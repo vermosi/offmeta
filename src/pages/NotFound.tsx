@@ -37,37 +37,28 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background relative">
-      <div
-        className="fixed inset-0 pointer-events-none bg-page-gradient"
-        aria-hidden="true"
-      />
-      <div
-        className="fixed inset-0 pointer-events-none bg-page-noise"
-        aria-hidden="true"
-      />
-
+    <div className="min-h-screen flex flex-col bg-background">
       <SkipLinks />
       <Header />
 
-      <main
-        id="main-content"
-        className="relative flex-1 flex items-center justify-center px-4"
-      >
-        <div className="text-center max-w-md space-y-6">
-          <h1 className="text-8xl font-black text-primary/45 select-none">
+      <main id="main-content" className="container-main flex-1 py-20">
+        <div className="max-w-2xl">
+          <p
+            className="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground"
+            aria-hidden="true"
+          >
             404
-          </h1>
-          <h1 className="text-2xl font-bold text-foreground">
+          </p>
+          <h1 className="mt-4 font-display text-3xl font-bold uppercase tracking-tight text-foreground">
             {t('notFound.title')}
           </h1>
-          <p className="text-muted-foreground text-sm leading-relaxed">
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
             {t(
               'notFound.description',
               "The page you're looking for doesn't exist or has been moved.",
             )}
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button asChild variant="default" className="gap-2">
               <Link to="/">
                 <Search className="h-4 w-4" />
@@ -82,15 +73,15 @@ const NotFound = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-left">
+          <div className="mt-12 grid grid-cols-1 divide-y divide-border/60 border-y border-border/60 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
             <Link
               to="/browse-searches"
-              className="rounded-lg border border-border/70 bg-card/70 p-4 transition-colors hover:border-border"
+              className="group p-6 transition-colors hover:bg-muted/30 focus-ring"
             >
-              <p className="text-sm font-medium text-foreground">
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                 {t('notFound.browseSearches', 'Browse searches')}
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              <p className="mt-2 text-sm leading-relaxed text-foreground/80">
                 {t(
                   'notFound.browseSearchesDescription',
                   'See curated and recent search patterns that can help you get back on track.',
@@ -99,19 +90,19 @@ const NotFound = () => {
             </Link>
             <Link
               to="/guides"
-              className="rounded-lg border border-border/70 bg-card/70 p-4 transition-colors hover:border-border"
+              className="group p-6 transition-colors hover:bg-muted/30 focus-ring"
             >
-              <p className="text-sm font-medium text-foreground">
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                 {t('notFound.readGuides', 'Read guides')}
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              <p className="mt-2 text-sm leading-relaxed text-foreground/80">
                 {t(
                   'notFound.readGuidesDescription',
                   'Explore practical deckbuilding and search tips for the next step.',
                 )}
               </p>
             </Link>
-                      </div>
+          </div>
         </div>
       </main>
 
