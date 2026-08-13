@@ -99,7 +99,14 @@ export function useSavedSearches() {
       );
       if (error) throw error;
     },
-    onSuccess: invalidate,
+    onSuccess: (_data, input) => {
+      invalidate();
+      void trackEvent('saved_search_created', {
+        query: input.naturalQuery.slice(0, 200),
+        scryfall_query: input.scryfallQuery ?? undefined,
+        results_count: input.resultCount ?? undefined,
+      });
+    },
   });
 
   const removeSearch = useMutation({
@@ -107,7 +114,10 @@ export function useSavedSearches() {
       const { error } = await supabase.from('saved_searches').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      void trackEvent('saved_search_removed', {});
+    },
   });
 
   const isSearchSaved = useCallback(
