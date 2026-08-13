@@ -81,6 +81,12 @@ export default function AppRoutes() {
               element={withFullApp(<ResetPassword />)}
             />
             <Route path="/profile" element={withFullApp(<ProfileSettings />)} />
+            <Route path="/admin" element={withFullApp(<AdminConsole />)} />
+            <Route path="/admin/:area" element={withFullApp(<AdminConsole />)} />
+            <Route
+              path="/admin/:area/:section"
+              element={withFullApp(<AdminConsole />)}
+            />
             <Route
               path="/admin/analytics"
               element={withFullApp(<AdminAnalytics />)}
