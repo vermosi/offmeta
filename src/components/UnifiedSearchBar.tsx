@@ -436,7 +436,7 @@ export const UnifiedSearchBar = forwardRef<
               onClick={() => setShowAllExamples(true)}
               className="font-mono text-[11px] uppercase tracking-[0.12em] text-accent transition-colors hover:text-accent/80"
             >
-              More ▾
+              {t('search.moreExamples', 'More')} ▾
             </button>
           )}
         </div>
