@@ -271,7 +271,7 @@ export function CardDetailView({ card }: CardDetailViewProps) {
                   {faceDetails.power}/{faceDetails.toughness}
                 </span>
               )}
-              {faceDetails.loyalty && <span>Loyalty {faceDetails.loyalty}</span>}
+              {card.loyalty && <span>Loyalty {card.loyalty}</span>}
               {card.reserved && (
                 <span className="text-rarity-rare">
                   {t('card.reservedList', 'Reserved List')}
