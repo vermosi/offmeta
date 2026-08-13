@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { GUIDE_SUMMARIES as GUIDES } from '@/data/guide-summaries';
-import { BookOpen, FileText, Sparkles, ChevronRight, TrendingUp } from 'lucide-react';
+import { BookOpen, Code2, FileText, Sparkles, ChevronRight, TrendingUp } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
@@ -54,6 +54,15 @@ export default function DocsIndex() {
         description: t('docs.syntaxDesc', 'Translate common natural phrases into Scryfall operators.'),
         href: '/docs/syntax',
         icon: Sparkles,
+      },
+      {
+        title: t('docs.apiTitle', 'Semantic API'),
+        description: t(
+          'docs.apiDesc',
+          'Read-only API for card roles, methods, problems addressed and characteristics.',
+        ),
+        href: '/api',
+        icon: Code2,
       },
       {
         title: t('nav.guides', 'Guides'),
