@@ -255,29 +255,17 @@ export const UnifiedSearchBar = forwardRef<
 
   return (
     <div
-      className="space-y-4 sm:space-y-6 w-full mx-auto px-0 animate-fade-in"
-      style={{
-        maxWidth: 'clamp(320px, 90vw, 840px)',
-        animationDuration: '0.5s',
-        animationDelay: '0.15s',
-        animationFillMode: 'backwards',
-      }}
+      className="w-full space-y-4 px-0"
       role="search"
       aria-label={t('search.label')}
     >
       {/* Search input */}
       <div className="relative space-y-2">
-        <div className={`gradient-border-wrap ${isFocused ? 'opacity-100' : 'opacity-60 hover:opacity-80'} transition-opacity duration-300`}>
+        <div>
           <div
-            className={`
-              relative flex items-center gap-1.5 sm:gap-2 rounded-3xl border border-border/60 bg-gradient-to-r from-card/95 via-background/85 to-card/95 p-1.5 shadow-sm transition-all duration-300 sm:p-2
-              transition-all duration-300
-              ${
-                isFocused
-                  ? 'shadow-xl shadow-accent/10'
-                  : 'shadow-sm'
-              }
-            `}
+            className={`relative flex items-stretch gap-0 border bg-background/40 transition-colors duration-200 ${
+              isFocused ? 'border-foreground/60' : 'border-border'
+            }`}
           >
             <label htmlFor="search-input" className="sr-only">
               {t('search.inputLabel')}
