@@ -19,6 +19,8 @@ import { getCardPrintings, type CardPrinting } from '@/lib/scryfall/printings';
 
 import { cn } from '@/lib/core/utils';
 import { ManaCost, OracleText } from '@/components/ManaSymbol';
+import { SaveCardButton } from '@/components/SaveCardButton';
+import { toSavedCardInput } from '@/lib/account';
 import { useAnalytics, useAffiliateConfig } from '@/hooks';
 import { useTranslation } from '@/lib/i18n';
 
@@ -259,9 +261,12 @@ export function CardDetailView({ card }: CardDetailViewProps) {
                   {faceDetails.type_line}
                 </p>
               </div>
-              {faceDetails.mana_cost && (
-                <ManaCost cost={faceDetails.mana_cost} size="md" />
-              )}
+              <div className="flex items-center gap-3">
+                {faceDetails.mana_cost && (
+                  <ManaCost cost={faceDetails.mana_cost} size="md" />
+                )}
+                <SaveCardButton card={toSavedCardInput(card)} size="md" />
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-x-6 gap-y-1 border-y border-border/50 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
