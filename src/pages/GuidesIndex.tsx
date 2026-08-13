@@ -182,7 +182,7 @@ export default function GuidesIndex() {
                 type="button"
                 onClick={() => setActiveFilter(filter.key)}
                 aria-pressed={isActive}
-                className={`font-mono text-[11px] uppercase tracking-[0.26em] underline-offset-[6px] transition-colors ${
+                className={`inline-flex min-h-9 items-center font-mono text-[11px] uppercase tracking-[0.26em] underline-offset-[6px] transition-colors ${
                   isActive
                     ? 'text-foreground underline decoration-accent decoration-2'
                     : 'text-muted-foreground hover:text-foreground'
