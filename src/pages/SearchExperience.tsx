@@ -883,10 +883,19 @@ const Index = () => {
         )}
 
         {!hasSearched && (
+          <div id="home-examples" className="container-main pb-2">
+            <Suspense fallback={null}>
+              <ExampleQueriesCarousel onTrySearch={handleTryExample} />
+            </Suspense>
+          </div>
+        )}
+
+        {!hasSearched && (
           <div id="home-quick-paths">
             <HomepageQuickPaths />
           </div>
         )}
+
 
         {!hasSearched && (
           <Suspense fallback={null}>
