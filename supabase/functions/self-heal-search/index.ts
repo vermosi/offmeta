@@ -421,6 +421,9 @@ serve(
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         },
       );
+      );
+    } finally {
+      await lease.release();
     }
   }),
 );
