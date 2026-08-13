@@ -16,6 +16,8 @@ import { createLogger, withLogging } from '../_shared/logger.ts';
 
 const BATCH_SIZE = 75;
 const SCRYFALL_DELAY_MS = 120;
+/** Scryfall ids are RFC-4122 UUIDs; stored synthetic ids are rejected by the API. */
+const SCRYFALL_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const log = createLogger('price-snapshot');
 
