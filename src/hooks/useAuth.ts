@@ -102,7 +102,9 @@ export function useAuthProvider(): AuthContextValue {
   // re-subscribes when analytics identity changes.
   const { trackEvent } = useAnalytics();
   const trackEventRef = useRef(trackEvent);
-  trackEventRef.current = trackEvent;
+  useEffect(() => {
+    trackEventRef.current = trackEvent;
+  }, [trackEvent]);
 
   const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
