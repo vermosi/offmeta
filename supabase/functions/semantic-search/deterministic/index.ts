@@ -315,24 +315,7 @@ export function buildDeterministicIntent(query: string, options?: { isKnownCardN
     const exactQuery = wordCount === 1
       ? `name:${safeName}`
       : `name:"${safeName}"`;
-    const intent: ParsedIntent = {
-      colors: null,
-      types: [],
-      subtypes: [],
-      cmc: null,
-      power: null,
-      toughness: null,
-      isCommander: false,
-      format: null,
-      yearConstraint: null,
-      priceConstraint: null,
-      remainingQuery: '',
-      warnings: [],
-      oraclePatterns: [],
-      tagTokens: [],
-      statTotalApprox: null,
-    };
-    return { intent, deterministicQuery: exactQuery };
+    return { intent: emptyIntent(), deterministicQuery: exactQuery };
   }
 
   const ir = buildIR(query);
