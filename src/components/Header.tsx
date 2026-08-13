@@ -15,6 +15,7 @@ import {
   NAV_WORDMARK_CLASS,
 } from '@/lib/ui/nav-tokens';
 import { useTranslation } from '@/lib/i18n';
+import { onSignInRequested } from '@/lib/account';
 
 const AuthModal = lazy(() =>
   import('@/components/AuthModal').then((m) => ({ default: m.AuthModal })),
@@ -31,8 +32,19 @@ export function Header() {
   const { hasRole: isAdmin } = useUserRole('admin');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authReason, setAuthReason] = useState<string | undefined>(undefined);
   const [isScrolled, setIsScrolled] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Save controls anywhere in the app can ask for the sign-in modal.
+  useEffect(
+    () =>
+      onSignInRequested(({ reason }) => {
+        setAuthReason(reason);
+        setAuthModalOpen(true);
+      }),
+    [],
+  );
 
   const CORE_LINKS = [
     { label: t('header.guides', 'Guides'), href: '/guides' },
@@ -119,6 +131,12 @@ export function Header() {
             <div className="mt-4 pt-4 border-t border-border/50">
               {user ? (
                 <>
+                  <Link to="/saved" onClick={() => setMobileMenuOpen(false)} className="w-full border-b border-border/40 px-1 py-4 text-base text-foreground transition-colors hover:text-accent focus-ring">
+                    {t('nav.saved', 'Saved')}
+                  </Link>
+                  <Link to="/history" onClick={() => setMobileMenuOpen(false)} className="w-full border-b border-border/40 px-1 py-4 text-base text-foreground transition-colors hover:text-accent focus-ring">
+                    {t('nav.history', 'History')}
+                  </Link>
                   <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="w-full border-b border-border/40 px-1 py-4 text-base text-foreground transition-colors hover:text-accent focus-ring">
                     {t('nav.profileSettings')}
                   </Link>
@@ -219,7 +237,14 @@ export function Header() {
 
       {authModalOpen && (
         <Suspense fallback={null}>
-          <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+          <AuthModal
+            open={authModalOpen}
+            onOpenChange={(open) => {
+              setAuthModalOpen(open);
+              if (!open) setAuthReason(undefined);
+            }}
+            description={authReason}
+          />
         </Suspense>
       )}
     </>
