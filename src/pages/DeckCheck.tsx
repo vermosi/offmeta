@@ -25,6 +25,8 @@ import {
   type DeckProfile,
 } from '@/lib/deck-intelligence';
 import { applySeoMeta } from '@/lib/seo';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { trackFunnelStep } from '@/lib/analytics/funnels';
 import { queryToSlug } from '@/lib/search-slug';
 import { Loader2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
