@@ -625,14 +625,6 @@ const Index = () => {
               cardCount={cards.length}
             />
 
-            {!hasSearched && (
-              <div id="home-examples">
-                <Suspense fallback={null}>
-                  <ExampleQueriesCarousel onTrySearch={handleTryExample} />
-                </Suspense>
-              </div>
-            )}
-
             {/* Real cards, immediately — the index should look like Magic
                 before it looks like marketing. */}
             {!hasSearched && (
@@ -640,6 +632,7 @@ const Index = () => {
                 <InstantDemoPreview onTrySearch={handleTryExample} />
               </Suspense>
             )}
+
 
 
             {isSearching && originalQuery && (
