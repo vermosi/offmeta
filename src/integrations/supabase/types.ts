@@ -262,6 +262,45 @@ export type Database = {
         }
         Relationships: []
       }
+      collections: {
+        Row: {
+          commander_name: string | null
+          created_at: string
+          description: string | null
+          format: string | null
+          id: string
+          is_default: boolean
+          kind: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          commander_name?: string | null
+          created_at?: string
+          description?: string | null
+          format?: string | null
+          id?: string
+          is_default?: boolean
+          kind?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          commander_name?: string | null
+          created_at?: string
+          description?: string | null
+          format?: string | null
+          id?: string
+          is_default?: boolean
+          kind?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       curated_searches: {
         Row: {
           category: string
@@ -811,6 +850,129 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_card_collections: {
+        Row: {
+          collection_id: string
+          created_at: string
+          saved_card_id: string
+          user_id: string
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string
+          saved_card_id: string
+          user_id: string
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string
+          saved_card_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_card_collections_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_card_collections_saved_card_id_fkey"
+            columns: ["saved_card_id"]
+            isOneToOne: false
+            referencedRelation: "saved_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_cards: {
+        Row: {
+          card_name: string
+          cmc: number | null
+          colors: string[]
+          created_at: string
+          id: string
+          image_url: string | null
+          mana_cost: string | null
+          note: string | null
+          oracle_id: string
+          price_usd: number | null
+          scryfall_id: string | null
+          type_line: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_name: string
+          cmc?: number | null
+          colors?: string[]
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          mana_cost?: string | null
+          note?: string | null
+          oracle_id: string
+          price_usd?: number | null
+          scryfall_id?: string | null
+          type_line?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_name?: string
+          cmc?: number | null
+          colors?: string[]
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          mana_cost?: string | null
+          note?: string | null
+          oracle_id?: string
+          price_usd?: number | null
+          scryfall_id?: string | null
+          type_line?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_searches: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          natural_query: string
+          normalized_query: string
+          result_count: number | null
+          scryfall_query: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          natural_query: string
+          normalized_query: string
+          result_count?: number | null
+          scryfall_query?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          natural_query?: string
+          normalized_query?: string
+          result_count?: number | null
+          scryfall_query?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       search_feedback: {
         Row: {
           created_at: string
@@ -854,6 +1016,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      search_history: {
+        Row: {
+          created_at: string
+          id: string
+          last_run_at: string
+          normalized_query: string
+          raw_query: string
+          run_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_run_at?: string
+          normalized_query: string
+          raw_query: string
+          run_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_run_at?: string
+          normalized_query?: string
+          raw_query?: string
+          run_count?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       search_intent_clusters: {
         Row: {
