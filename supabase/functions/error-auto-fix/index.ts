@@ -19,6 +19,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { withLogging } from '../_shared/logger.ts';
 import { requireServiceOrPipelineKey } from '../_shared/auth.ts';
 import { acquireJobLock, lockBusyResponse } from '../_shared/jobLock.ts';
+import { claimDedupe, recordDedupeDecision } from '../_shared/dedupe.ts';
 
 const JOB_NAME = 'error-auto-fix';
 /** Above the worst-case run time so a slow run is never lapped by cron. */
