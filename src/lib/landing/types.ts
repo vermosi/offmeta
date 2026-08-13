@@ -23,6 +23,21 @@ export interface IntentPath {
   description: string;
   /** Natural-language query executed when the path is clicked. */
   query: string;
+  /**
+   * Oracle-text phrases that prove a card belongs to this intent. Used to
+   * label representative results and to count real matches. Cards matching
+   * nothing are dropped rather than labelled loosely.
+   */
+  match?: readonly string[];
+}
+
+/** An adjacent concept surfaced under "More like this". */
+export interface AdjacentConcept {
+  label: string;
+  /** Natural-language query that runs in OffMeta search. */
+  query: string;
+  /** Optional intentional landing page for the same concept. */
+  href?: string;
 }
 
 export interface RelatedPageLink {
@@ -63,7 +78,11 @@ export interface LandingPageConfig {
   /** Scryfall query used to show a few real cards. Omit to hide the section. */
   representativeQuery?: string;
   representativeLabel?: string;
+  /** Short topic token for the technical summary, e.g. "TREASURE HATE". */
+  summaryTopic?: string;
   explanation?: LandingExplanation;
+  /** Adjacent concepts for the "More like this" discovery band. */
+  adjacentConcepts?: AdjacentConcept[];
   /** Plain natural-language queries rendered as mono text links. */
   relatedSearches?: string[];
   relatedPages?: RelatedPageLink[];
