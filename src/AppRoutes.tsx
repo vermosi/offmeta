@@ -129,7 +129,23 @@ export default function AppRoutes() {
               path="/.lovable/oauth/consent"
               element={withFullApp(<OAuthConsent />)}
             />
+            {/* Registry-declared landing pages (roles, problems, colors,
+                commander, alternatives, comparison). Unknown slugs render 404. */}
+            <Route path="/mtg/:topic" element={withFullApp(<LandingRoute />)} />
+            <Route
+              path="/commander/:topic"
+              element={withFullApp(<LandingRoute />)}
+            />
+            <Route
+              path="/alternatives/:cardName"
+              element={withFullApp(<LandingRoute />)}
+            />
+            <Route
+              path="/scryfall-alternative"
+              element={withFullApp(<LandingRoute />)}
+            />
             <Route path="*" element={withFullApp(<NotFound />)} />
+
           </Route>
         </Routes>
       </Suspense>
