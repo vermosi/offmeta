@@ -33,6 +33,39 @@ interface RepairDetail {
   reason?: string;
 }
 
+interface DiagnosticsBucket {
+  code: string;
+  attempt_count: number;
+  final_count: number;
+}
+
+interface DiagnosticsItem {
+  query: string | null;
+  before_query: string | null;
+  after_query: string | null;
+  reason_code: string | null;
+  reason: string | null;
+  attempt_count: number;
+}
+
+interface Diagnostics {
+  totals?: { unrepairable?: number; total_attempts?: number; runs?: number };
+  buckets?: DiagnosticsBucket[];
+  items?: DiagnosticsItem[];
+}
+
+/** Plain-English explanation for each stable reason code from the repair loop. */
+const REASON_LABELS: Record<string, string> = {
+  no_model_response: 'Model returned nothing',
+  unparseable_response: 'Unparseable model output',
+  low_confidence: 'Confidence below threshold',
+  duplicate_syntax: 'Repeated an earlier failed query',
+  invalid_otag: 'Hallucinated oracle tag',
+  scryfall_rejected: 'Scryfall rejected the syntax',
+  zero_results: 'Zero results',
+  below_threshold: 'Too few results',
+};
+
 function formatRelative(iso: string | null): string {
   if (!iso) return 'never';
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
