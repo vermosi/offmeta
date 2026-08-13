@@ -15,6 +15,7 @@ import { useState, type ReactNode } from 'react';
 import { Check, Copy, ExternalLink } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { cn } from '@/lib/core/utils';
+import { intentFromScryfallQuery } from '@/lib/search/whyItMatches';
 import type { SearchIntent } from '@/types/search';
 
 interface SearchDeskHeaderProps {
@@ -106,8 +107,12 @@ export function SearchDeskHeader({
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState(false);
 
-  const constraints = buildInterpretation(intent);
   const query = scryfallQuery.trim();
+  const derivedIntent = intent ?? null;
+  let constraints = buildInterpretation(derivedIntent);
+  if (constraints.length === 0) {
+    constraints = buildInterpretation(intentFromScryfallQuery(query));
+  }
   const activeWarnings = (warnings ?? []).filter(Boolean);
 
   const handleCopy = async () => {
