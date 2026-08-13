@@ -309,6 +309,13 @@ serve(
     const auth = await requireServiceOrPipelineKey(req, corsHeaders);
     if (!auth.authorized) return auth.response;
 
+    // Close out any earlier run that never reported back (cold shutdown).
+    await supabase
+      .from('ops_watchdog_runs')
+      .update({ status: 'abandoned', finished_at: new Date().toISOString() })
+      .eq('status', 'running')
+      .lt('started_at', new Date(Date.now() - 3_600_000).toISOString());
+
     const startedAt = new Date().toISOString();
     const { data: runRow } = await supabase
       .from('ops_watchdog_runs')
