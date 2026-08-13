@@ -12,6 +12,7 @@ import {
   
   injectJsonLd,
   buildSearchResultsJsonLd,
+  buildSeoTitle,
 } from '@/lib/seo';
 import type { ScryfallCard } from '@/types/card';
 
