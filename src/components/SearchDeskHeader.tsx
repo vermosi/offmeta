@@ -86,7 +86,11 @@ export function buildInterpretation(intent?: SearchIntent | null): Constraint[] 
     out.push({ kind: 'function tag', value: tag.replace(/^otag:/, '').replace(/-/g, ' ') });
   }
   for (const phrase of intent.oraclePatterns ?? []) {
-    out.push({ kind: 'oracle text', value: `“${phrase}”` });
+    const cleaned = phrase
+      .replace(/^(?:o|oracle|fo):/i, '')
+      .replace(/^"|"$/g, '')
+      .trim();
+    if (cleaned) out.push({ kind: 'oracle text', value: `“${cleaned}”` });
   }
 
   return out.slice(0, 12);
@@ -112,6 +116,18 @@ export function SearchDeskHeader({
   let constraints = buildInterpretation(derivedIntent);
   if (constraints.length === 0) {
     constraints = buildInterpretation(intentFromScryfallQuery(query));
+    const colorMatch = query.match(/\b(c|ci|id|color|identity)[:=]([wubrgc]+)\b/i);
+    if (colorMatch) {
+      const names = colorMatch[2]
+        .toUpperCase()
+        .split('')
+        .map((c) => COLOR_NAMES[c] ?? c.toLowerCase())
+        .join(' + ');
+      constraints.unshift({
+        kind: /^(ci|id|identity)$/i.test(colorMatch[1]) ? 'color identity' : 'colors',
+        value: names,
+      });
+    }
   }
   const activeWarnings = (warnings ?? []).filter(Boolean);
 
