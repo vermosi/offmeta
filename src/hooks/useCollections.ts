@@ -100,7 +100,13 @@ export function useCollections() {
       if (error) throw error;
       return mapRow(data as CollectionRow);
     },
-    onSuccess: invalidate,
+    onSuccess: (collection) => {
+      invalidate();
+      void trackEvent('collection_created', {
+        is_default: collection.isDefault,
+        kind: collection.kind,
+      });
+    },
   });
 
   const renameCollection = useMutation({
