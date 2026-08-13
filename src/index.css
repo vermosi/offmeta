@@ -605,6 +605,67 @@
     z-index: -10;
   }
 
+  /* Mana ambience — five soft fields of Magic's colour pie washing the page.
+     Editorial, not neon: very low alpha, heavy blur, no hard edges. */
+  .bg-mana-ambience {
+    z-index: -8;
+    opacity: 0.5;
+    background:
+      radial-gradient(
+        38rem 28rem at 8% -6%,
+        hsl(var(--mtg-white) / 0.16),
+        transparent 70%
+      ),
+      radial-gradient(
+        34rem 26rem at 92% 4%,
+        hsl(var(--mtg-blue) / 0.16),
+        transparent 70%
+      ),
+      radial-gradient(
+        30rem 24rem at 50% 42%,
+        hsl(var(--mtg-black) / 0.18),
+        transparent 72%
+      ),
+      radial-gradient(
+        32rem 26rem at 4% 74%,
+        hsl(var(--mtg-red) / 0.13),
+        transparent 70%
+      ),
+      radial-gradient(
+        34rem 28rem at 96% 82%,
+        hsl(var(--mtg-green) / 0.13),
+        transparent 70%
+      );
+  }
+
+  .dark .bg-mana-ambience {
+    opacity: 0.42;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bg-mana-ambience {
+      animation: mana-drift 42s ease-in-out infinite alternate;
+    }
+  }
+
+  @keyframes mana-drift {
+    from {
+      transform: scale(1) translate3d(0, 0, 0);
+    }
+    to {
+      transform: scale(1.06) translate3d(0, -1.25%, 0);
+    }
+  }
+
+  /* Hairline editorial rule used by the masthead + feature panels. */
+  .rule-hairline {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      hsl(var(--border) / 0.9),
+      hsl(var(--border) / 0.15)
+    );
+  }
 
 
   .bg-page-noise {
