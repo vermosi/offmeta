@@ -48,7 +48,12 @@ const LOOKBACK_DAYS = 30;
 /** Max failing searches repaired per run (bounds AI + Scryfall spend). */
 const MAX_CANDIDATES = 12;
 /** Model attempts per candidate before giving up. */
-const MAX_ATTEMPTS = 2;
+const MAX_ATTEMPTS = 4;
+/**
+ * Temperature ladder: attempt 0 stays deterministic, later attempts diversify so
+ * retries explore new syntax instead of repeating the same failed query.
+ */
+const ATTEMPT_TEMPERATURES = [0.2, 0.6, 0.9, 1.0];
 /** A repair must return at least this many cards to be installed. */
 const MIN_RESULTS = 3;
 /** Exact-name (single-card) lookups should not be penalized for returning one match. */
@@ -218,7 +223,10 @@ async function previouslyRejected(pattern: string): Promise<boolean> {
   return (data?.length ?? 0) > 0;
 }
 
-async function askModel(prompt: string): Promise<string | null> {
+async function askModel(
+  prompt: string,
+  temperature = ATTEMPT_TEMPERATURES[0],
+): Promise<string | null> {
   try {
     const response = await fetch(
       'https://ai.gateway.lovable.dev/v1/chat/completions',
@@ -231,7 +239,7 @@ async function askModel(prompt: string): Promise<string | null> {
         body: JSON.stringify({
           model: 'google/gemini-2.5-flash-lite',
           messages: [{ role: 'user', content: prompt }],
-          temperature: 0.2,
+          temperature,
         }),
       },
     );
@@ -259,6 +267,10 @@ async function repairCandidate(
   details: Detail[],
 ): Promise<'repaired' | 'skipped'> {
   const priorAttempts: { syntax: string; reason: string }[] = [];
+  /** Normalized syntaxes already tried, so a repeat never burns a Scryfall call. */
+  const seenSyntax = new Set<string>();
+  const fingerprint = (syntax: string) =>
+    syntax.toLowerCase().replace(/["']/g, '').replace(/\s+/g, ' ').trim();
   let best: RepairSuggestion | null = null;
   let bestCount = 0;
 
@@ -268,7 +280,9 @@ async function repairCandidate(
         query: candidate.query,
         failedTranslation: candidate.last_translation,
         priorAttempts,
+        attempt,
       }),
+      ATTEMPT_TEMPERATURES[Math.min(attempt, ATTEMPT_TEMPERATURES.length - 1)],
     );
     if (!raw) break;
 
@@ -280,6 +294,22 @@ async function repairCandidate(
       });
       continue;
     }
+
+    // Identical retry: don't re-verify it, just tell the model it repeated itself.
+    const key = fingerprint(suggestion.scryfallSyntax);
+    if (seenSyntax.has(key)) {
+      priorAttempts.push({
+        syntax: suggestion.scryfallSyntax,
+        reason: 'repeated an earlier failed query — must use a different structure',
+      });
+      logger.warn('duplicate_repair_attempt', {
+        query: candidate.query,
+        syntax: suggestion.scryfallSyntax,
+        attempt,
+      });
+      continue;
+    }
+    seenSyntax.add(key);
 
     // Reject hallucinated otag: values before spending a Scryfall round-trip.
     const otagCheck = validateOtags(suggestion.scryfallSyntax);

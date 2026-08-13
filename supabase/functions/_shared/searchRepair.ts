@@ -122,18 +122,36 @@ interface RepairPromptInput {
   failedTranslation: string;
   /** Previous attempts that were rejected, with the reason, for the retry loop. */
   priorAttempts?: { syntax: string; reason: string }[];
+  /** Zero-based attempt index, used to escalate the repair strategy. */
+  attempt?: number;
 }
+
+/**
+ * Each retry is pushed onto a structurally different strategy so the model
+ * cannot converge back onto the same failed syntax.
+ */
+export const REPAIR_STRATEGIES: string[] = [
+  'Strategy 1 — faithful: translate the intent as precisely as possible using curated otag: tags.',
+  'Strategy 2 — restructure: use a DIFFERENT mechanism than the previous attempt (swap otag: for o:"..." oracle text, or oracle text for otag:), and drop one constraint.',
+  'Strategy 3 — broaden hard: keep only the single most important concept. Remove colour, format, rarity and mana-value constraints entirely.',
+  'Strategy 4 — last resort: if the text names or misspells a card, output !"Exact Card Name"; otherwise output the broadest single-term query that still relates to the intent.',
+];
 
 export function buildRepairPrompt({
   query,
   failedTranslation,
   priorAttempts = [],
+  attempt = 0,
 }: RepairPromptInput): string {
   const history = priorAttempts.length
-    ? `\nPrevious attempts that FAILED (do not repeat them):\n${priorAttempts
+    ? `\nPrevious attempts that FAILED (do not repeat them, and do not output a query that only differs by whitespace or quoting):\n${priorAttempts
         .map((a) => `- ${a.syntax} → ${a.reason}`)
         .join('\n')}\n`
     : '';
+
+  const strategy = `\n${
+    REPAIR_STRATEGIES[Math.min(attempt, REPAIR_STRATEGIES.length - 1)]
+  }\n`;
 
   return `You are a Scryfall query expert repairing a failed Magic: The Gathering search.
 
@@ -143,7 +161,7 @@ ${query}
 </user_query>
 
 The translation "${failedTranslation}" returned ZERO results.
-${history}
+${history}${strategy}
 Prefer these curated oracle tags over fragile oracle text:
 ${SCRYFALL_OTAGS.join(', ')}
 
