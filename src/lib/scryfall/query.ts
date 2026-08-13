@@ -275,6 +275,9 @@ export const KNOWN_OTAGS = new Set([
   'bounceland',
   'boltland',
   'attack-trigger',
+  // Full Scryfall Tagger functional vocabulary (generated from
+  // src/data/scryfall-tagger-tags.txt) so real tags are never stripped.
+  ...SCRYFALL_ORACLE_TAGS,
 ]);
 
 /**
