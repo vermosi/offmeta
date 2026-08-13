@@ -226,6 +226,13 @@
   <body>
     <!-- Static indexable content for SEO crawlers (visible but subtle) -->
     <aside
+    <!--
+      Static indexable content for SEO crawlers. Removed from the DOM by
+      src/main.tsx once React mounts, so the rendered page keeps exactly one
+      <h1> (the React one) while the raw HTML still ships a heading, copy and
+      internal links for crawlers that do not execute JavaScript.
+    -->
+    <aside
       id="seo-content"
       aria-label="About OffMeta"
       style="
@@ -236,15 +243,27 @@
         overflow: hidden;
       "
     >
-      <h2>OffMeta — Natural Language Magic Card Search</h2>
+      <h1>OffMeta — Natural Language Magic Card Search</h1>
       <p>
         OffMeta is a natural language Magic: The Gathering card search tool. It
         lets players describe cards the way they talk and translates that into
-        real Scryfall searches. No syntax knowledge required.
+        real Scryfall searches. No syntax knowledge required. Type something
+        like "cheap green ramp spells", "creatures that make treasure tokens"
+        or "budget alternatives to Rhystic Study" and OffMeta builds the
+        Scryfall query for you, shows it, and lets you edit it.
       </p>
+      <nav aria-label="Primary">
+        <ul>
+          <li><a href="/guides">Search guides</a></li>
+          <li><a href="/combos">Commander combo finder</a></li>
+          <li><a href="/market">Magic card market trends</a></li>
+          <li><a href="/docs">Search syntax docs</a></li>
+          <li><a href="/about">About OffMeta</a></li>
+        </ul>
+      </nav>
     </aside>
 
-    <!-- Fallback for JavaScript-disabled browsers -->
+
     <noscript>
       <div style="padding: 2rem; font-family: system-ui, sans-serif">
         <h2>OffMeta — Natural Language Magic Card Search</h2>
