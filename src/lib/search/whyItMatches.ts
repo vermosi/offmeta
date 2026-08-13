@@ -200,3 +200,61 @@ export function buildWhyItMatches(
     reasons,
   };
 }
+
+/**
+ * Derive a minimal {@link SearchIntent} from an executed Scryfall query.
+ *
+ * The translation pipeline only returns a parsed intent on its full path;
+ * fast, cached and deterministic paths return the query string alone. Parsing
+ * the query keeps "why it matches" available on every search without
+ * inventing constraints: only tokens present in the query are reported.
+ */
+export function intentFromScryfallQuery(query: string | null | undefined): SearchIntent | null {
+  if (!query || !query.trim()) return null;
+
+  const oraclePatterns: string[] = [];
+  const tags: string[] = [];
+  const types: string[] = [];
+  let cmc: SearchIntent['cmc'] = null;
+
+  const oracleQuoted = /\bo(?:racle)?:"([^"]+)"/gi;
+  for (const match of query.matchAll(oracleQuoted)) {
+    oraclePatterns.push(`o:"${match[1]}"`);
+  }
+  const oracleBare = /\bo(?:racle)?:([^\s"()]+)/gi;
+  for (const match of query.matchAll(oracleBare)) {
+    oraclePatterns.push(`o:"${match[1]}"`);
+  }
+  const tagToken = /\b(?:otag|oracletag|function|functionality):([^\s"()]+)/gi;
+  for (const match of query.matchAll(tagToken)) {
+    tags.push(`otag:${match[1]}`);
+  }
+  const typeToken = /\bt(?:ype)?:([^\s"()]+)/gi;
+  for (const match of query.matchAll(typeToken)) {
+    types.push(match[1].replace(/["-]/g, ' ').trim());
+  }
+  const cmcToken = /\b(?:mv|cmc):(<=|>=|<|>|=)?(\d+)/i.exec(query);
+  if (cmcToken) {
+    cmc = { op: cmcToken[1] || '=', value: Number(cmcToken[2]) };
+  }
+
+  if (
+    oraclePatterns.length === 0 &&
+    tags.length === 0 &&
+    types.length === 0 &&
+    !cmc
+  ) {
+    return null;
+  }
+
+  return {
+    colors: null,
+    types,
+    cmc,
+    power: null,
+    toughness: null,
+    tags,
+    oraclePatterns: Array.from(new Set(oraclePatterns)),
+    warnings: [],
+  };
+}
