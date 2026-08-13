@@ -10,14 +10,18 @@ const QUICK_PATHS = [
   {
     href: '/search/commander%20ramp',
     index: '01',
-    title: 'Start with a search',
-    description: 'Turn a deck idea into real cards and refinements.',
+    titleKey: 'home.quickPathSearchTitle',
+    titleFallback: 'Start with a search',
+    descriptionKey: 'home.quickPathSearchDescription',
+    descriptionFallback: 'Turn a deck idea into real cards and refinements.',
   },
   {
     href: '/guides/cards-like-x',
     index: '02',
-    title: 'Cards like X',
-    description: 'Find close substitutes for staples and favorite effects.',
+    titleKey: 'home.quickPathSimilarTitle',
+    titleFallback: 'Cards like X',
+    descriptionKey: 'home.quickPathSimilarDescription',
+    descriptionFallback: 'Find close substitutes for staples and favorite effects.',
   },
 ] as const;
 
@@ -44,7 +48,7 @@ export function HomepageQuickPaths() {
                 to={path.href}
                 onClick={() =>
                   trackEvent('quick_path_clicked', {
-                    action: path.title,
+                    action: path.titleKey,
                     placement: 'homepage_quick_paths',
                     cta: path.href,
                   })
@@ -56,10 +60,10 @@ export function HomepageQuickPaths() {
                 </span>
                 <span className="flex-1">
                   <span className="block font-display text-base font-bold uppercase tracking-tight text-foreground">
-                    {path.title}
+                    {t(path.titleKey, path.titleFallback)}
                   </span>
                   <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">
-                    {path.description}
+                    {t(path.descriptionKey, path.descriptionFallback)}
                   </span>
                 </span>
                 <span

@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useTranslation } from '@/lib/i18n';
 
 const DEMO_QUERY = 'budget board wipes under $5';
 const DEMO_SCRYFALL = 'otag:board-wipe usd<5';
@@ -63,6 +64,7 @@ function useTypewriter(text: string, speed = 40) {
 }
 
 export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
+  const { t } = useTranslation();
   const { trackEvent } = useAnalytics();
   const impressionTracked = useRef(false);
   const { displayed: typedQuery, done: typingDone } = useTypewriter(DEMO_QUERY, 50);
@@ -99,7 +101,7 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="font-mono text-[10px] uppercase tracking-[0.34em] text-muted-foreground">
-                See it in action
+                {t('demo.eyebrow', 'See it in action')}
               </span>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -121,7 +123,7 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
             onClick={handleSearchClick}
             className="self-start font-mono text-[11px] uppercase tracking-[0.24em] text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground sm:self-auto"
           >
-            Try this search →
+            {t('demo.trySearch', 'Try this search')} →
           </button>
         </div>
 

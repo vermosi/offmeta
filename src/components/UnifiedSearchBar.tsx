@@ -123,7 +123,7 @@ export interface UnifiedSearchBarHandle {
 // Ordered to lead with discovery-flavored queries (see docs/product-audit.md).
 // Tested queries — `budget board wipes under $5`, `cards that protect my commander`,
 // `mana rocks that cost 2` — must remain present so existing suites keep passing.
-const EXAMPLE_QUERIES = [
+const EXAMPLE_QUERY_FALLBACKS = [
   'cards that punish treasure decks',
   'budget alternatives to Rhystic Study',
   'cards similar to Seedborn Muse',
@@ -168,7 +168,10 @@ export const UnifiedSearchBar = forwardRef<
     return undefined;
   }, [isMobile]);
 
-  const placeholder = 'budget board wipes under $5';
+  const placeholder = t('search.placeholder', 'budget board wipes under $5');
+  const exampleQueries = EXAMPLE_QUERY_FALLBACKS.map((fallback, index) =>
+    t(`search.example${index + 1}`, fallback),
+  );
   const [, setShowHistoryDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -204,16 +207,16 @@ export const UnifiedSearchBar = forwardRef<
 
   const visibleExamples = useMemo(() => {
     const maxVisible = showAllExamples
-      ? EXAMPLE_QUERIES.length
+      ? exampleQueries.length
       : collapsedCount;
-    return EXAMPLE_QUERIES.slice(0, maxVisible).map((query, position) => ({
+    return exampleQueries.slice(0, maxVisible).map((query, position) => ({
       query,
       position,
     }));
-  }, [collapsedCount, showAllExamples]);
+  }, [collapsedCount, exampleQueries, showAllExamples]);
 
   const hasHiddenExamples =
-    !showAllExamples && EXAMPLE_QUERIES.length > collapsedCount;
+    !showAllExamples && exampleQueries.length > collapsedCount;
 
 
   const flattenedVisibleExamples = visibleExamples;

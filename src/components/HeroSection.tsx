@@ -55,7 +55,10 @@ export function HeroSection() {
             className="lg:col-span-8 font-display text-[clamp(2.5rem,6.4vw,5rem)] font-extrabold uppercase leading-[0.85] tracking-tight text-foreground"
           >
             <span className="sr-only">
-              OffMeta. Search Magic cards in plain English.{' '}
+              {t(
+                'hero.accessibleTitle',
+                'OffMeta. Search Magic cards in plain English.',
+              )}{' '}
             </span>
             <span aria-hidden="true">
               {t('hero.titleLine1', 'Manifest the')}
