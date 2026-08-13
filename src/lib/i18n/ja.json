@@ -1192,6 +1192,7 @@
   "search.hint": "検索クエリを入力してEnterを押すか、検索をクリックしてください",
   "search.inputLabel": "自然言語でマジックカードを検索",
   "search.label": "カード検索",
+  "search.moreExamples": "もっと見る",
   "search.phaseFetching": "カードを取得中…",
   "search.phaseTranslating": "クエリを翻訳中…",
   "search.placeholder": "探しているカードを説明してください...",

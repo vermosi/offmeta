@@ -1233,6 +1233,7 @@
   "search.hint": "输入搜索内容并按回车或点击搜索",
   "search.inputLabel": "用自然语言搜索万智牌卡牌",
   "search.label": "卡牌搜索",
+  "search.moreExamples": "更多",
   "search.phaseFetching": "正在获取卡牌…",
   "search.phaseTranslating": "正在翻译查询…",
   "search.placeholder": "描述你在找什么...",

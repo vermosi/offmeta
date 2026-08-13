@@ -1192,6 +1192,7 @@
   "search.hint": "Gib deine Suche ein und drücke Enter oder klicke auf Suchen",
   "search.inputLabel": "Suche Magic-Karten mit natürlicher Sprache",
   "search.label": "Kartensuche",
+  "search.moreExamples": "Mehr",
   "search.phaseFetching": "Karten werden geladen",
   "search.phaseTranslating": "Anfrage wird übersetzt",
   "search.placeholder": "Beschreibe, wonach du suchst...",

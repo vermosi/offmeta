@@ -1233,6 +1233,7 @@
   "search.hint": "輸入搜尋內容並按 Enter 或點擊搜尋",
   "search.inputLabel": "用自然語言搜尋魔法風雲會卡牌",
   "search.label": "卡牌搜尋",
+  "search.moreExamples": "更多",
   "search.phaseFetching": "正在取得卡牌…",
   "search.phaseTranslating": "正在翻譯查詢…",
   "search.placeholder": "描述你在找什麼...",

@@ -1233,6 +1233,7 @@
   "search.hint": "Введите запрос и нажмите Enter или кнопку Поиск",
   "search.inputLabel": "Ищите карты Magic на естественном языке",
   "search.label": "Поиск карт",
+  "search.moreExamples": "Ещё",
   "search.phaseFetching": "Загрузка карт…",
   "search.phaseTranslating": "Перевод запроса…",
   "search.placeholder": "Опишите, что вы ищете...",

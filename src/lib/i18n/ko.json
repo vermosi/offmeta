@@ -1233,6 +1233,7 @@
   "search.hint": "검색어를 입력하고 Enter를 누르거나 검색을 클릭하세요",
   "search.inputLabel": "자연어로 매직 카드 검색",
   "search.label": "카드 검색",
+  "search.moreExamples": "더 보기",
   "search.phaseFetching": "카드 불러오는 중…",
   "search.phaseTranslating": "쿼리 번역 중…",
   "search.placeholder": "찾고 있는 것을 설명하세요...",
