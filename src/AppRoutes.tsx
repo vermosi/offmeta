@@ -15,6 +15,7 @@ const GuidesIndex = lazy(() => import('./pages/GuidesIndex'));
 const GuidePage = lazy(() => import('./pages/GuidePage'));
 const DocsIndex = lazy(() => import('./pages/DocsIndex'));
 const SyntaxCheatSheet = lazy(() => import('./pages/SyntaxCheatSheet'));
+const ApiDocs = lazy(() => import('./pages/ApiDocs'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'));
