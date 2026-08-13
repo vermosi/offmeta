@@ -127,10 +127,11 @@ export const CardItem = memo(function CardItem({
   );
 
   return (
+    <div data-testid="search-result-card" className="flex w-full flex-col gap-1">
     <div
-      data-testid="search-result-card"
       className="group relative w-full aspect-[2.5/3.5] rounded-2xl overflow-hidden bg-secondary shadow-sm ring-1 ring-border/30"
     >
+
       <button
         type="button"
         onClick={onClick}
