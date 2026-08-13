@@ -338,6 +338,30 @@ export type Database = {
         }
         Relationships: []
       }
+      job_dedupe: {
+        Row: {
+          claimed_at: string
+          decision: Json
+          dedupe_key: string
+          expires_at: string
+          hit_count: number
+        }
+        Insert: {
+          claimed_at?: string
+          decision?: Json
+          dedupe_key: string
+          expires_at: string
+          hit_count?: number
+        }
+        Update: {
+          claimed_at?: string
+          decision?: Json
+          dedupe_key?: string
+          expires_at?: string
+          hit_count?: number
+        }
+        Relationships: []
+      }
       job_locks: {
         Row: {
           expires_at: string
@@ -963,6 +987,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      claim_dedupe_key: {
+        Args: { p_decision?: Json; p_key: string; p_ttl_seconds: number }
+        Returns: Json
+      }
       cleanup_expired_cache: { Args: never; Returns: undefined }
       compute_query_quality: {
         Args: {
@@ -1156,6 +1184,7 @@ export type Database = {
         }
         Returns: number
       }
+      prune_dedupe_and_locks: { Args: never; Returns: undefined }
       prune_old_error_events: { Args: never; Returns: undefined }
       prune_old_price_snapshots: { Args: never; Returns: undefined }
       prune_old_rate_limits: { Args: never; Returns: undefined }
@@ -1167,6 +1196,10 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      record_dedupe_decision: {
+        Args: { p_decision: Json; p_key: string }
+        Returns: undefined
       }
       refresh_price_mover_stats: { Args: never; Returns: undefined }
       release_job_lock: {
