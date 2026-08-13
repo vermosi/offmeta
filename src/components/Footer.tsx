@@ -7,6 +7,15 @@ import { Logo } from '@/components/Logo';
 import { ExternalLink } from 'lucide-react';
 import { GUIDE_SUMMARIES as GUIDES } from '@/data/guide-summaries';
 import { useTranslation } from '@/lib/i18n';
+import {
+  NAV_BRAND_CLASS,
+  NAV_EYEBROW_CLASS,
+  NAV_LINK_CLASS,
+  NAV_LINK_GAP_CLASS,
+  NAV_LINK_WITH_ICON_CLASS,
+  NAV_LOGO_CLASS,
+  NAV_WORDMARK_CLASS,
+} from '@/lib/ui/nav-tokens';
 
 const MAX_MOBILE_GUIDES = 5;
 
@@ -24,16 +33,14 @@ const DATA_SOURCES = [
   { name: 'TopDeck.gg', href: 'https://topdeck.gg' },
 ] as const;
 
-const LINK_CLASS =
-  'font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground focus-ring';
+const LINK_CLASS = NAV_LINK_CLASS;
 
-const SOCIAL_LINK_CLASS =
-  'inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground focus-ring';
+const SOCIAL_LINK_CLASS = NAV_LINK_WITH_ICON_CLASS;
 
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="mb-3 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70">
+      <h3 className={`mb-3 ${NAV_EYEBROW_CLASS}`}>
         {title}
       </h3>
       <ul className="space-y-2.5">{children}</ul>
@@ -83,9 +90,9 @@ export function Footer() {
     <footer className="mt-auto border-t border-border/60 bg-transparent" role="contentinfo">
       <div className="container-main py-10">
         <div className="flex flex-col gap-8 border-b border-border/40 pb-8 md:flex-row md:items-start md:justify-between">
-          <Link to="/" className="group flex items-center gap-2.5 focus-ring" aria-label={t('header.home')}>
-            <Logo variant="gradient" className="h-7 w-7" />
-            <span className="font-display text-sm font-extrabold uppercase tracking-[0.22em] text-foreground">
+          <Link to="/" className={NAV_BRAND_CLASS} aria-label={t('header.home')}>
+            <Logo variant="gradient" className={NAV_LOGO_CLASS} />
+            <span className={NAV_WORDMARK_CLASS}>
               {t('footer.brand', 'OffMeta')}
             </span>
           </Link>
@@ -125,7 +132,7 @@ export function Footer() {
         </div>
 
         <div className="flex flex-col gap-4 border-b border-border/40 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-6">
+          <div className={`flex items-center ${NAV_LINK_GAP_CLASS}`}>
             <a
               href="https://discord.gg/9UEv6vrTD4"
               target="_blank"
@@ -152,7 +159,7 @@ export function Footer() {
             </a>
           </div>
 
-          <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+          <span className={NAV_EYEBROW_CLASS}>
             © {new Date().getFullYear()} OffMeta
           </span>
         </div>
