@@ -221,6 +221,14 @@ Deno.serve(
     );
 
     try {
+      // Un-stick rows whose repair run died before it could write an outcome.
+      await supabase
+        .from('error_events')
+        .update({ status: 'failed' })
+        .eq('status', 'repairing')
+        .lt('last_seen_at', new Date(Date.now() - 60 * 60_000).toISOString());
+
+
       const { data: rows, error } = await supabase
         .from('error_events')
         .select('id,source,error_type,message,url,status,fix_attempts,context')
