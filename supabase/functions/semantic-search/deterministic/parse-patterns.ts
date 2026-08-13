@@ -158,7 +158,7 @@ export function parseSpecialPatterns(query: string, ir: SearchIR): string {
     ir.specials.push('f:commander');
     commanderConceptPattern.lastIndex = 0;
     // Only strip "commander" from the match, keep the concept keyword
-    remaining = remaining.replace(/\bcommander\b/gi, '').trim();
+    remaining = remaining.replace(/\bcommanders?\b/gi, '').trim();
   }
 
   // If "commander" is still in the remaining text AND concept tags/oracle were
@@ -185,7 +185,7 @@ export function parseSpecialPatterns(query: string, ir: SearchIR): string {
     } else {
       ir.specials.push('is:commander');
     }
-    remaining = remaining.replace(/\b(?:as )?commander\b/gi, '').trim();
+    remaining = remaining.replace(/\b(?:as )?commanders?\b/gi, '').trim();
   }
 
   // Format parsing: "from modern", "in pioneer", "legal in standard", etc.
