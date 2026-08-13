@@ -70,6 +70,19 @@ export function IntentLandingPage({
             name: 'OffMeta',
             url: 'https://offmeta.app/',
           },
+          mainEntity: {
+            '@type': 'ItemList',
+            name: breadcrumbLabel,
+            numberOfItems: searches.length,
+            itemListElement: searches.map((entry, index) => ({
+              '@type': 'ListItem',
+              position: index + 1,
+              name: entry.title,
+              url: entry.href
+                ? `https://offmeta.app${entry.href}`
+                : `https://offmeta.app/?q=${encodeURIComponent(entry.query)}`,
+            })),
+          },
         },
       ],
     });
@@ -78,7 +91,7 @@ export function IntentLandingPage({
       cleanupMeta();
       cleanupLd();
     };
-  }, [breadcrumbLabel, description, title, url]);
+  }, [breadcrumbLabel, description, searches, title, url]);
 
   return (
     <div className="min-h-screen bg-background">
