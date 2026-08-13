@@ -147,7 +147,15 @@ export function useSavedCards() {
 
       return saved;
     },
-    onSuccess: invalidate,
+    onSuccess: (saved) => {
+      invalidate();
+      void trackEvent('card_saved', {
+        oracle_id: saved.oracleId,
+        card_name: saved.cardName,
+        collection_count: saved.collectionIds.length,
+      });
+      trackFunnelStep('card_save', { card_name: saved.cardName });
+    },
   });
 
   const removeCard = useMutation({
@@ -171,6 +179,9 @@ export function useSavedCards() {
       if (context?.previous) {
         queryClient.setQueryData(savedCardsQueryKey(userId), context.previous);
       }
+    },
+    onSuccess: (_data, oracleId) => {
+      void trackEvent('card_unsaved', { oracle_id: oracleId });
     },
     onSettled: invalidate,
   });
