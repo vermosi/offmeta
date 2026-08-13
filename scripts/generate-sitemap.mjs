@@ -283,6 +283,18 @@ for (const slug of GUIDE_SLUGS) {
   pushUnique(`/guides/${slug}`, null);
 }
 
+const landingPaths = await readIndexableLandingPaths();
+if (landingPaths.length < MIN_EXPECTED_LANDING_PAGES) {
+  console.error(
+    `[sitemap] Only ${landingPaths.length} indexable landing pages found ` +
+      `(expected >= ${MIN_EXPECTED_LANDING_PAGES}) — refusing to drop landing coverage.`,
+  );
+  process.exit(1);
+}
+for (const path of landingPaths) {
+  pushUnique(path, null);
+}
+
 for (const row of curated) {
   pushUnique(`/search/${row.slug}`, toLastmodDate(row.updated_at));
 }
@@ -329,7 +341,8 @@ await fs.writeFile(OUTPUT, xml, 'utf8');
 console.log(
   `[sitemap] Wrote ${seen.size} URLs ` +
     `(cards=${cards.length}, search=${curated.length}, ai=${seoPages.length}, ` +
-    `guides=${GUIDE_SLUGS.length}, static=${STATIC_PATHS.length}, ` +
+    `guides=${GUIDE_SLUGS.length}, landing=${landingPaths.length}, ` +
+    `static=${STATIC_PATHS.length}, ` +
     `supabase=${HAS_SUPABASE ? 'on' : 'off'}).`,
 );
 
