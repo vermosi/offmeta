@@ -107,6 +107,7 @@ describe('UnifiedSearchBar', () => {
     expect(
       screen.getByText('cards that protect my commander'),
     ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /more/i }));
     expect(screen.getByText('mana rocks that cost 2')).toBeInTheDocument();
   });
 
