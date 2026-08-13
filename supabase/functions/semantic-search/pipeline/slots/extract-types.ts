@@ -4,6 +4,7 @@
  */
 
 import { CARD_TYPES } from '../../shared-mappings.ts';
+import { SCRYFALL_SUBTYPE_SLUGS } from '../../../_shared/subtype-vocabulary.ts';
 import { COMMON_SUBTYPES } from './constants.ts';
 
 /**
@@ -114,6 +115,42 @@ export function extractTypes(query: string): {
   return { types: { include, includeOr, exclude }, remaining };
 }
 
+/**
+ * Words that look like subtypes but are far more often used as plain English
+ * or as MTG mechanics vocabulary. Resolving these to `t:` hijacks the query.
+ */
+const SUBTYPE_STOPWORDS = new Set([
+  'ally',
+  'assembly',
+  'construct',
+  'guest',
+  'mount',
+  'noble',
+  'nomad',
+  'processor',
+  'scout',
+  'servo',
+  'shaman',
+  'spawn',
+  'sponge',
+  'time',
+  'townsfolk',
+  'unicorn',
+  'volver',
+  'wall',
+  'ward',
+  'worker',
+]);
+
+/** Naive English singularization limited to subtype-shaped nouns. */
+function singularizeSubtype(word: string): string {
+  if (/ves$/i.test(word)) return word.replace(/ves$/i, 'f');
+  if (/ies$/i.test(word)) return word.replace(/ies$/i, 'y');
+  if (/(ch|sh|ss|x|z)es$/i.test(word)) return word.replace(/es$/i, '');
+  if (/s$/i.test(word) && !/ss$/i.test(word)) return word.replace(/s$/i, '');
+  return word;
+}
+
 export function extractSubtypes(query: string): {
   subtypes: string[];
   remaining: string;
@@ -121,16 +158,37 @@ export function extractSubtypes(query: string): {
   let remaining = query;
   const subtypes: string[] = [];
 
+  const addSubtype = (value: string) => {
+    const normalized = value.toLowerCase();
+    if (!subtypes.includes(normalized)) subtypes.push(normalized);
+  };
+
   for (const subtype of COMMON_SUBTYPES) {
     const pattern = new RegExp(`\\b${subtype}\\b`, 'gi');
     if (pattern.test(remaining)) {
-      const singular = subtype.replace(/s$/, '').replace(/ves$/, 'f');
-      if (!subtypes.includes(singular)) {
-        subtypes.push(singular);
-      }
+      addSubtype(subtype.replace(/s$/, '').replace(/ves$/, 'f'));
       remaining = remaining.replace(pattern, '').trim();
     }
   }
 
-  return { subtypes, remaining };
+  // Fall back to the full generated Scryfall subtype catalog so uncommon
+  // tribes ("monkey", "ape", "phyrexian") aren't silently dropped.
+  const tokens = remaining.match(/[a-z][a-z'-]*/gi) ?? [];
+  for (const token of tokens) {
+    const lower = token.toLowerCase();
+    if (SUBTYPE_STOPWORDS.has(lower)) continue;
+    const singular = singularizeSubtype(lower);
+    if (SUBTYPE_STOPWORDS.has(singular)) continue;
+    const match = SCRYFALL_SUBTYPE_SLUGS.has(lower)
+      ? lower
+      : SCRYFALL_SUBTYPE_SLUGS.has(singular)
+        ? singular
+        : null;
+    if (!match) continue;
+    addSubtype(match);
+    remaining = remaining.replace(new RegExp(`\\b${token}\\b`, 'gi'), '').trim();
+  }
+
+  return { subtypes, remaining: remaining.replace(/\s{2,}/g, ' ').trim() };
 }
+

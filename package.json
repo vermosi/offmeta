@@ -15,10 +15,11 @@
     "typecheck": "tsc --noEmit",
     "typecheck:analytics": "tsc --noEmit -p tsconfig.analytics.json",
     "check:mtg-copy": "node scripts/check-mtg-copy.mjs",
+    "check:design-tokens": "node scripts/check-design-tokens.mjs",
     "check:bundle-size": "node scripts/check-bundle-size.mjs",
     "backfill:mtgjson": "node scripts/backfill-mtgjson-price-history.mjs",
     "test:watch": "vitest",
-    "check": "npm run lint && npm run typecheck && npm run test",
+    "check": "npm run lint && npm run typecheck && npm run check:design-tokens && npm run test",
     "prepare": "husky install",
     "prebuild": "node scripts/generate-sitemap.mjs",
     "postbuild": "node scripts/prerender-cards.mjs"
