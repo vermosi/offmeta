@@ -127,10 +127,11 @@ export const CardItem = memo(function CardItem({
   );
 
   return (
+    <div data-testid="search-result-card" className="flex w-full flex-col gap-1">
     <div
-      data-testid="search-result-card"
       className="group relative w-full aspect-[2.5/3.5] rounded-2xl overflow-hidden bg-secondary shadow-sm ring-1 ring-border/30"
     >
+
       <button
         type="button"
         onClick={onClick}
@@ -160,72 +161,7 @@ export const CardItem = memo(function CardItem({
         />
       )}
 
-      {/* Top-left status stack — save button is placed here so it never
-          covers the mana cost printed in the top-right of the card art. */}
-      <div className="absolute top-1.5 left-1.5 z-20 flex flex-col gap-1.5">
-        {isOwned && (
-          <div
-            className="h-5 w-5 rounded-full bg-success/90 flex items-center justify-center shadow-sm"
-            aria-label={t('card.ownedAria', 'Owned')}
-          >
-            <svg
-              className="h-3 w-3 text-success-foreground"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-        )}
-        <SaveCardButton card={toSavedCardInput(card)} />
-      </div>
 
-      {/* WHY IT MATCHES — moved to the bottom-left so it never covers the
-          mana cost printed in the top-right of the card art. */}
-
-      {whyReport && (
-        <div className="absolute bottom-8 left-1.5 z-30 sm:bottom-9">
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-                className="border border-contrast/40 bg-overlay/70 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-contrast backdrop-blur-sm transition-colors hover:border-contrast hover:bg-overlay/90 focus-visible:outline-none focus-visible:border-contrast"
-                aria-label={
-                  t(
-                    'cardItem.whyBadgeAria',
-                    '{count} reasons this card matches your search. Activate to view details.',
-                  ).replace('{count}', String(whyReport.reasons.length)) +
-                  ` ${whyReport.reasons.map((r) => r.label).join('; ')}`
-                }
-              >
-                <span aria-hidden="true">{t('cardItem.whyBadge', 'why')}</span>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent
-              side="top"
-              align="start"
-              sideOffset={6}
-
-              className="w-64 rounded-none border-border p-3"
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-              aria-label={t('whyItMatches.title', 'Why it matches')}
-            >
-              <WhyItMatches
-                report={whyReport}
-                onRefineWithMatch={onRefineWithMatch}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      )}
 
       {/* Info overlay — always visible on mobile, hover on desktop */}
       <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-overlay/90 via-overlay/55 to-transparent pt-6 sm:pt-8 pb-1.5 sm:pb-2 px-2 sm:px-2.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity duration-200 pointer-events-none">
@@ -281,5 +217,62 @@ export const CardItem = memo(function CardItem({
         )}
       </div>
     </div>
+
+    {/* Footer row — status/save/why live below the art so nothing covers
+        the card image or its printed mana cost. */}
+    <div className="flex min-h-7 items-center gap-1.5">
+      {isOwned && (
+        <span
+          className="h-5 w-5 rounded-full bg-success/90 flex items-center justify-center"
+          aria-label={t('card.ownedAria', 'Owned')}
+        >
+          <svg
+            className="h-3 w-3 text-success-foreground"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </span>
+      )}
+      <SaveCardButton card={toSavedCardInput(card)} />
+      {whyReport && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="ml-auto border border-border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-foreground hover:text-foreground focus-visible:outline-none focus-visible:border-foreground"
+              aria-label={
+                t(
+                  'cardItem.whyBadgeAria',
+                  '{count} reasons this card matches your search. Activate to view details.',
+                ).replace('{count}', String(whyReport.reasons.length)) +
+                ` ${whyReport.reasons.map((r) => r.label).join('; ')}`
+              }
+            >
+              <span aria-hidden="true">{t('cardItem.whyBadge', 'why')}</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="top"
+            align="end"
+            sideOffset={6}
+            className="w-64 rounded-none border-border p-3"
+            aria-label={t('whyItMatches.title', 'Why it matches')}
+          >
+            <WhyItMatches
+              report={whyReport}
+              onRefineWithMatch={onRefineWithMatch}
+            />
+          </PopoverContent>
+        </Popover>
+      )}
+    </div>
+    </div>
+
   );
 });
