@@ -11,115 +11,117 @@
 
 @layer base {
   :root {
-    /* 
-     * LIGHT MODE - Mystic oracle theme
-     * Deep purples with vibrant gradients
+    /*
+     * LIGHT MODE — Editorial paper & ink
+     * Mirrors the dark "Midnight Arcane" system: neutral indigo-tinted paper,
+     * ink-black type, one restrained violet accent.
      */
 
     /* Surfaces */
-    --background: 270 30% 98%;
-    --foreground: 270 50% 15%;
+    --background: 250 24% 97%;
+    --foreground: 250 40% 10%;
 
-    --card: 270 30% 100%;
-    --card-foreground: 270 50% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 250 40% 10%;
 
-    --popover: 270 30% 100%;
-    --popover-foreground: 270 50% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 250 40% 10%;
 
-    /* Primary - Deep purple */
-    --primary: 270 50% 25%;
-    --primary-foreground: 270 30% 98%;
+    /* Primary — ink (inverse of dark, where primary is near-white) */
+    --primary: 250 40% 12%;
+    --primary-foreground: 250 24% 98%;
 
-    /* Secondary - Soft purple */
-    --secondary: 270 25% 94%;
-    --secondary-foreground: 270 50% 20%;
+    /* Secondary — light stone */
+    --secondary: 250 18% 93%;
+    --secondary-foreground: 250 35% 18%;
 
-    /* Muted - Light purple gray */
-    --muted: 270 20% 94%;
-    --muted-foreground: 270 15% 45%;
+    /* Muted — paper haze */
+    --muted: 250 18% 94%;
+    --muted-foreground: 250 12% 38%;
 
-    /* Accent - Magenta */
-    --accent: 300 85% 55%;
+    /* Accent — deep violet (the signature, readable on paper) */
+    --accent: 265 62% 44%;
     --accent-foreground: 0 0% 100%;
 
-    /* Gradient colors */
-    --gradient-start: 300 85% 55%;
-    --gradient-end: 195 90% 55%;
+    /* Gradient — violet → teal, restrained */
+    --gradient-start: 265 62% 48%;
+    --gradient-end: 195 70% 42%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 46%;
     --destructive-foreground: 0 0% 100%;
 
     /* Semantic status tokens */
-    --success: 142 71% 45%;
+    --success: 152 62% 32%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 32 90% 38%;
     --warning-foreground: 0 0% 100%;
-    --info: 205 90% 50%;
+    --info: 205 82% 38%;
     --info-foreground: 0 0% 100%;
 
     /* MTG color identity tokens */
-    --mtg-white: 45 93% 88%;
-    --mtg-white-foreground: 35 70% 22%;
-    --mtg-blue: 208 90% 66%;
-    --mtg-blue-foreground: 215 70% 18%;
-    --mtg-black: 240 6% 28%;
-    --mtg-black-foreground: 0 0% 96%;
-    --mtg-red: 0 84% 60%;
+    --mtg-white: 45 80% 74%;
+    --mtg-white-foreground: 35 70% 18%;
+    --mtg-blue: 208 78% 44%;
+    --mtg-blue-foreground: 0 0% 100%;
+    --mtg-black: 250 12% 32%;
+    --mtg-black-foreground: 0 0% 98%;
+    --mtg-red: 0 68% 46%;
     --mtg-red-foreground: 0 0% 100%;
-    --mtg-green: 142 71% 45%;
+    --mtg-green: 142 55% 30%;
     --mtg-green-foreground: 0 0% 100%;
-    --mtg-colorless: 240 5% 82%;
-    --mtg-colorless-foreground: 240 6% 24%;
+    --mtg-colorless: 250 8% 62%;
+    --mtg-colorless-foreground: 250 15% 16%;
 
     /* Domain data visualization tokens */
-    --rarity-common: 270 20% 90%;
-    --rarity-common-foreground: 270 15% 45%;
-    --rarity-uncommon: 220 12% 64%;
-    --rarity-uncommon-foreground: 220 18% 28%;
-    --rarity-rare: 38 92% 55%;
-    --rarity-rare-foreground: 38 90% 20%;
-    --rarity-mythic: 24 95% 58%;
-    --rarity-mythic-foreground: 24 90% 18%;
-    --analytics-local: 152 60% 45%;
-    --analytics-cache: 205 90% 50%;
-    --analytics-scryfall: 38 92% 50%;
-    --deck-creature: 142 71% 45%;
-    --deck-instant: 205 90% 58%;
-    --deck-sorcery: 0 84% 65%;
-    --deck-artifact: 240 5% 64%;
-    --deck-enchantment: 280 75% 64%;
-    --deck-planeswalker: 38 92% 58%;
-    --deck-land: 35 70% 38%;
-    --deck-battle: 24 95% 58%;
-    --overlay: 270 45% 6%;
-    --contrast: 0 0% 100%;
-    --contrast-foreground: 270 45% 6%;
+    --rarity-common: 250 18% 90%;
+    --rarity-common-foreground: 250 12% 34%;
+    --rarity-uncommon: 220 10% 52%;
+    --rarity-uncommon-foreground: 0 0% 100%;
+    --rarity-rare: 38 88% 40%;
+    --rarity-rare-foreground: 0 0% 100%;
+    --rarity-mythic: 24 88% 44%;
+    --rarity-mythic-foreground: 0 0% 100%;
+    --analytics-local: 152 58% 32%;
+    --analytics-cache: 205 82% 38%;
+    --analytics-scryfall: 32 90% 38%;
+    --deck-creature: 142 55% 32%;
+    --deck-instant: 205 80% 40%;
+    --deck-sorcery: 0 68% 48%;
+    --deck-artifact: 250 8% 48%;
+    --deck-enchantment: 280 55% 46%;
+    --deck-planeswalker: 32 88% 40%;
+    --deck-land: 35 60% 32%;
+    --deck-battle: 24 85% 44%;
+    --overlay: 250 40% 12%;
+    --contrast: 250 40% 10%;
+    --contrast-foreground: 0 0% 100%;
 
     /* Borders */
-    --border: 270 20% 88%;
-    --input: 270 20% 88%;
-    --ring: 300 85% 55%;
+    --border: 250 16% 86%;
+    --input: 250 16% 86%;
+    --ring: 265 62% 44%;
 
     /* Radius */
     --radius: 0.625rem;
 
-    /* Brand gradient */
-    --brand: 300 85% 55%;
+    /* Brand */
+    --brand: 265 62% 44%;
     --brand-foreground: 0 0% 100%;
 
-    /* Shadows - Purple tinted */
-    --shadow-sm: 0 1px 2px 0 hsl(270 50% 20% / 0.05);
+    /* Shadows — neutral indigo depth */
+    --shadow-sm: 0 1px 2px 0 hsl(250 40% 12% / 0.06);
     --shadow-md:
-      0 4px 6px -1px hsl(270 50% 20% / 0.08),
-      0 2px 4px -2px hsl(270 50% 20% / 0.05);
+      0 4px 6px -1px hsl(250 40% 12% / 0.08),
+      0 2px 4px -2px hsl(250 40% 12% / 0.05);
     --shadow-lg:
-      0 10px 15px -3px hsl(270 50% 20% / 0.1),
-      0 4px 6px -4px hsl(270 50% 20% / 0.05);
+      0 10px 15px -3px hsl(250 40% 12% / 0.1),
+      0 4px 6px -4px hsl(250 40% 12% / 0.05);
     --shadow-xl:
-      0 20px 25px -5px hsl(270 50% 20% / 0.12),
-      0 8px 10px -6px hsl(270 50% 20% / 0.05);
-    --shadow-hover: 0 20px 40px -12px hsl(300 85% 55% / 0.25);
+      0 20px 25px -5px hsl(250 40% 12% / 0.12),
+      0 8px 10px -6px hsl(250 40% 12% / 0.06);
+    --shadow-hover: 0 20px 40px -12px hsl(250 40% 12% / 0.18);
   }
+
 
   .dark {
     /* 
