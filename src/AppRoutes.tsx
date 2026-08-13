@@ -18,6 +18,9 @@ const SyntaxCheatSheet = lazy(() => import('./pages/SyntaxCheatSheet'));
 const ApiDocs = lazy(() => import('./pages/ApiDocs'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
+const SavedPage = lazy(() => import('./pages/SavedPage'));
+const HistoryPage = lazy(() => import('./pages/HistoryPage'));
+
 const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'));
 const AdminConsole = lazy(() => import('./pages/AdminConsole'));
 const AdminCuratedSearches = lazy(() => import('./pages/AdminCuratedSearches'));
@@ -81,6 +84,9 @@ export default function AppRoutes() {
               element={withFullApp(<ResetPassword />)}
             />
             <Route path="/profile" element={withFullApp(<ProfileSettings />)} />
+            <Route path="/saved" element={withFullApp(<SavedPage />)} />
+            <Route path="/history" element={withFullApp(<HistoryPage />)} />
+
             <Route path="/admin" element={withFullApp(<AdminConsole />)} />
             <Route path="/admin/:area" element={withFullApp(<AdminConsole />)} />
             <Route

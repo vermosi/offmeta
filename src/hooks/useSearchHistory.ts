@@ -1,9 +1,13 @@
 /**
  * Hook for managing search history in localStorage.
+ *
+ * Signed-in users additionally get the same history mirrored to their account
+ * so it follows them across devices (see lib/account/searchHistorySync).
  */
 
 import { useState, useCallback } from 'react';
 import { CLIENT_CONFIG } from '@/lib/config';
+import { recordSearchHistory } from '@/lib/account/searchHistorySync';
 
 const SEARCH_HISTORY_KEY = 'offmeta_search_history';
 
@@ -20,6 +24,7 @@ export function useSearchHistory() {
 
   const addToHistory = useCallback((query: string) => {
     if (!query.trim()) return;
+    void recordSearchHistory(query);
     setHistory((prev) => {
       const filtered = prev.filter(
         (q) => q.toLowerCase() !== query.toLowerCase(),
@@ -33,6 +38,7 @@ export function useSearchHistory() {
       return updated;
     });
   }, []);
+
 
   const removeFromHistory = useCallback((queryToRemove: string) => {
     setHistory((prev) => {

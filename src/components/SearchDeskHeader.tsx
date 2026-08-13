@@ -14,6 +14,7 @@
 import { useState, type ReactNode } from 'react';
 import { Check, Copy, ExternalLink } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { SaveSearchButton } from '@/components/SaveSearchButton';
 import { cn } from '@/lib/core/utils';
 import { intentFromScryfallQuery } from '@/lib/search/whyItMatches';
 import type { SearchIntent } from '@/types/search';
@@ -166,6 +167,14 @@ export function SearchDeskHeader({
           >
             {originalQuery || query}
           </h1>
+
+          <div className="mt-4">
+            <SaveSearchButton
+              naturalQuery={originalQuery || query}
+              scryfallQuery={query}
+              resultCount={totalCards}
+            />
+          </div>
 
           {constraints.length > 0 && (
             <>

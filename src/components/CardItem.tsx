@@ -35,6 +35,9 @@ import {
 
 import { WhyItMatches } from '@/components/WhyItMatches';
 import type { WhyItMatches as WhyItMatchesReport } from '@/lib/search/whyItMatches';
+import { SaveCardButton } from '@/components/SaveCardButton';
+import { cn } from '@/lib/core/utils';
+import { toSavedCardInput } from '@/lib/account';
 
 interface CardItemProps {
   card: ScryfallCard;
@@ -177,6 +180,16 @@ export const CardItem = memo(function CardItem({
           </svg>
         </div>
       )}
+
+      {/* SAVE — offset when the why badge occupies the top-right corner */}
+      <div
+        className={cn(
+          'absolute top-1.5 z-20',
+          whyReport ? 'right-12' : 'right-1.5',
+        )}
+      >
+        <SaveCardButton card={toSavedCardInput(card)} />
+      </div>
 
       {/* WHY IT MATCHES — editorial notation tag opening the full report */}
       {whyReport && (

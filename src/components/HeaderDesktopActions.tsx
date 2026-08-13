@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { LogOut, User, Settings, Shield } from 'lucide-react';
+import { LogOut, User, Settings, Shield, Bookmark, Clock } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import {
@@ -59,6 +59,14 @@ export function HeaderDesktopActions({
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             </div>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate('/saved')}>
+              <Bookmark className="h-4 w-4 mr-2" />
+              {t('nav.saved', 'Saved')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/history')}>
+              <Clock className="h-4 w-4 mr-2" />
+              {t('nav.history', 'History')}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/profile')}>
               <Settings className="h-4 w-4 mr-2" />
               {t('nav.profileSettings')}

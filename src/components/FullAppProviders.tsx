@@ -12,6 +12,7 @@ import { AuthProvider } from '@/components/AuthProvider';
 import AppInitializer from '@/components/AppInitializer';
 import { RouteTracker } from '@/components/RouteTracker';
 import { ScrollToTopOnNavigate } from '@/components/ScrollToTopOnNavigate';
+import { PendingSaveReplay } from '@/components/PendingSaveReplay';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,6 +38,7 @@ export default function FullAppProviders({ children }: { children: ReactNode }) 
             <AppInitializer />
             <RouteTracker />
             <ScrollToTopOnNavigate />
+            <PendingSaveReplay />
           </Suspense>
           {children}
         </TooltipProvider>
