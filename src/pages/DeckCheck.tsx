@@ -65,6 +65,7 @@ export default function DeckCheck() {
   const [analyzing, setAnalyzing] = useState(false);
   const [profile, setProfile] = useState<DeckProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { trackEvent } = useAnalytics();
 
   useEffect(() => {
     const cleanup = applySeoMeta({
@@ -78,7 +79,7 @@ export default function DeckCheck() {
 
   const parsed = useMemo(() => parseDecklist(raw), [raw]);
 
-  const runAnalysis = async (text: string) => {
+  const runAnalysis = async (text: string, source: 'paste' | 'moxfield' = 'paste') => {
     const deck = parseDecklist(text);
     if (deck.cards.length === 0) {
       setError('No cards found in that list.');
@@ -88,7 +89,14 @@ export default function DeckCheck() {
     setError(null);
     try {
       const resolved = await resolveDeckCards(deck.cards);
-      setProfile(analyzeDeck(resolved));
+      const analysed = analyzeDeck(resolved);
+      setProfile(analysed);
+      void trackEvent('deck_check_run', {
+        source,
+        card_count: deck.cards.length,
+        resolved_count: resolved.length,
+      });
+      trackFunnelStep('deck_check', { source, card_count: deck.cards.length });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Could not analyse that decklist.',
