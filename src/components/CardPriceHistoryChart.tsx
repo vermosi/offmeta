@@ -202,11 +202,11 @@ export function CardPriceHistoryChart({
               className={cn(
                 'flex flex-col items-start gap-0.5 rounded-lg border px-2 py-1.5 text-left transition-colors min-h-[44px]',
                 isHidden
-                  ? 'border-border/40 opacity-50 hover:opacity-80'
+                  ? 'border-dashed border-border/60'
                   : 'border-border/70 bg-muted/40',
               )}
             >
-              <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-foreground">
                 <span
                   aria-hidden="true"
                   className="h-0.5 w-3 rounded-full"

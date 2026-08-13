@@ -802,7 +802,7 @@ const Index = () => {
                 </Suspense>
               </div>
             )}
-        </main>
+        
 
         {/* Below the fold: the argument for OffMeta, kept after the cards. */}
         {!hasSearched && (
@@ -889,6 +889,7 @@ const Index = () => {
             <ScryfallComparison onTrySearch={handleTryExample} />
           </Suspense>
         )}
+        </main>
 
         <Suspense fallback={null}>
           <Footer />

@@ -40,9 +40,9 @@ const SOCIAL_LINK_CLASS = NAV_LINK_WITH_ICON_CLASS;
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className={`mb-3 ${NAV_EYEBROW_CLASS}`}>
+      <h2 className={`mb-3 ${NAV_EYEBROW_CLASS}`}>
         {title}
-      </h3>
+      </h2>
       <ul className="space-y-2.5">{children}</ul>
     </div>
   );
