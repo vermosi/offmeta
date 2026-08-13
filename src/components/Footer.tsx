@@ -31,12 +31,24 @@ const BUILT_WITH = [
   { name: 'Lovable', href: 'https://lovable.dev' },
 ] as const;
 
+function handleExternalClick(
+  e: React.MouseEvent<HTMLAnchorElement>,
+  href: string,
+) {
+  if (typeof window.gtagSendEvent === 'function') {
+    e.preventDefault();
+    window.gtagSendEvent(href);
+    return false;
+  }
+}
+
 function ExternalAnchor({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={(e) => handleExternalClick(e, href)}
       className="inline-flex items-center gap-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
     >
       {children}
@@ -44,6 +56,7 @@ function ExternalAnchor({ href, children }: { href: string; children: React.Reac
     </a>
   );
 }
+
 
 export function Footer() {
   const { t } = useTranslation();
