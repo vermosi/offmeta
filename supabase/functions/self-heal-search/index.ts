@@ -280,6 +280,21 @@ async function repairCandidate(
       continue;
     }
 
+    // Reject hallucinated otag: values before spending a Scryfall round-trip.
+    const otagCheck = validateOtags(suggestion.scryfallSyntax);
+    if (!otagCheck.valid) {
+      priorAttempts.push({
+        syntax: suggestion.scryfallSyntax,
+        reason: otagCheck.reason ?? 'invalid oracle tag',
+      });
+      logger.warn('invalid_otag_rejected', {
+        query: candidate.query,
+        syntax: suggestion.scryfallSyntax,
+        invalidTags: otagCheck.unknownTags,
+      });
+      continue;
+    }
+
     await sleep(SCRYFALL_DELAY_MS);
     const check = await checkScryfall(suggestion.scryfallSyntax);
     const threshold = minResultsFor(suggestion.scryfallSyntax);
