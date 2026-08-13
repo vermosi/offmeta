@@ -57,10 +57,14 @@ interface FixOutcome {
   detail?: string;
 }
 
-async function invokeFunction(name: string, body: unknown): Promise<FixOutcome> {
-  if (!REPAIRABLE_FUNCTIONS.has(name)) {
-    return { action: `invoke:${name}`, ok: false, detail: 'function_not_allowed' };
-  }
+/**
+ * Repair invocations already made during the current run, keyed by function
+ * name. Ten sitemap rows must not fire ten sitemap regenerations — every
+ * repair here is whole-pipeline, so one call per run per function is enough.
+ */
+let runInvocations = new Map<string, Promise<FixOutcome>>();
+
+async function invokeFunctionUncached(name: string, body: unknown): Promise<FixOutcome> {
   const url = Deno.env.get('SUPABASE_URL');
   const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!url || !key) {
@@ -82,6 +86,21 @@ async function invokeFunction(name: string, body: unknown): Promise<FixOutcome> 
     return { action: `invoke:${name}`, ok: false, detail: String(err).slice(0, 300) };
   }
 }
+
+async function invokeFunction(name: string, body: unknown): Promise<FixOutcome> {
+  if (!REPAIRABLE_FUNCTIONS.has(name)) {
+    return { action: `invoke:${name}`, ok: false, detail: 'function_not_allowed' };
+  }
+  const existing = runInvocations.get(name);
+  if (existing) {
+    const outcome = await existing;
+    return { ...outcome, detail: `deduped_in_run: ${outcome.detail ?? ''}`.trim() };
+  }
+  const pending = invokeFunctionUncached(name, body);
+  runInvocations.set(name, pending);
+  return await pending;
+}
+
 
 /** Verify the live sitemap is servable and non-trivial. */
 async function verifySitemap(): Promise<FixOutcome> {
