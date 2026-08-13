@@ -36,7 +36,6 @@ import {
 import { WhyItMatches } from '@/components/WhyItMatches';
 import type { WhyItMatches as WhyItMatchesReport } from '@/lib/search/whyItMatches';
 import { SaveCardButton } from '@/components/SaveCardButton';
-import { cn } from '@/lib/core/utils';
 import { toSavedCardInput } from '@/lib/account';
 
 interface CardItemProps {
