@@ -589,6 +589,24 @@ export type Database = {
           },
         ]
       }
+      semrush_cache: {
+        Row: {
+          cache_key: string
+          fetched_at: string
+          payload: Json
+        }
+        Insert: {
+          cache_key: string
+          fetched_at?: string
+          payload: Json
+        }
+        Update: {
+          cache_key?: string
+          fetched_at?: string
+          payload?: Json
+        }
+        Relationships: []
+      }
       seo_health_checks: {
         Row: {
           check_type: string
