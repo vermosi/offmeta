@@ -35,6 +35,7 @@ import {
   sleep,
   type RepairSuggestion,
 } from '../_shared/searchRepair.ts';
+import { validateOtags } from '../_shared/otagValidation.ts';
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, LOVABLE_API_KEY } =
   validateEnv(['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'LOVABLE_API_KEY']);
