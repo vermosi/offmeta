@@ -23,6 +23,29 @@ User-agent: PerplexityBot
 Allow: /ai/
 Disallow: /
 
+# Answer-engine / on-demand fetchers. These fetch a page only when a user asks
+# about it, so they stay allowed (they are not training scrapers).
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin
+Disallow: /profile
+Disallow: /reset-password
+Disallow: /user/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin
+Disallow: /profile
+Disallow: /reset-password
+Disallow: /user/
+
+# Training crawlers, blocked outright.
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
 User-agent: CCBot
 Disallow: /
 
