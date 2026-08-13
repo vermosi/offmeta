@@ -415,6 +415,108 @@ export type Database = {
         }
         Relationships: []
       }
+      ontology_approaches: {
+        Row: {
+          approach_key: string
+          created_at: string
+          description: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          approach_key: string
+          created_at?: string
+          description: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          approach_key?: string
+          created_at?: string
+          description?: string
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      ontology_edges: {
+        Row: {
+          created_at: string
+          from_tag: string
+          id: string
+          note: string | null
+          relation: string
+          to_tag: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          from_tag: string
+          id?: string
+          note?: string | null
+          relation: string
+          to_tag: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          from_tag?: string
+          id?: string
+          note?: string | null
+          relation?: string
+          to_tag?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ontology_edges_from_tag_fkey"
+            columns: ["from_tag"]
+            isOneToOne: false
+            referencedRelation: "ontology_tags"
+            referencedColumns: ["tag_key"]
+          },
+          {
+            foreignKeyName: "ontology_edges_to_tag_fkey"
+            columns: ["to_tag"]
+            isOneToOne: false
+            referencedRelation: "ontology_tags"
+            referencedColumns: ["tag_key"]
+          },
+        ]
+      }
+      ontology_tag_approaches: {
+        Row: {
+          approach_key: string
+          tag_key: string
+          weight: number
+        }
+        Insert: {
+          approach_key: string
+          tag_key: string
+          weight?: number
+        }
+        Update: {
+          approach_key?: string
+          tag_key?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ontology_tag_approaches_approach_key_fkey"
+            columns: ["approach_key"]
+            isOneToOne: false
+            referencedRelation: "ontology_approaches"
+            referencedColumns: ["approach_key"]
+          },
+          {
+            foreignKeyName: "ontology_tag_approaches_tag_key_fkey"
+            columns: ["tag_key"]
+            isOneToOne: false
+            referencedRelation: "ontology_tags"
+            referencedColumns: ["tag_key"]
+          },
+        ]
+      }
       ontology_tags: {
         Row: {
           created_at: string
@@ -1154,6 +1256,20 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      expand_ontology_concepts: {
+        Args: {
+          p_max_depth?: number
+          p_min_weight?: number
+          p_tag_keys: string[]
+        }
+        Returns: {
+          depth: number
+          dimension: string
+          label: string
+          tag_key: string
+          weight: number
+        }[]
+      }
       get_ai_usage_stats: { Args: { days_back?: number }; Returns: Json }
       get_card_ontology: {
         Args: { p_oracle_ids: string[] }
@@ -1279,6 +1395,17 @@ export type Database = {
       get_search_analytics: {
         Args: { max_low_confidence?: number; since_date: string }
         Returns: Json
+      }
+      get_search_approaches: {
+        Args: { p_examples_per_approach?: number; p_oracle_ids: string[] }
+        Returns: {
+          approach_key: string
+          card_count: number
+          concepts: string[]
+          description: string
+          examples: Json
+          label: string
+        }[]
       }
       get_search_failure_breakdown: {
         Args: { since_date: string; until_date?: string }
