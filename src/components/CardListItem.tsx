@@ -24,7 +24,7 @@ import type { WhyItMatches as WhyItMatchesReport } from '@/lib/search/whyItMatch
 interface CardListItemProps {
   card: ScryfallCard;
   onClick: () => void;
-  onSearchSimilar?: (cardName: string) => void;
+  onSearchSimilar?: (query: string) => void;
   tabIndex?: number;
   isOwned?: boolean;
   sparklineData?: SparklinePoint[];
@@ -153,7 +153,7 @@ export const CardListItem = memo(function CardListItem({
           type="button"
           onClick={(event) => {
             event.stopPropagation();
-            onSearchSimilar(card.name);
+            onSearchSimilar(`cards similar to ${card.name}`);
           }}
         className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-background/70 px-2 py-1 text-[10px] font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/10"
         aria-label={t('card.searchSimilarAria', 'Search cards similar to {name}', { name: displayName })}

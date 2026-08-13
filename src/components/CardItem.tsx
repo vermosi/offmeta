@@ -31,7 +31,7 @@ import {
 interface CardItemProps {
   card: ScryfallCard;
   onClick: () => void;
-  onSearchSimilar?: (cardName: string) => void;
+  onSearchSimilar?: (query: string) => void;
   tabIndex?: number;
   isOwned?: boolean;
   sparklineData?: SparklinePoint[];
@@ -204,7 +204,7 @@ export const CardItem = memo(function CardItem({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onSearchSimilar(card.name);
+              onSearchSimilar(`cards similar to ${card.name}`);
             }}
             className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/70 px-2.5 py-1 text-[10px] font-medium text-foreground pointer-events-auto transition-colors hover:border-accent/40 hover:bg-accent/10"
             aria-label={t('card.searchSimilarAria', 'Search cards similar to {name}', { name: displayName })}
