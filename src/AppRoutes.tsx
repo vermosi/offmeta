@@ -36,6 +36,8 @@ const AdminSeoPages = lazy(() => import('./pages/AdminSeoPages'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const SearchExperience = lazy(() => import('./pages/SearchExperience'));
 const OAuthConsent = lazy(() => import('./pages/OAuthConsent'));
+const LandingRoute = lazy(() => import('./pages/LandingRoute'));
+
 
 const routeFallback = <div className="min-h-screen bg-background" />;
 // Per-route ErrorBoundary so a lazy-chunk load failure or render crash on one
