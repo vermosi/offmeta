@@ -18,9 +18,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { withLogging } from '../_shared/logger.ts';
 import { requireServiceOrPipelineKey } from '../_shared/auth.ts';
+import { acquireJobLock, lockBusyResponse } from '../_shared/jobLock.ts';
 
+const JOB_NAME = 'error-auto-fix';
+/** Above the worst-case run time so a slow run is never lapped by cron. */
+const LOCK_TTL_SECONDS = 600;
 const MAX_ROWS_PER_RUN = 15;
 const MAX_FIX_ATTEMPTS = 3;
+/** Backoff floor between two repair attempts on the same issue. */
+const BASE_BACKOFF_MINUTES = 15;
+/** Rows with no repair strategy are parked rather than re-read every cycle. */
+const NO_STRATEGY_BACKOFF_MINUTES = 24 * 60;
 
 /** Edge functions this job is allowed to invoke as a repair action. */
 const REPAIRABLE_FUNCTIONS = new Set([
