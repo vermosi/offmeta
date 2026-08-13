@@ -28,8 +28,11 @@ declare global {
       command: GtagCommand,
       ...args: (string | number | Date | Record<string, unknown>)[]
     ) => void;
+    /** Google Ads delayed-navigation helper (injected on the homepage). */
+    gtagSendEvent?: (url: string) => boolean | void;
   }
 }
+
 
 let gaInitialized = false;
 
