@@ -226,7 +226,7 @@ Deno.serve(
         .from('error_events')
         .update({ status: 'failed' })
         .eq('status', 'repairing')
-        .lt('last_seen_at', new Date(Date.now() - 60 * 60_000).toISOString());
+        .lt('updated_at', new Date(Date.now() - 60 * 60_000).toISOString());
 
 
       const { data: rows, error } = await supabase
