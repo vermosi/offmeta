@@ -85,6 +85,11 @@ function functionForJob(jobname: string): string | null {
   return null;
 }
 
+/**
+ * Dispatch a repair job. The watchdog never waits for the target to finish —
+ * some pipelines run for minutes and would blow the watchdog's own wall clock.
+ * A dispatch that is still running when the timeout fires counts as success.
+ */
 async function invokeFunction(name: string): Promise<{ ok: boolean; detail: string }> {
   if (!INVOKABLE.has(name)) return { ok: false, detail: 'function_not_allowed' };
   try {
@@ -96,6 +101,7 @@ async function invokeFunction(name: string): Promise<{ ok: boolean; detail: stri
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ triggered_by: 'ops-watchdog' }),
+      signal: AbortSignal.timeout(DISPATCH_TIMEOUT_MS),
     });
     const detail = `${res.status}`;
     if (!res.ok) {
@@ -103,11 +109,18 @@ async function invokeFunction(name: string): Promise<{ ok: boolean; detail: stri
       logger.warn(`invoke ${name} failed [${res.status}]: ${body.slice(0, 400)}`);
       return { ok: false, detail: `${detail}: ${body.slice(0, 200)}` };
     }
+    // Drain the body so the connection closes cleanly.
+    await res.text();
     return { ok: true, detail };
   } catch (err) {
-    return { ok: false, detail: String(err).slice(0, 200) };
+    const message = String(err);
+    if (message.includes('Timeout') || message.includes('aborted')) {
+      return { ok: true, detail: 'dispatched (still running)' };
+    }
+    return { ok: false, detail: message.slice(0, 200) };
   }
 }
+
 
 /** 1. File error_events for pg_cron jobs that failed recently. */
 async function checkCronFailures(checks: Check[]): Promise<void> {
