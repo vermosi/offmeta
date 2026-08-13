@@ -119,8 +119,6 @@ export function VirtualizedCardGrid({
   isFetchingNextPage,
   isError,
   onRetry,
-  getWhyReport,
-  onRefineWithMatch,
 }: VirtualizedCardGridProps) {
   const parentRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ columns: 4, cardWidth: 200, gap: 16 });
@@ -175,9 +173,7 @@ export function VirtualizedCardGrid({
   const { t } = useTranslation();
   // Use ceil to avoid underestimated row heights (which can cause overlap).
   const cardHeight = Math.ceil(cardWidth / CARD_ASPECT_RATIO);
-  // Footer row beneath each card holds the save/owned/why controls.
-  const cardFooterHeight = 32;
-  const rowHeight = cardHeight + cardFooterHeight + gap;
+  const rowHeight = cardHeight + gap;
 
   const rowCount = Math.ceil(cards.length / columns);
   const showLoadMoreRow =
@@ -344,8 +340,6 @@ export function VirtualizedCardGrid({
                     <CardItem
                       card={card}
                       onClick={() => onCardClick(card, cardIndex)}
-                      whyReport={getWhyReport?.(card) ?? null}
-                      onRefineWithMatch={onRefineWithMatch}
                     />
                   </div>
                 );
