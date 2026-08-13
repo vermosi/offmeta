@@ -112,13 +112,7 @@ const IS_TEST_MODE = import.meta.env.MODE === 'test';
 const Index = () => {
   const { t } = useTranslation();
   const location = useLocation();
-  const [showFirstUseHint, setShowFirstUseHint] = useState(() => {
-    try {
-      return localStorage.getItem('offmeta_home_hint_dismissed') !== '1';
-    } catch {
-      return true;
-    }
-  });
+
   const {
     trackLandingPageView,
     trackHomePageView,
