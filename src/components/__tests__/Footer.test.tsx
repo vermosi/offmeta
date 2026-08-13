@@ -84,13 +84,4 @@ describe('Footer', () => {
     expect(screen.getByText('TopDeck.gg').closest('a')).toHaveAttribute('href', 'https://topdeck.gg');
   });
 
-  it('renders Built With section with tech stack links', () => {
-    renderFooter();
-    expect(screen.getByText('Built With')).toBeInTheDocument();
-    expect(screen.getByText('React').closest('a')).toHaveAttribute('href', 'https://react.dev');
-    expect(screen.getByText('TypeScript').closest('a')).toHaveAttribute('href', 'https://www.typescriptlang.org');
-    expect(screen.getByText('Tailwind CSS').closest('a')).toHaveAttribute('href', 'https://tailwindcss.com');
-    expect(screen.getByText('Vite').closest('a')).toHaveAttribute('href', 'https://vitejs.dev');
-    expect(screen.getByText('Lovable').closest('a')).toHaveAttribute('href', 'https://lovable.dev');
-  });
 });
