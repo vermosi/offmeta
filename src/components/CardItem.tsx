@@ -209,9 +209,10 @@ export const CardItem = memo(function CardItem({
               </button>
             </PopoverTrigger>
             <PopoverContent
-              side="bottom"
-              align="end"
+              side="top"
+              align="start"
               sideOffset={6}
+
               className="w-64 rounded-none border-border p-3"
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
