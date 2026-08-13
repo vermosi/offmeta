@@ -161,7 +161,7 @@ ${query}
 </user_query>
 
 The translation "${failedTranslation}" returned ZERO results.
-${history}
+${history}${strategy}
 Prefer these curated oracle tags over fragile oracle text:
 ${SCRYFALL_OTAGS.join(', ')}
 
