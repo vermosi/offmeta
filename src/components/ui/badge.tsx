@@ -16,16 +16,16 @@ const badgeVariants = cva(
         // Card rarity variants
         common: 'border-transparent bg-secondary text-muted-foreground',
         uncommon:
-          'border-transparent bg-rarity-uncommon/20 text-rarity-uncommon',
-        rare: 'border-transparent bg-rarity-rare/20 text-rarity-rare',
+          'border-transparent bg-rarity-uncommon/10 dark:bg-rarity-uncommon/20 text-rarity-uncommon',
+        rare: 'border-transparent bg-rarity-rare/10 dark:bg-rarity-rare/20 text-rarity-rare',
         mythic:
-          'border-transparent bg-rarity-mythic/20 text-rarity-mythic',
+          'border-transparent bg-rarity-mythic/10 dark:bg-rarity-mythic/20 text-rarity-mythic',
         // Status badges
         success:
-          'border-transparent bg-success/15 text-success dark:bg-success/20 dark:text-success',
+          'border-transparent bg-success/10 text-success dark:bg-success/20 dark:text-success',
         warning:
-          'border-transparent bg-warning/15 text-warning dark:bg-warning/20 dark:text-warning',
-        info: 'border-transparent bg-primary/15 text-primary dark:bg-primary/20 dark:text-primary',
+          'border-transparent bg-warning/10 text-warning dark:bg-warning/20 dark:text-warning',
+        info: 'border-transparent bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary',
       },
       size: {
         default: 'px-2 py-0.5 text-xs',

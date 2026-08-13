@@ -108,7 +108,7 @@ export default function DocsIndex() {
             </p>
           </header>
 
-          <section className="prose prose-sm prose-invert max-w-none text-muted-foreground space-y-3 text-sm leading-relaxed border-b border-border/30 pb-8">
+          <section className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground space-y-3 text-sm leading-relaxed border-b border-border/30 pb-8">
             <p>
               {t(
                 'docs.intro1',

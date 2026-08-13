@@ -275,7 +275,7 @@ export default function AiPage() {
           <p className="text-base leading-relaxed sm:text-lg">{content.tldr}</p>
         </section>
 
-        <section className="prose prose-invert mb-10 max-w-none">
+        <section className="prose dark:prose-invert mb-10 max-w-none">
           {content.explanation.split('\n\n').map((paragraph, i) => (
             <p key={i} className="mb-4 text-base leading-relaxed text-foreground/90">
               {paragraph}
