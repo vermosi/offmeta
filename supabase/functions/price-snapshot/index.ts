@@ -175,6 +175,8 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
           for (const row of data) {
             if (seen.has(row.card_name)) continue;
             seen.add(row.card_name);
+            // Backfill targets always go back to Scryfall for a fresh price.
+            if (backfill.names.has(row.card_name)) continue;
             // If we have a recent snapshot (< 24h), reuse it
             if (row.price_usd !== null || row.price_usd_foil !== null) {
               snapshots.push({
