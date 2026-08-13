@@ -133,13 +133,13 @@ export default function AppRoutes() {
             />
             {/* Registry-declared landing pages (roles, problems, colors,
                 commander, alternatives, comparison). Unknown slugs render 404. */}
-            <Route path="/mtg/:topic" element={withFullApp(<LandingRoute />)} />
+            <Route path="/mtg/*" element={withFullApp(<LandingRoute />)} />
             <Route
-              path="/commander/:topic"
+              path="/commander/*"
               element={withFullApp(<LandingRoute />)}
             />
             <Route
-              path="/alternatives/:cardName"
+              path="/alternatives/*"
               element={withFullApp(<LandingRoute />)}
             />
             <Route
