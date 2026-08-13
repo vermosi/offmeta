@@ -806,11 +806,95 @@ const Index = () => {
             )}
         </main>
 
+        {/* Below the fold: the argument for OffMeta, kept after the cards. */}
         {!hasSearched && (
-          <div className="container-main" aria-hidden="true">
-            <div className="section-divider" />
+          <section className="relative mt-10 border-t border-border/50 py-10 sm:py-14">
+            <div className="container-main">
+              <p className="font-mono text-[10px] uppercase tracking-[0.34em] text-muted-foreground sm:text-[11px]">
+                Why OffMeta
+              </p>
+              <div className="mt-4 grid gap-8 lg:grid-cols-12 lg:items-start">
+                <div className="lg:col-span-5">
+                  <h2 className="font-display text-3xl font-extrabold uppercase leading-[0.9] tracking-tight text-foreground sm:text-4xl">
+                    Search like a player,
+                    <br />
+                    <span className="font-editorial text-[0.92em] font-normal normal-case italic tracking-normal text-accent">
+                      not a query language.
+                    </span>
+                  </h2>
+                  <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+                    OffMeta turns plain English into real Scryfall search, shows
+                    you exactly what it built, and keeps the query editable.
+                    Faster first results without losing control.
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-4 font-mono text-[11px] uppercase tracking-[0.18em]">
+                    <Link
+                      to="/about"
+                      className="inline-flex items-center gap-2 border-b border-border/60 pb-1 text-foreground transition-colors hover:border-accent"
+                    >
+                      Learn the difference
+                      <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Link>
+                    <Link
+                      to="/guides"
+                      className="inline-flex items-center gap-2 border-b border-border/60 pb-1 text-foreground transition-colors hover:border-accent"
+                    >
+                      Browse guides
+                      <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid gap-px overflow-hidden border border-border/50 bg-border/50 sm:grid-cols-3 lg:col-span-7">
+                  {[
+                    {
+                      icon: Search,
+                      accent: 'bg-mtg-blue',
+                      title: 'Type the job',
+                      body: 'Start with the thing you need: a hate card, a combo piece, a budget answer.',
+                    },
+                    {
+                      icon: SlidersHorizontal,
+                      accent: 'bg-mtg-red',
+                      title: 'See the query',
+                      body: 'Every result exposes the Scryfall syntax so you can edit or reuse it.',
+                    },
+                    {
+                      icon: Sparkles,
+                      accent: 'bg-mtg-green',
+                      title: 'Keep refining',
+                      body: 'Jump to similar cards, related searches, and follow-ups without starting over.',
+                    },
+                  ].map(({ icon: Icon, accent, title, body }) => (
+                    <div key={title} className="bg-background/80 p-5">
+                      <span
+                        className={`block h-px w-8 ${accent}`}
+                        aria-hidden="true"
+                      />
+                      <Icon
+                        className="mt-4 h-4 w-4 text-muted-foreground"
+                        aria-hidden="true"
+                      />
+                      <h3 className="mt-3 font-display text-sm font-bold uppercase tracking-tight text-foreground">
+                        {title}
+                      </h3>
+                      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                        {body}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {!hasSearched && (
+          <div id="home-quick-paths">
+            <HomepageQuickPaths />
           </div>
         )}
+
         {!hasSearched && (
           <Suspense fallback={null}>
             <ScryfallComparison onTrySearch={handleTryExample} />
