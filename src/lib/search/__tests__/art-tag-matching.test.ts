@@ -37,3 +37,17 @@ describe('matchArtTagQuery', () => {
     expect(isLikelyArtTagQuery('draw two cards')).toBe(false);
   });
 });
+
+describe('casing and pluralization normalization', () => {
+  it('resolves the same tag regardless of casing or separators', () => {
+    const expected = 'atag:shirtless';
+    for (const q of ['shirtless cards', 'Shirtless', 'SHIRTLESS CARDS', 'shirtless-cards', '  Shirtless  Cards  ']) {
+      expect(matchArtTagQuery(q)?.query).toBe(expected);
+    }
+  });
+
+  it('still rejects reserved terms in plural form', () => {
+    expect(matchArtTagQuery('dragons')).toBeNull();
+    expect(matchArtTagQuery('treasures')).toBeNull();
+  });
+});

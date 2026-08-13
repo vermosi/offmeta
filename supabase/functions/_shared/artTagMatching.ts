@@ -88,10 +88,17 @@ export interface ArtTagMatch {
   query: string;
 }
 
+/**
+ * Case-folds, strips diacritics, and collapses every separator (spaces,
+ * underscores, hyphens, punctuation) so "Shirtless_Cards", "shirtless-cards"
+ * and "  SHIRTLESS  cards " all reduce to the same token stream.
+ */
 function normalize(input: string): string {
   return input
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -103,22 +110,58 @@ function contentTokens(query: string): string[] {
     .filter((token) => token.length > 0 && !FILLER_WORDS.has(token));
 }
 
+/**
+ * Returns the singular/plural spelling variants of a single token, most
+ * specific first. Handles the regular English forms present in the Scryfall
+ * art-tag vocabulary (people/person is covered by the filler/vocabulary sets).
+ */
+function tokenVariants(token: string): string[] {
+  const variants = [token];
+  const add = (value: string) => {
+    if (value.length > 1 && !variants.includes(value)) variants.push(value);
+  };
+
+  if (token.endsWith('ies') && token.length > 4) add(`${token.slice(0, -3)}y`);
+  if (token.endsWith('ses') || token.endsWith('xes') || token.endsWith('zes')) {
+    add(token.slice(0, -2));
+  }
+  if (token.endsWith('ches') || token.endsWith('shes')) add(token.slice(0, -2));
+  if (token.endsWith('s') && !token.endsWith('ss') && token.length > 3) {
+    add(token.slice(0, -1));
+  }
+  // Singular input, plural tag ("shirtless person" style vocabulary entries).
+  if (!token.endsWith('s')) {
+    add(`${token}s`);
+    if (token.endsWith('y') && token.length > 2) add(`${token.slice(0, -1)}ies`);
+  }
+  return variants;
+}
+
+/** Cartesian product of per-token variants, capped to keep lookups cheap. */
+function candidateTags(tokens: string[]): string[] {
+  let combos: string[][] = [[]];
+  for (const token of tokens) {
+    const next: string[][] = [];
+    for (const combo of combos) {
+      for (const variant of tokenVariants(token)) {
+        next.push([...combo, variant]);
+      }
+    }
+    combos = next.slice(0, 32);
+  }
+  return combos.map((combo) => combo.join('-'));
+}
+
 function lookupTag(tokens: string[]): string | null {
   if (tokens.length === 0 || tokens.length > 4) return null;
-  const joined = tokens.join('-');
-  if (RESERVED_TERMS.has(joined)) return null;
-  if (SCRYFALL_ART_TAG_SET.has(joined)) return joined;
 
-  // "shirtless people" → try the singular form of the trailing word.
-  const last = tokens[tokens.length - 1];
-  if (last.length > 3 && last.endsWith('s')) {
-    const singular = [...tokens.slice(0, -1), last.replace(/s$/, '')].join('-');
-    if (!RESERVED_TERMS.has(singular) && SCRYFALL_ART_TAG_SET.has(singular)) {
-      return singular;
-    }
+  for (const candidate of candidateTags(tokens)) {
+    if (RESERVED_TERMS.has(candidate)) return null;
+    if (SCRYFALL_ART_TAG_SET.has(candidate)) return candidate;
   }
   return null;
 }
+
 
 /**
  * Returns an `atag:` query when the whole query (minus filler) names a known
