@@ -19,8 +19,79 @@ const BATCH_SIZE = 75;
 const SCRYFALL_DELAY_MS = 120;
 /** Scryfall ids are v4 UUIDs; locally generated v5 ids are rejected by the API. */
 const SCRYFALL_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+/** A card with no snapshot inside this window is considered stale. */
+const STALE_AFTER_HOURS = 48;
+/** Upper bound on cards pulled back in by the backfill, per run. */
+const MAX_BACKFILL_CARDS = 750;
 
 const log = createLogger('price-snapshot');
+
+/**
+ * Cards that must be re-fetched from Scryfall regardless of the normal
+ * "reuse a snapshot < 24h old" shortcut:
+ *
+ *   - stale: tracked in the last 90 days but with no snapshot inside the
+ *     staleness window, including cards that aged out of the 30-day tracking
+ *     query and would otherwise never be picked up again.
+ *   - errored: named by an unresolved price-snapshot error_event.
+ *
+ * @returns names to force-refresh plus the error rows that asked for them.
+ */
+async function collectBackfillTargets(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+): Promise<{ names: Map<string, string | null>; errorIds: string[] }> {
+  const names = new Map<string, string | null>();
+  const errorIds: string[] = [];
+
+  const staleCutoff = new Date(Date.now() - STALE_AFTER_HOURS * 3_600_000).toISOString();
+  const historyCutoff = new Date(Date.now() - 90 * 24 * 3_600_000).toISOString();
+
+  // Everything seen in the last 90 days, minus everything seen recently.
+  const [{ data: history }, { data: recent }] = await Promise.all([
+    supabase
+      .from('price_snapshots')
+      .select('card_name, scryfall_id')
+      .gte('recorded_at', historyCutoff)
+      .limit(20000),
+    supabase
+      .from('price_snapshots')
+      .select('card_name')
+      .gte('recorded_at', staleCutoff)
+      .limit(20000),
+  ]);
+
+  const fresh = new Set<string>((recent ?? []).map((r: { card_name: string }) => r.card_name));
+  for (const row of history ?? []) {
+    if (fresh.has(row.card_name) || names.has(row.card_name)) continue;
+    names.set(row.card_name, row.scryfall_id ?? null);
+    if (names.size >= MAX_BACKFILL_CARDS) break;
+  }
+
+  // Cards the pipeline previously failed on.
+  const { data: errorRows } = await supabase
+    .from('error_events')
+    .select('id, context')
+    .eq('source', 'price-snapshot')
+    .in('status', ['open', 'failed'])
+    .limit(50);
+
+  for (const row of errorRows ?? []) {
+    const ctx = (row.context ?? {}) as Record<string, unknown>;
+    const listed = [
+      ...(Array.isArray(ctx.cardNames) ? ctx.cardNames : []),
+      ...(typeof ctx.card_name === 'string' ? [ctx.card_name] : []),
+    ];
+    for (const name of listed) {
+      if (typeof name === 'string' && name.trim() && !names.has(name)) {
+        names.set(name, null);
+      }
+    }
+    errorIds.push(row.id as string);
+  }
+
+  return { names, errorIds };
+}
 
 serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(req);
