@@ -81,11 +81,8 @@ interface VirtualizedCardGridProps {
   isFetchingNextPage?: boolean;
   isError?: boolean;
   onRetry?: () => void;
-  /** Deterministic match report per card, rendered as the WHY IT MATCHES tag. */
-  getWhyReport?: (card: ScryfallCard) => WhyItMatchesReport | null;
-  /** One-click refine handler passed through to the match report. */
-  onRefineWithMatch?: (token: string, label: string) => void;
 }
+
 
 const CARD_ASPECT_RATIO = 2.5 / 3.5;
 // Max card width to prevent cards from growing too large when filtering
