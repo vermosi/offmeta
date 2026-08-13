@@ -73,6 +73,16 @@ export default function About() {
     setMeta('property', 'og:description', ABOUT_META.description);
     setMeta('property', 'og:url', ABOUT_META.url);
     setMeta('property', 'og:image', ABOUT_META.image);
+    setMeta(
+      'property',
+      'og:image:alt',
+      'OffMeta — search Magic cards by intent, see the real Scryfall query',
+    );
+    setMeta(
+      'name',
+      'twitter:image:alt',
+      'OffMeta — search Magic cards by intent, see the real Scryfall query',
+    );
     setMeta('property', 'og:type', 'website');
 
     setMeta('name', 'twitter:card', 'summary_large_image');
