@@ -180,41 +180,29 @@ export default function ProfileSettings() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background relative">
-      <div
-        className="fixed inset-0 pointer-events-none bg-page-gradient"
-        aria-hidden="true"
-      />
-      <div
-        className="fixed inset-0 pointer-events-none bg-page-noise"
-        aria-hidden="true"
-      />
-
+    <div className="min-h-screen flex flex-col bg-background">
       <SkipLinks />
       <Header />
 
-      <main id="main-content" className="relative flex-1 pt-6 sm:pt-10 pb-16">
-        <div
-          className="container-main"
-          style={{ maxWidth: 'clamp(320px, 90vw, 480px)' }}
-        >
+      <main id="main-content" className="container-main flex-1 py-12">
+        <div className="max-w-2xl">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+            className="inline-flex min-h-9 items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-foreground focus-ring"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-3.5 w-3.5" />
             {t('profile.back')}
           </Link>
 
-          <div className="space-y-1 mb-8">
-            <h1 className="text-xl font-semibold text-foreground">
-              {t('profile.title')}
-            </h1>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
-          </div>
+          <h1 className="mt-6 font-display text-3xl font-bold uppercase tracking-tight text-foreground">
+            {t('profile.title')}
+          </h1>
+          <p className="mt-2 font-mono text-xs tracking-wide text-muted-foreground">
+            {user.email}
+          </p>
 
           {loadError ? (
-            <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+            <div className="mt-10 space-y-3 border border-destructive/40 bg-destructive/5 p-6 text-sm text-destructive">
               <p>Failed to load your profile settings: {loadError}</p>
               <Button
                 type="button"
@@ -225,17 +213,19 @@ export default function ProfileSettings() {
               </Button>
             </div>
           ) : isLoading ? (
-            <div className="flex justify-center py-12">
+            <div className="flex justify-center py-16">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="mt-10 divide-y divide-border/60 border-y border-border/60">
               {/* Avatar section */}
-              <div className="space-y-3">
-                <Label>{t('profile.avatar')}</Label>
-                <div className="flex items-center gap-4">
-                  <div className="relative group">
-                    <div className="h-20 w-20 rounded-full bg-primary/10 border-2 border-border overflow-hidden flex items-center justify-center">
+              <section className="py-8">
+                <h2 className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                  {t('profile.avatar')}
+                </h2>
+                <div className="mt-5 flex flex-wrap items-center gap-5">
+                  <div className="relative">
+                    <div className="flex h-20 w-20 items-center justify-center overflow-hidden border border-border/60 bg-muted/30">
                       {avatarUrl ? (
                         <img
                           src={avatarUrl}
@@ -243,11 +233,11 @@ export default function ProfileSettings() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <User className="h-8 w-8 text-muted-foreground" />
+                        <User className="h-7 w-7 text-muted-foreground" />
                       )}
                     </div>
                     {isUploadingAvatar && (
-                      <div className="absolute inset-0 rounded-full bg-background/70 flex items-center justify-center">
+                      <div className="absolute inset-0 flex items-center justify-center bg-background/70">
                         <Loader2 className="h-5 w-5 animate-spin text-primary" />
                       </div>
                     )}
@@ -260,7 +250,7 @@ export default function ProfileSettings() {
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploadingAvatar}
                     >
-                      <Camera className="h-4 w-4 mr-1.5" />
+                      <Camera className="mr-1.5 h-4 w-4" />
                       {avatarUrl
                         ? t('profile.avatarChange')
                         : t('profile.avatarUpload')}
@@ -274,7 +264,7 @@ export default function ProfileSettings() {
                         disabled={isUploadingAvatar}
                         className="text-destructive hover:text-destructive"
                       >
-                        <Trash2 className="h-4 w-4 mr-1.5" />
+                        <Trash2 className="mr-1.5 h-4 w-4" />
                         {t('profile.avatarRemove')}
                       </Button>
                     )}
@@ -287,47 +277,66 @@ export default function ProfileSettings() {
                     onChange={handleAvatarUpload}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="mt-4 text-xs text-muted-foreground">
                   {t('profile.avatarHint')}
                 </p>
-              </div>
+              </section>
 
               {/* Display name form */}
-              <form onSubmit={handleSave} className="space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="display-name">
-                    {t('profile.displayName')}
-                  </Label>
-                  <div className="relative">
-                    <User
-                      className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-                      aria-hidden="true"
-                    />
+              <section className="py-8">
+                <form onSubmit={handleSave} className="space-y-5">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="display-name"
+                      className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground"
+                    >
+                      {t('profile.displayName')}
+                    </Label>
                     <Input
                       id="display-name"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder={t('profile.displayNamePlaceholder')}
                       maxLength={100}
-                      className="pl-9"
                     />
+                    <p className="font-mono text-[11px] tracking-wide text-muted-foreground">
+                      {displayName.trim().length}/100 {t('profile.characters')}
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {displayName.trim().length}/100 {t('profile.characters')}
-                  </p>
-                </div>
 
-                <Button type="submit" disabled={isSaving} className="w-full">
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      {t('profile.saving')}
-                    </>
-                  ) : (
-                    t('profile.saveChanges')
-                  )}
-                </Button>
-              </form>
+                  <Button type="submit" disabled={isSaving} className="sm:w-auto">
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t('profile.saving')}
+                      </>
+                    ) : (
+                      t('profile.saveChanges')
+                    )}
+                  </Button>
+                </form>
+              </section>
+
+              {/* Account shortcuts */}
+              <section className="py-8">
+                <h2 className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                  {t('account.shortcuts', 'Your library')}
+                </h2>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Link
+                    to="/saved"
+                    className="min-h-9 border border-border/60 px-3 py-2 text-xs uppercase tracking-wide text-foreground transition-colors hover:border-primary/60 hover:text-primary focus-ring"
+                  >
+                    {t('account.savedTitle', 'Saved')}
+                  </Link>
+                  <Link
+                    to="/history"
+                    className="min-h-9 border border-border/60 px-3 py-2 text-xs uppercase tracking-wide text-foreground transition-colors hover:border-primary/60 hover:text-primary focus-ring"
+                  >
+                    {t('account.historyTitle', 'History')}
+                  </Link>
+                </div>
+              </section>
             </div>
           )}
         </div>

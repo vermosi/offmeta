@@ -72,12 +72,12 @@ const ResetPassword = () => {
         className="flex-1 container-main py-12 flex items-center justify-center"
       >
         <div className="w-full max-w-sm space-y-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-center">
+          <h1 className="font-display text-2xl font-bold uppercase tracking-tight text-foreground">
             {t('resetPassword.title')}
           </h1>
 
           {invalidLink && !done ? (
-            <div className="space-y-4 rounded-lg border border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
+            <div className="space-y-4 border border-border/60 bg-muted/20 p-5 text-sm text-muted-foreground">
               <p>
                 This password reset link is missing recovery context or has
                 already been used.

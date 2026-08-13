@@ -88,31 +88,31 @@ export default function PublicProfile() {
         </Link>
 
         {profileLoading ? (
-          <div className="flex items-center gap-4">
-            <Skeleton className="h-16 w-16 rounded-full" />
+          <div className="flex items-center gap-5">
+            <Skeleton className="h-16 w-16" />
             <div className="space-y-2">
               <Skeleton className="h-6 w-40" />
               <Skeleton className="h-4 w-24" />
             </div>
           </div>
         ) : profile ? (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
                 alt={profile.display_name || t('publicProfile.userAvatar')}
-                className="h-16 w-16 rounded-full object-cover border-2 border-border"
+                className="h-16 w-16 border border-border/60 object-cover"
               />
             ) : (
-              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center border-2 border-border">
-                <User className="h-8 w-8 text-muted-foreground" />
+              <div className="flex h-16 w-16 items-center justify-center border border-border/60 bg-muted/30">
+                <User className="h-7 w-7 text-muted-foreground" />
               </div>
             )}
             <div>
-              <h1 className="text-xl font-bold tracking-tight">
+              <h1 className="font-display text-2xl font-bold uppercase tracking-tight text-foreground">
                 {profile.display_name || t('publicProfile.anonymousUser')}
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                 {t('publicProfile.memberSince').replace(
                   '{date}',
                   memberSince || '',
@@ -121,16 +121,15 @@ export default function PublicProfile() {
             </div>
           </div>
         ) : (
-          <div className="text-center py-16">
-            <User className="h-12 w-12 mx-auto text-muted-foreground/30" />
-            <p className="text-muted-foreground mt-2">
+          <div className="border-y border-border/60 py-16 text-center">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
               {t('publicProfile.userNotFound')}
             </p>
           </div>
         )}
 
         {profileLoadError && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive space-y-3">
+          <div className="space-y-3 border border-destructive/40 bg-destructive/5 p-5 text-sm text-destructive">
             <p>Failed to load this profile: {profileLoadError}</p>
             <Button
               variant="outline"
