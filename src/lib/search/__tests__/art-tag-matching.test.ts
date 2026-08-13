@@ -51,3 +51,52 @@ describe('casing and pluralization normalization', () => {
     expect(matchArtTagQuery('treasures')).toBeNull();
   });
 });
+
+describe('never hijacks type or mechanic terms', () => {
+  const RESERVED_QUERIES = [
+    'dragon',
+    'dragons',
+    'dragon cards',
+    'red dragon',
+    'treasure',
+    'treasures',
+    'treasure tokens',
+    'goblin',
+    'goblins',
+    'angel cards',
+    'vampire tribal',
+    'zombie tokens',
+    'wolf pack',
+    'wizards',
+    'knight creatures',
+    'human soldiers',
+    'sacrifice outlets',
+    'artifact cards',
+    'lands',
+    'mountains',
+    'snakes',
+    'spiders',
+    'cat tokens',
+    'dog cards',
+    'bird creatures',
+    'beast cards',
+    'demon cards',
+    'elf tribal',
+  ];
+
+  it.each(RESERVED_QUERIES)('returns null for %s', (query) => {
+    expect(matchArtTagQuery(query)).toBeNull();
+    expect(isLikelyArtTagQuery(query)).toBe(false);
+  });
+
+  it('returns null for common non-art search phrasing', () => {
+    expect(matchArtTagQuery('draw two cards')).toBeNull();
+    expect(matchArtTagQuery('counterspells under $5')).toBeNull();
+    expect(matchArtTagQuery('cards that punish treasure decks')).toBeNull();
+  });
+
+  it('still matches genuine art vocabulary alongside the guards', () => {
+    expect(matchArtTagQuery('shirtless cards')?.query).toBe('atag:shirtless');
+    expect(matchArtTagQuery('shirtless artwork')?.query).toBe('atag:shirtless');
+  });
+});

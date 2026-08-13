@@ -172,8 +172,22 @@ export function matchArtTagQuery(query: string): ArtTagMatch | null {
 
   const explicitArt = /\b(art|artwork|illustration|picture)\b/i.test(query);
   const tokens = contentTokens(query);
+
+  // Any reserved type/mechanic word anywhere in the query ("red dragon",
+  // "wolf pack") means the functional reading wins unless the user explicitly
+  // asked about artwork.
+  if (
+    !explicitArt &&
+    tokens.some((token) =>
+      tokenVariants(token).some((variant) => RESERVED_TERMS.has(variant)),
+    )
+  ) {
+    return null;
+  }
+
   const tag = lookupTag(tokens);
   if (!tag) return null;
+
 
   // Single-word art tags without an explicit "art" mention are only safe when
   // the term is unmistakably artwork vocabulary (not a type/mechanic word).
