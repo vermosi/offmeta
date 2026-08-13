@@ -10,7 +10,6 @@ describe('matchSetPhrase', () => {
   });
   it('builds combined query', () => {
     const { deterministicQuery } = buildDeterministicIntent('the hobbit red dwarf');
-    console.log(deterministicQuery);
     expect(deterministicQuery).toContain('e:hob');
     expect(deterministicQuery).toMatch(/dwarf/i);
   });
