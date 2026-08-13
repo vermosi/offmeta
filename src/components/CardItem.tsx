@@ -184,10 +184,12 @@ export const CardItem = memo(function CardItem({
         <SaveCardButton card={toSavedCardInput(card)} />
       </div>
 
-      {/* WHY IT MATCHES — editorial notation tag opening the full report */}
+      {/* WHY IT MATCHES — moved to the bottom-left so it never covers the
+          mana cost printed in the top-right of the card art. */}
 
       {whyReport && (
-        <div className="absolute top-1.5 right-1.5 z-20">
+        <div className="absolute bottom-8 left-1.5 z-30 sm:bottom-9">
+
           <Popover>
             <PopoverTrigger asChild>
               <button
