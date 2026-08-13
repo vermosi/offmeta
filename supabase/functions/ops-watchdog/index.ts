@@ -25,6 +25,13 @@ import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts'
 import { validateEnv } from '../_shared/env.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
 import { reportEdgeError } from '../_shared/errorReporter.ts';
+import { acquireJobLock, lockBusyResponse } from '../_shared/jobLock.ts';
+
+const JOB_NAME = 'ops-watchdog';
+/** Lease held for a whole watchdog run; above its worst-case wall clock. */
+const LOCK_TTL_SECONDS = 300;
+/** Minimum gap between two dispatches of the same repair pipeline. */
+const DISPATCH_COOLDOWN_SECONDS = 3 * 60 * 60;
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = validateEnv([
   'SUPABASE_URL',
