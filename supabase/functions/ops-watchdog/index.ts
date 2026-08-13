@@ -126,18 +126,25 @@ async function invokeFunction(name: string): Promise<{ ok: boolean; detail: stri
     if (!res.ok) {
       const body = await res.text();
       logger.warn(`invoke ${name} failed [${res.status}]: ${body.slice(0, 400)}`);
-      return { ok: false, detail: `${detail}: ${body.slice(0, 200)}` };
+      const failed = { ok: false, detail: `${detail}: ${body.slice(0, 200)}` };
+      dispatchedThisRun.set(name, failed);
+      return failed;
     }
     // Drain the body so the connection closes cleanly.
     await res.text();
-    return { ok: true, detail };
+    const done = { ok: true, detail };
+    dispatchedThisRun.set(name, done);
+    return done;
   } catch (err) {
     const message = String(err);
-    if (message.includes('Timeout') || message.includes('aborted')) {
-      return { ok: true, detail: 'dispatched (still running)' };
-    }
-    return { ok: false, detail: message.slice(0, 200) };
+    const outcome = message.includes('Timeout') || message.includes('aborted')
+      ? { ok: true, detail: 'dispatched (still running)' }
+      : { ok: false, detail: message.slice(0, 200) };
+    dispatchedThisRun.set(name, outcome);
+    return outcome;
   }
+  // The dispatch lease is intentionally left to expire: it is the cooldown
+  // that stops the next hourly run from re-kicking a pipeline still in flight.
 }
 
 
