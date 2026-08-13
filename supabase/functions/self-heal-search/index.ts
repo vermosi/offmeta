@@ -223,7 +223,10 @@ async function previouslyRejected(pattern: string): Promise<boolean> {
   return (data?.length ?? 0) > 0;
 }
 
-async function askModel(prompt: string): Promise<string | null> {
+async function askModel(
+  prompt: string,
+  temperature = ATTEMPT_TEMPERATURES[0],
+): Promise<string | null> {
   try {
     const response = await fetch(
       'https://ai.gateway.lovable.dev/v1/chat/completions',
@@ -236,7 +239,7 @@ async function askModel(prompt: string): Promise<string | null> {
         body: JSON.stringify({
           model: 'google/gemini-2.5-flash-lite',
           messages: [{ role: 'user', content: prompt }],
-          temperature: 0.2,
+          temperature,
         }),
       },
     );
