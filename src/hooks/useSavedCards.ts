@@ -73,6 +73,7 @@ export function savedCardsQueryKey(userId: string | undefined) {
 export function useSavedCards() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { trackEvent } = useAnalytics();
   const userId = user?.id;
 
   const query = useQuery({
