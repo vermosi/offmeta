@@ -15,10 +15,10 @@ export function ThemeToggle() {
 
   return (
     <Button
-      variant="outline"
+      variant="ghost"
       size="icon"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="rounded-lg magnetic"
+      className="h-8 w-8 rounded-none text-muted-foreground hover:bg-transparent hover:text-foreground"
       aria-label={isDark ? t('theme.switchToLight') : t('theme.switchToDark')}
       aria-pressed={isDark}
       data-testid="theme-toggle"

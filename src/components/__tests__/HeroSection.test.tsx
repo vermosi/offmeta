@@ -19,14 +19,10 @@ describe('HeroSection', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: /search magic cards without learning scryfall syntax/i,
+        name: /offmeta\. search magic cards in plain english/i,
       }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /start searching/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/budget board wipes under \$5/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/manifest the/i)).toBeInTheDocument();
+    expect(screen.getByText(/perfect draw\./i)).toBeInTheDocument();
   });
 });

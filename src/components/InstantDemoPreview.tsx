@@ -4,8 +4,6 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Search, Sparkles } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 const DEMO_QUERY = 'budget board wipes under $5';
@@ -93,15 +91,14 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
   return (
     <div className="animate-reveal space-y-6">
       {/* Section divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" aria-hidden="true" />
+      <div className="h-px bg-border/60" aria-hidden="true" />
 
-      <div className="glass-card rounded-2xl p-5 sm:p-8 space-y-6">
+      <div className="space-y-6 py-6 sm:py-8">
         {/* Heading with typewriter */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-accent" aria-hidden="true" />
-              <span className="text-base font-semibold text-foreground tracking-wide">
+              <span className="font-mono text-[10px] uppercase tracking-[0.34em] text-muted-foreground">
                 See it in action
               </span>
             </div>
@@ -119,15 +116,13 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
               )}
             </p>
           </div>
-          <Button
-            variant="accent"
-            size="sm"
+          <button
+            type="button"
             onClick={handleSearchClick}
-            className="gap-2 text-sm self-start sm:self-auto font-medium magnetic shadow-lg shadow-accent/20"
+            className="self-start font-mono text-[11px] uppercase tracking-[0.24em] text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground sm:self-auto"
           >
-            <Search className="h-4 w-4" aria-hidden="true" />
-            Try this search
-          </Button>
+            Try this search →
+          </button>
         </div>
 
         {/* Card grid — larger cards with 3D hover */}
@@ -137,10 +132,10 @@ export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
               key={card.name}
               type="button"
               onClick={() => handleCardClick(card.name, index)}
-              className="group flex flex-col items-center gap-2 focus-ring rounded-lg demo-card-entrance"
+              className="group flex flex-col items-center gap-2 focus-ring demo-card-entrance"
               style={{ animationDelay: `${index * 100 + 300}ms` }}
             >
-              <div className="relative aspect-[488/680] w-full overflow-hidden rounded-xl border border-border/40 bg-muted shadow-md transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-accent/10 group-hover:-translate-y-2 demo-card-3d">
+              <div className="relative aspect-[488/680] w-full overflow-hidden border border-border/40 bg-muted transition-transform duration-500 group-hover:-translate-y-1">
                 <img
                   src={card.imageUri.replace('/normal/', '/small/')}
                   srcSet={`${card.imageUri.replace('/normal/', '/small/')} 146w, ${card.imageUri} 488w, ${card.imageUri.replace('/normal/', '/large/')} 672w`}

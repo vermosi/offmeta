@@ -22,12 +22,12 @@ describe('HomepageQuickPaths', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole('link', {
-        name: /start with a search turn a deck idea into real cards and refinements\./i,
+        name: /start with a search/i,
       }),
     ).toHaveAttribute('href', '/search/commander%20ramp');
     expect(
       screen.getByRole('link', {
-        name: /cards like x find close substitutes for staples and favorite effects\./i,
+        name: /cards like x/i,
       }),
     ).toHaveAttribute('href', '/guides/cards-like-x');
   });

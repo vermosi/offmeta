@@ -152,15 +152,15 @@ export function ExampleQueriesCarousel({
 
   return (
     <section
-      className="container-main pb-8 sm:pb-12"
+      className="container-main border-t border-border/50 py-8 sm:py-12"
       aria-label={t('examples.sectionLabel', 'Try an example query')}
     >
-      <div className="mx-auto max-w-4xl">
-        <div className="mb-4 flex flex-col items-center gap-2 text-center">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+      <div>
+        <div className="mb-5 flex flex-col gap-2">
+          <span className="font-mono text-[10px] uppercase tracking-[0.34em] text-muted-foreground">
             {t('examples.eyebrow', 'Try it now')}
           </span>
-          <h2 className="text-base font-semibold text-foreground sm:text-lg">
+          <h2 className="font-display text-xl font-extrabold uppercase tracking-tight text-foreground sm:text-2xl">
             {t(
               'examples.heading',
               'One-click examples for each step',
@@ -170,7 +170,7 @@ export function ExampleQueriesCarousel({
 
         {/* Step tabs */}
         <div
-          className="mb-4 flex items-center justify-center gap-1.5 sm:gap-2"
+          className="mb-4 flex items-center gap-5"
           role="tablist"
           aria-label={t('examples.tabsLabel', 'Example categories')}
           aria-orientation="horizontal"
@@ -194,11 +194,11 @@ export function ExampleQueriesCarousel({
                 onClick={() => setActiveStep(key)}
                 onKeyDown={handleTabKeyDown}
                 className={cn(
-                  'flex min-h-9 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                  'flex min-h-9 items-center gap-1.5 border-b px-1 pb-1 font-mono text-[11px] uppercase tracking-[0.24em] transition-colors',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                   isActive
-                    ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                    : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground',
+                    ? 'border-foreground text-foreground'
+                    : 'border-transparent text-muted-foreground hover:text-foreground',
                 )}
               >
                 <Icon className="h-3.5 w-3.5" aria-hidden="true" />
@@ -208,7 +208,7 @@ export function ExampleQueriesCarousel({
           })}
         </div>
 
-        <p className="mb-3 text-center text-xs text-muted-foreground" id={`${reactId}-hint`}>
+        <p className="mb-3 text-xs text-muted-foreground" id={`${reactId}-hint`}>
           {active.hint}
         </p>
 
@@ -244,9 +244,9 @@ export function ExampleQueriesCarousel({
                 }}
                 aria-label={`${trySearchLabel} ${example}`}
                 className={cn(
-                  'group flex min-h-9 shrink-0 items-center gap-2 rounded-full border border-border bg-card/70 px-4 py-2 text-xs font-medium text-foreground backdrop-blur-sm transition-all sm:text-sm',
-                  'hover:-translate-y-0.5 hover:border-primary/50 hover:bg-card hover:shadow-md hover:shadow-primary/10',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                  'group flex min-h-9 shrink-0 items-center gap-2 py-2 font-mono text-[11px] lowercase tracking-[0.06em] text-muted-foreground underline decoration-border underline-offset-[6px] transition-colors',
+                  'hover:text-foreground hover:decoration-foreground',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 )}
               >
                 <span className="max-w-[220px] truncate sm:max-w-none">

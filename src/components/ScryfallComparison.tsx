@@ -10,7 +10,6 @@
  * stacks. See docs/product-audit.md (PR2) for scope rationale.
  */
 
-import { Search, Type } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { MTG_COPY } from '@/lib/i18n/copy';
 
@@ -54,78 +53,55 @@ export function ScryfallComparison({ onTrySearch }: ScryfallComparisonProps) {
 
   return (
     <section
-      className="py-10 sm:py-14"
+      className="border-t border-border/50 py-10 sm:py-14"
       aria-labelledby="scryfall-comparison-heading"
     >
       <div className="container-main">
-        <div className="text-center mb-8 sm:mb-10">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-medium border border-border/60 bg-card/50 text-muted-foreground mb-3">
-            {t('compare.pill', MTG_COPY.comparisonPill)}
-          </span>
+        <p className="font-mono text-[10px] uppercase tracking-[0.34em] text-muted-foreground sm:text-[11px]">
+          {t('compare.pill', MTG_COPY.comparisonPill)}
+        </p>
+
+        <div className="mt-6 grid gap-8 lg:grid-cols-12 lg:items-end">
           <h2
             id="scryfall-comparison-heading"
-            className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-foreground"
+            className="font-display text-2xl font-extrabold uppercase leading-[0.95] tracking-tight text-foreground sm:text-3xl lg:col-span-6"
           >
             {t('compare.heading', MTG_COPY.comparisonHeading)}
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
+          <p className="max-w-md text-sm leading-relaxed text-muted-foreground lg:col-span-6">
             {t('compare.subheading', MTG_COPY.comparisonSubheading)}
           </p>
         </div>
 
-        <div className="grid gap-4 max-w-4xl mx-auto">
+        <div className="mt-8 border-t border-border/50">
           {ROWS.map((row) => (
-            <article key={row.natural} className="group">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground/80 mb-2 pl-1">
+            <article
+              key={row.natural}
+              className="grid gap-2 border-b border-border/50 py-5 sm:grid-cols-12 sm:items-baseline sm:gap-6"
+            >
+              <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground/70 sm:col-span-3">
                 {row.intent}
               </p>
-              <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-stretch">
-                {/* Raw Scryfall column */}
-                <div className="rounded-2xl border border-border/60 bg-card/40 p-5 transition-colors group-hover:bg-card/60">
-                  <div className="flex items-center gap-1.5 mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
-                    <Type className="h-3 w-3" aria-hidden="true" />
-                    {t('compare.rawLabel', 'Raw Scryfall')}
-                  </div>
-                  <code className="block font-mono text-xs sm:text-[13px] text-warning/90 leading-relaxed break-words">
-                    {row.scryfall}
-                  </code>
-                </div>
-
-                <div
-                  className="hidden sm:flex items-center justify-center"
-                  aria-hidden="true"
-                >
-                  <div className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground">
-                    VS
-                  </div>
-                </div>
-
-                {/* OffMeta column */}
-                <div className="rounded-2xl border border-accent/25 bg-accent/[0.06] p-5 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)] transition-colors group-hover:border-accent/50 group-hover:bg-accent/10">
-                  <div className="flex items-center gap-1.5 mb-3 text-[10px] font-bold uppercase tracking-widest text-accent">
-                    <Search className="h-3 w-3" aria-hidden="true" />
-                    {t('compare.offmetaLabel', 'OffMeta')}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => onTrySearch?.(row.natural)}
-                    disabled={!onTrySearch}
-                    className="text-left w-full text-sm sm:text-[15px] text-foreground hover:text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-                    aria-label={t('compare.tryQuery', 'Try this search').replace(
-                      '{query}',
-                      row.natural,
-                    )}
-                  >
-                    &ldquo;{row.natural}&rdquo;
-                  </button>
-                </div>
-              </div>
+              <code className="block break-words font-mono text-xs leading-relaxed text-muted-foreground sm:col-span-5">
+                {row.scryfall}
+              </code>
+              <button
+                type="button"
+                onClick={() => onTrySearch?.(row.natural)}
+                disabled={!onTrySearch}
+                className="text-left text-sm text-foreground underline decoration-border underline-offset-[6px] transition-colors hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:col-span-4"
+                aria-label={t('compare.tryQuery', 'Try this search').replace(
+                  '{query}',
+                  row.natural,
+                )}
+              >
+                {row.natural} →
+              </button>
             </article>
           ))}
         </div>
 
-
-        <p className="mt-6 text-center text-xs text-muted-foreground/80 max-w-xl mx-auto">
+        <p className="mt-6 max-w-xl text-xs leading-relaxed text-muted-foreground/80">
           {t(
             'compare.footnote',
             'Every result comes from Scryfall — the source of truth for card data. OffMeta only translates intent and adds discovery layers on top.',

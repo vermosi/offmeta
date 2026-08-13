@@ -13,7 +13,6 @@ import {
   useImperativeHandle,
   forwardRef,
 } from 'react';
-import { Button } from '@/components/ui/button';
 import { Search, Loader2, X, Clock, Sparkles, Database } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useSearchContext } from '@/hooks/useSearchContext';
@@ -34,11 +33,6 @@ import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 import { useTranslation } from '@/lib/i18n';
 
-const SearchCountBadge = lazy(() =>
-  import('@/components/SearchCountBadge').then((m) => ({
-    default: m.SearchCountBadge,
-  })),
-);
 const VoiceSearchControl = lazy(() =>
   import('@/components/VoiceSearchControl').then((m) => ({
     default: m.VoiceSearchControl,
@@ -94,17 +88,13 @@ function PhaseIndicator({
 
   return (
     <div
-      className="flex items-center justify-center gap-2 animate-fade-in"
+      className="flex items-center gap-2"
       role="status"
       aria-live="polite"
       aria-label={label}
     >
       <div
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-300 ${
-          isTranslating
-            ? 'bg-primary/10 border-primary/20 text-primary'
-            : 'bg-accent/10 border-accent/20 text-accent-foreground'
-        }`}
+        className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground"
       >
         {isTranslating ? (
           <>
@@ -255,29 +245,17 @@ export const UnifiedSearchBar = forwardRef<
 
   return (
     <div
-      className="space-y-4 sm:space-y-6 w-full mx-auto px-0 animate-fade-in"
-      style={{
-        maxWidth: 'clamp(320px, 90vw, 840px)',
-        animationDuration: '0.5s',
-        animationDelay: '0.15s',
-        animationFillMode: 'backwards',
-      }}
+      className="w-full space-y-4 px-0"
       role="search"
       aria-label={t('search.label')}
     >
       {/* Search input */}
       <div className="relative space-y-2">
-        <div className={`gradient-border-wrap ${isFocused ? 'opacity-100' : 'opacity-60 hover:opacity-80'} transition-opacity duration-300`}>
+        <div>
           <div
-            className={`
-              relative flex items-center gap-1.5 sm:gap-2 rounded-3xl border border-border/60 bg-gradient-to-r from-card/95 via-background/85 to-card/95 p-1.5 shadow-sm transition-all duration-300 sm:p-2
-              transition-all duration-300
-              ${
-                isFocused
-                  ? 'shadow-xl shadow-accent/10'
-                  : 'shadow-sm'
-              }
-            `}
+            className={`relative flex items-stretch gap-0 border bg-background/40 transition-colors duration-200 ${
+              isFocused ? 'border-foreground/60' : 'border-border'
+            }`}
           >
             <label htmlFor="search-input" className="sr-only">
               {t('search.inputLabel')}
@@ -316,7 +294,7 @@ export const UnifiedSearchBar = forwardRef<
                     setTimeout(() => setShowHistoryDropdown(false), 200);
                   }
                 }}
-                className="flex-1 min-w-0 w-full bg-transparent text-base sm:text-lg text-foreground placeholder:text-muted-foreground focus:outline-none py-3 px-3 sm:px-2"
+                className="w-full min-w-0 flex-1 bg-transparent px-4 py-4 focus-visible:ring-0 focus-visible:ring-offset-0 text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none sm:px-5 sm:py-5 sm:text-lg"
                 autoComplete="off"
                 autoCorrect="off"
                 spellCheck="false"
@@ -328,7 +306,7 @@ export const UnifiedSearchBar = forwardRef<
               <button
                 aria-label={t('search.clear')}
                 data-testid="search-clear-button"
-                className="flex min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="flex min-h-[36px] min-w-[36px] flex-shrink-0 items-center justify-center self-center p-2 text-muted-foreground transition-colors hover:text-foreground"
                 onClick={() => {
                   setQuery('');
                   inputRef.current?.focus();
@@ -341,7 +319,7 @@ export const UnifiedSearchBar = forwardRef<
             {isVoiceSupported && (
               <Suspense fallback={null}>
                 <VoiceSearchControl
-                  className="h-9 w-9 sm:h-10 sm:w-10"
+                  className="h-9 w-9 self-center sm:h-10 sm:w-10"
                   onTranscript={(transcript) => {
                     setQuery(transcript);
                   }}
@@ -353,7 +331,8 @@ export const UnifiedSearchBar = forwardRef<
               </Suspense>
             )}
 
-            <Button
+            <button
+              type="button"
               onClick={() => handleSearch()}
               disabled={
                 isSearching ||
@@ -361,9 +340,7 @@ export const UnifiedSearchBar = forwardRef<
                 !query.trim() ||
                 rateLimitCountdown > 0
               }
-              variant="accent"
-              size="sm"
-              className="h-10 flex-shrink-0 gap-2 rounded-full px-4 font-medium shadow-lg shadow-accent/20 sm:h-12 sm:px-5"
+              className="flex flex-shrink-0 items-center gap-2 border-l border-border bg-foreground px-5 font-mono text-[11px] uppercase tracking-[0.24em] text-background transition-opacity hover:opacity-85 disabled:opacity-40 sm:px-7"
               data-testid="search-submit-button"
               aria-label={
                 rateLimitCountdown > 0
@@ -378,39 +355,25 @@ export const UnifiedSearchBar = forwardRef<
             >
               {rateLimitCountdown > 0 ? (
                 <>
-                  <Clock className="h-4 w-4" aria-hidden="true" />
-                  <span className="text-xs">{rateLimitCountdown}s</span>
+                  <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{rateLimitCountdown}s</span>
                 </>
               ) : isSearching ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
               ) : (
                 <>
-                  <Search className="h-4 w-4" aria-hidden="true" />
-                  <span className="hidden sm:inline">{t('search.button')}</span>
+                  <Search className="h-3.5 w-3.5 sm:hidden" aria-hidden="true" />
+                  <span className="hidden sm:inline">
+                    {t('search.button')} →
+                  </span>
                 </>
               )}
-            </Button>
-
-            {/* Desktop-only inline buttons */}
-            <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
-              <Suspense fallback={null}>
-                <SearchFeedback
-                  originalQuery={query}
-                  translatedQuery={lastTranslatedQuery}
-                />
-                <SearchHelpModal
-                  onTryExample={(exampleQuery) => {
-                    setQuery(exampleQuery);
-                    handleSearch(exampleQuery);
-                  }}
-                />
-              </Suspense>
-            </div>
+            </button>
           </div>
         </div>
 
-        {/* Secondary row: Mobile-only auxiliary actions */}
-        <div className="flex sm:hidden items-center justify-center gap-2 flex-wrap">
+        {/* Auxiliary actions */}
+        <div className="flex flex-wrap items-center gap-2">
           <Suspense fallback={null}>
             <SearchFeedback
               originalQuery={query}
@@ -430,25 +393,13 @@ export const UnifiedSearchBar = forwardRef<
         </p>
       </div>
 
-      {/* Trust signals — compact single line, only on landing */}
-      {showExamples && (
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground/70">
-          <span>✦ Free to use</span>
-          <span>✦ Powered by Scryfall</span>
-          <span>✦ No account required</span>
-          <Suspense fallback={null}>
-            <SearchCountBadge />
-          </Suspense>
-        </div>
-      )}
-
       {/* Progressive loading phase indicator */}
       <PhaseIndicator phase={searchPhase} isCardFetching={isCardFetching} />
 
       {/* Example queries - shown when no query typed */}
       {showExamples && (
         <div
-          className="animate-reveal flex flex-wrap items-center justify-center gap-x-2 gap-y-2"
+          className="flex flex-wrap items-baseline gap-x-5 gap-y-2"
           role="group"
           aria-label={t('search.trySearchingFor')}
         >
@@ -470,7 +421,7 @@ export const UnifiedSearchBar = forwardRef<
                 setQuery(example);
                 handleSearch(example);
               }}
-              className="focus-ring rounded-full border border-border/60 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:border-accent/50 hover:bg-accent/10 hover:text-foreground"
+              className="focus-ring font-mono text-[11px] lowercase tracking-[0.06em] text-muted-foreground underline decoration-border underline-offset-[6px] transition-colors hover:text-foreground hover:decoration-foreground"
               aria-label={t('search.searchFor').replace('{query}', example)}
             >
               {example}

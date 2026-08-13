@@ -86,14 +86,14 @@ export function Header() {
                 to={link.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
-                  'w-full px-4 py-3 text-base font-medium rounded-xl',
+                  'w-full border-b border-border/40 px-1 py-4 font-display text-base font-bold uppercase tracking-tight',
                   'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
                 )}
               >
                 {link.label}
               </Link>
             ))}
-            <p className="px-4 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="px-1 pb-1 pt-6 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
               {t('nav.mobileCommunity', 'Community')}
             </p>
             <a
@@ -102,7 +102,7 @@ export function Header() {
               rel="noopener noreferrer"
               onClick={() => setMobileMenuOpen(false)}
               className={cn(
-                'w-full px-4 py-3 text-base font-medium rounded-xl flex items-center gap-2',
+                'flex w-full items-center gap-2 border-b border-border/40 px-1 py-4 font-display text-base font-bold uppercase tracking-tight',
                 'text-foreground hover:bg-secondary/50 transition-colors focus-ring',
               )}
             >
@@ -111,11 +111,11 @@ export function Header() {
             <div className="mt-4 pt-4 border-t border-border/50">
               {user ? (
                 <>
-                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
+                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="w-full border-b border-border/40 px-1 py-4 text-base text-foreground transition-colors hover:text-accent focus-ring">
                     {t('nav.profileSettings')}
                   </Link>
                   {isAdmin && (
-                    <Link to="/admin/analytics" onClick={() => setMobileMenuOpen(false)} className="w-full px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring">
+                    <Link to="/admin/analytics" onClick={() => setMobileMenuOpen(false)} className="w-full border-b border-border/40 px-1 py-4 text-base text-foreground transition-colors hover:text-accent focus-ring">
                       {t('nav.adminDashboard')}
                     </Link>
                   )}
@@ -124,7 +124,7 @@ export function Header() {
                       setMobileMenuOpen(false);
                       signOut();
                     }}
-                    className="w-full text-left px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring"
+                    className="w-full border-b border-border/40 px-1 py-4 text-left text-base text-foreground transition-colors hover:text-accent focus-ring"
                   >
                     {t('nav.signOut')}
                   </button>
@@ -135,7 +135,7 @@ export function Header() {
                     setMobileMenuOpen(false);
                     setAuthModalOpen(true);
                   }}
-                  className="w-full text-left px-4 py-3 text-base font-medium rounded-xl text-foreground hover:bg-secondary/50 transition-colors focus-ring"
+                  className="w-full border-b border-border/40 px-1 py-4 text-left text-base text-foreground transition-colors hover:text-accent focus-ring"
                 >
                   {t('nav.signIn')}
                 </button>
@@ -151,21 +151,23 @@ export function Header() {
     <>
       <header
         className={cn(
-          'sticky top-0 z-50 safe-top backdrop-blur-xl transition-colors',
+          'sticky top-0 z-50 safe-top transition-colors',
           isScrolled
-            ? 'border-b border-border/50 bg-background/80'
-            : 'border-b border-transparent bg-background/40',
+            ? 'border-b border-border/50 bg-background/90 backdrop-blur'
+            : 'border-b border-transparent bg-transparent',
         )}
         role="banner"
       >
         <div className="container-main py-3 sm:py-4 flex items-center justify-between">
           <Link
             to="/"
-            className="group flex items-center gap-2.5 min-h-0 focus-ring rounded-lg -ml-2 px-2 py-1"
+            className="group -ml-2 flex min-h-0 items-center gap-2.5 px-2 py-1 focus-ring"
             aria-label={t('header.home')}
           >
-            <Logo variant="gradient" className="h-7 w-7 sm:h-8 sm:w-8 transition-transform duration-200 group-hover:scale-105" />
-            <span className="text-lg font-semibold tracking-tight">OffMeta</span>
+            <Logo variant="gradient" className="h-7 w-7 sm:h-8 sm:w-8" />
+            <span className="font-display text-base font-extrabold uppercase tracking-[0.16em] text-foreground">
+              OffMeta
+            </span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-0.5" aria-label="Main navigation">
@@ -173,7 +175,7 @@ export function Header() {
               <Link
                 key={link.href}
                 to={link.href}
-                className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50 focus-ring"
+                className="px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground focus-ring"
               >
                 {link.label}
               </Link>
@@ -193,7 +195,7 @@ export function Header() {
 
           <button
             type="button"
-            className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors focus-ring"
+            className="p-2 text-muted-foreground transition-colors hover:text-foreground focus-ring md:hidden"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
             aria-label={mobileMenuOpen ? t('header.closeMenu') : t('header.openMenu')}
             aria-expanded={mobileMenuOpen}
