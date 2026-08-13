@@ -18,7 +18,7 @@ import { ExplanationPanel } from '@/components/ExplanationPanel';
 import { CLIENT_CONFIG } from '@/lib/config';
 
 import { rerankCardsWithIntelligence } from '@/lib/search/intelligence-ranking';
-import { buildWhyItMatches } from '@/lib/search/whyItMatches';
+import { buildWhyItMatches, intentFromScryfallQuery } from '@/lib/search/whyItMatches';
 import { getSearchRankingSignals } from '@/lib/search-ranking-signals';
 import type { ScryfallCard } from '@/types/card';
 import type { SearchIntent } from '@/types/search';
