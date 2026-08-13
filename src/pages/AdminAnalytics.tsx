@@ -60,6 +60,7 @@ import { FeedbackQueuePanel } from '@/pages/admin-analytics/components/FeedbackQ
 import { TranslationRulesPanel } from '@/pages/admin-analytics/components/TranslationRulesPanel';
 import { ErrorMonitorPanel } from '@/pages/admin-analytics/components/ErrorMonitorPanel';
 import { SemrushPanel } from '@/pages/admin-analytics/components/SemrushPanel';
+import { SelfHealPanel } from '@/pages/admin-analytics/components/SelfHealPanel';
 
 import { exportToCsv } from '@/pages/admin-analytics/utils/exportCsv';
 
@@ -338,6 +339,7 @@ export default function AdminAnalytics() {
 
           {/* Semrush organic visibility + backlinks */}
           <SemrushPanel />
+          <SelfHealPanel />
 
           <FeedbackQueuePanel
 

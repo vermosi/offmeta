@@ -589,6 +589,45 @@ export type Database = {
           },
         ]
       }
+      self_heal_runs: {
+        Row: {
+          candidates: number
+          details: Json
+          finished_at: string | null
+          id: string
+          repaired: number
+          rolled_back: number
+          skipped: number
+          started_at: string
+          status: string
+          verified: number
+        }
+        Insert: {
+          candidates?: number
+          details?: Json
+          finished_at?: string | null
+          id?: string
+          repaired?: number
+          rolled_back?: number
+          skipped?: number
+          started_at?: string
+          status?: string
+          verified?: number
+        }
+        Update: {
+          candidates?: number
+          details?: Json
+          finished_at?: string | null
+          id?: string
+          repaired?: number
+          rolled_back?: number
+          skipped?: number
+          started_at?: string
+          status?: string
+          verified?: number
+        }
+        Relationships: []
+      }
       semrush_cache: {
         Row: {
           cache_key: string
@@ -763,36 +802,51 @@ export type Database = {
       translation_rules: {
         Row: {
           archived_at: string | null
+          auto_generated: boolean
           confidence: number
           created_at: string
           description: string | null
+          failure_count: number
           id: string
           is_active: boolean
+          last_verified_at: string | null
           pattern: string
           scryfall_syntax: string
           source_feedback_id: string | null
+          verification_state: string
+          verified_result_count: number | null
         }
         Insert: {
           archived_at?: string | null
+          auto_generated?: boolean
           confidence?: number
           created_at?: string
           description?: string | null
+          failure_count?: number
           id?: string
           is_active?: boolean
+          last_verified_at?: string | null
           pattern: string
           scryfall_syntax: string
           source_feedback_id?: string | null
+          verification_state?: string
+          verified_result_count?: number | null
         }
         Update: {
           archived_at?: string | null
+          auto_generated?: boolean
           confidence?: number
           created_at?: string
           description?: string | null
+          failure_count?: number
           id?: string
           is_active?: boolean
+          last_verified_at?: string | null
           pattern?: string
           scryfall_syntax?: string
           source_feedback_id?: string | null
+          verification_state?: string
+          verified_result_count?: number | null
         }
         Relationships: [
           {
@@ -976,6 +1030,19 @@ export type Database = {
           fuzzy_resolved: number
           share_pct: number
           total: number
+        }[]
+      }
+      get_search_failure_candidates: {
+        Args: {
+          max_results?: number
+          min_frequency?: number
+          since_date: string
+        }
+        Returns: {
+          frequency: number
+          last_translation: string
+          query: string
+          sources: string
         }[]
       }
       get_seo_health_summary: { Args: never; Returns: Json }
