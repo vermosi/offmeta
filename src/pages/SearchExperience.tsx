@@ -802,7 +802,7 @@ const Index = () => {
                 </Suspense>
               </div>
             )}
-        </main>
+        
 
         {/* Below the fold: the argument for OffMeta, kept after the cards. */}
         {!hasSearched && (
