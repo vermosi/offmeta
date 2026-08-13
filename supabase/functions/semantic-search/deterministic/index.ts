@@ -10,6 +10,7 @@
 import type { ParsedIntent, SearchIR } from './types.ts';
 import { normalizeQuery } from './normalize.ts';
 import { matchSetQuery } from '../../_shared/setMatching.ts';
+import { matchArtTagQuery } from '../../_shared/artTagMatching.ts';
 import {
   parseCardsLike,
   parseSlangTerms,
@@ -321,6 +322,16 @@ export function buildDeterministicIntent(query: string, options?: { isKnownCardN
 
   const ir = buildIR(query);
   const deterministicQuery = renderIR(ir);
+
+  // Art-tag fallback: nothing else in the pipeline understood the query, but it
+  // names a Scryfall art tag ("shirtless cards" → atag:shirtless). Runs last so
+  // functional/type parsing always wins.
+  if (!deterministicQuery.trim()) {
+    const artMatch = matchArtTagQuery(query);
+    if (artMatch) {
+      return { intent: emptyIntent(), deterministicQuery: artMatch.query };
+    }
+  }
 
   const intent: ParsedIntent = {
     colors: null,
