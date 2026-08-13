@@ -55,6 +55,12 @@ const ScryfallComparison = lazy(() =>
     default: m.ScryfallComparison,
   })),
 );
+const InstantDemoPreview = lazy(() =>
+  import('@/components/InstantDemoPreview').then((m) => ({
+    default: m.InstantDemoPreview,
+  })),
+);
+
 const StickySearchNudge = lazy(() =>
   import('@/components/StickySearchNudge').then((m) => ({
     default: m.StickySearchNudge,
@@ -112,13 +118,7 @@ const IS_TEST_MODE = import.meta.env.MODE === 'test';
 const Index = () => {
   const { t } = useTranslation();
   const location = useLocation();
-  const [showFirstUseHint, setShowFirstUseHint] = useState(() => {
-    try {
-      return localStorage.getItem('offmeta_home_hint_dismissed') !== '1';
-    } catch {
-      return true;
-    }
-  });
+
   const {
     trackLandingPageView,
     trackHomePageView,
@@ -553,98 +553,20 @@ const Index = () => {
           aria-hidden="true"
         />
         <div
+          className="fixed inset-0 pointer-events-none bg-mana-ambience"
+          aria-hidden="true"
+        />
+        <div
           className="fixed inset-0 pointer-events-none bg-page-noise"
           aria-hidden="true"
         />
 
+
         <Header />
 
         {!showResultsMode && <HeroSection />}
-        {!hasSearched && (
-          <section className="relative border-y border-border/40 bg-card/25 px-4 py-7 sm:py-9">
-            <div className="container-main">
-              <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
-                <div className="space-y-3 rounded-2xl border border-border/60 bg-background/70 p-5 shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Why OffMeta
-                  </p>
-                  <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                    Search like a player, not like a query language.
-                  </h2>
-                  <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-                    OffMeta turns plain English into real Scryfall search, shows
-                    you exactly what it built, and keeps the query editable.
-                    That means faster first results without losing control.
-                  </p>
-                  <div className="flex flex-wrap gap-2 pt-1 text-sm">
-                    <Link
-                      to="/about"
-                      className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-4 py-2 font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
-                    >
-                      Learn the difference
-                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                    </Link>
-                    <Link
-                      to="/guides"
-                      className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-4 py-2 font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
-                    >
-                      Browse guides
-                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                    </Link>
-                  </div>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                  <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm">
-                    <Search
-                      className="h-5 w-5 text-accent"
-                      aria-hidden="true"
-                    />
-                    <h3 className="mt-3 text-sm font-semibold text-foreground">
-                      Type the job
-                    </h3>
-                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                      Start with the thing you need, like a hate card, combo
-                      piece, or budget answer.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm">
-                    <SlidersHorizontal
-                      className="h-5 w-5 text-accent"
-                      aria-hidden="true"
-                    />
-                    <h3 className="mt-3 text-sm font-semibold text-foreground">
-                      See the query
-                    </h3>
-                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                      Every result exposes the Scryfall syntax so you can edit
-                      or reuse it.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm">
-                    <Sparkles
-                      className="h-5 w-5 text-accent"
-                      aria-hidden="true"
-                    />
-                    <h3 className="mt-3 text-sm font-semibold text-foreground">
-                      Keep refining
-                    </h3>
-                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                      Jump to similar cards, related searches, and follow-up
-                      actions without starting over.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-        {!hasSearched && (
-          <div id="home-quick-paths">
-            <HomepageQuickPaths />
-          </div>
-        )}
         {!hasSearched && <HomepageTour />}
+
 
         {/* Floating particles — hero area */}
         <Suspense fallback={null}>
@@ -696,41 +618,6 @@ const Index = () => {
               />
             </div>
 
-            {!hasSearched && showFirstUseHint && (
-              <div className="mx-auto max-w-3xl rounded-2xl border border-border/60 bg-card/60 px-4 py-3 text-sm text-muted-foreground shadow-sm">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="leading-relaxed">
-                    Try a plain-English search like{' '}
-                    <span className="font-medium text-foreground">
-                      "cards that punish treasure decks"
-                    </span>{' '}
-                    or{' '}
-                    <span className="font-medium text-foreground">
-                      "cards similar to Seedborn Muse"
-                    </span>
-                    .
-                  </p>
-                  <button
-                    type="button"
-                    className="self-start rounded-full border border-border/60 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5"
-                    onClick={() => {
-                      setShowFirstUseHint(false);
-                      try {
-                        localStorage.setItem(
-                          'offmeta_home_hint_dismissed',
-                          '1',
-                        );
-                      } catch {
-                        // ignore storage failures
-                      }
-                    }}
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            )}
-
             <SearchProgressIndicator
               isSearching={isSearching}
               hasSearched={hasSearched}
@@ -738,13 +625,15 @@ const Index = () => {
               cardCount={cards.length}
             />
 
+            {/* Real cards, immediately — the index should look like Magic
+                before it looks like marketing. */}
             {!hasSearched && (
-              <div id="home-examples">
-                <Suspense fallback={null}>
-                  <ExampleQueriesCarousel onTrySearch={handleTryExample} />
-                </Suspense>
-              </div>
+              <Suspense fallback={null}>
+                <InstantDemoPreview onTrySearch={handleTryExample} />
+              </Suspense>
             )}
+
+
 
             {isSearching && originalQuery && (
               <Suspense fallback={null}>
@@ -910,11 +799,104 @@ const Index = () => {
             )}
         </main>
 
+        {/* Below the fold: the argument for OffMeta, kept after the cards. */}
         {!hasSearched && (
-          <div className="container-main" aria-hidden="true">
-            <div className="section-divider" />
+          <section className="relative mt-10 border-t border-border/50 py-10 sm:py-14">
+            <div className="container-main">
+              <p className="font-mono text-[10px] uppercase tracking-[0.34em] text-muted-foreground sm:text-[11px]">
+                Why OffMeta
+              </p>
+              <div className="mt-4 grid gap-8 lg:grid-cols-12 lg:items-start">
+                <div className="lg:col-span-5">
+                  <h2 className="font-display text-3xl font-extrabold uppercase leading-[0.9] tracking-tight text-foreground sm:text-4xl">
+                    Search like a player,
+                    <br />
+                    <span className="font-editorial text-[0.92em] font-normal normal-case italic tracking-normal text-accent">
+                      not a query language.
+                    </span>
+                  </h2>
+                  <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+                    OffMeta turns plain English into real Scryfall search, shows
+                    you exactly what it built, and keeps the query editable.
+                    Faster first results without losing control.
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-4 font-mono text-[11px] uppercase tracking-[0.18em]">
+                    <Link
+                      to="/about"
+                      className="inline-flex items-center gap-2 border-b border-border/60 pb-1 text-foreground transition-colors hover:border-accent"
+                    >
+                      Learn the difference
+                      <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Link>
+                    <Link
+                      to="/guides"
+                      className="inline-flex items-center gap-2 border-b border-border/60 pb-1 text-foreground transition-colors hover:border-accent"
+                    >
+                      Browse guides
+                      <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid gap-px overflow-hidden border border-border/50 bg-border/50 sm:grid-cols-3 lg:col-span-7">
+                  {[
+                    {
+                      icon: Search,
+                      accent: 'bg-mtg-blue',
+                      title: 'Type the job',
+                      body: 'Start with the thing you need: a hate card, a combo piece, a budget answer.',
+                    },
+                    {
+                      icon: SlidersHorizontal,
+                      accent: 'bg-mtg-red',
+                      title: 'See the query',
+                      body: 'Every result exposes the Scryfall syntax so you can edit or reuse it.',
+                    },
+                    {
+                      icon: Sparkles,
+                      accent: 'bg-mtg-green',
+                      title: 'Keep refining',
+                      body: 'Jump to similar cards, related searches, and follow-ups without starting over.',
+                    },
+                  ].map(({ icon: Icon, accent, title, body }) => (
+                    <div key={title} className="bg-background/80 p-5">
+                      <span
+                        className={`block h-px w-8 ${accent}`}
+                        aria-hidden="true"
+                      />
+                      <Icon
+                        className="mt-4 h-4 w-4 text-muted-foreground"
+                        aria-hidden="true"
+                      />
+                      <h3 className="mt-3 font-display text-sm font-bold uppercase tracking-tight text-foreground">
+                        {title}
+                      </h3>
+                      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                        {body}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {!hasSearched && (
+          <div id="home-examples" className="container-main pb-2">
+            <Suspense fallback={null}>
+              <ExampleQueriesCarousel onTrySearch={handleTryExample} />
+            </Suspense>
           </div>
         )}
+
+        {!hasSearched && (
+          <div id="home-quick-paths">
+            <HomepageQuickPaths />
+          </div>
+        )}
+
+
         {!hasSearched && (
           <Suspense fallback={null}>
             <ScryfallComparison onTrySearch={handleTryExample} />

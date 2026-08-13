@@ -46,8 +46,17 @@ export default {
           'Roboto',
           'sans-serif',
         ],
-        display: ['Sora', 'Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['SF Mono', 'ui-monospace', 'Menlo', 'Monaco', 'monospace'],
+        display: ['Archivo', 'Sora', 'Inter', 'system-ui', 'sans-serif'],
+        editorial: ['Fraunces', 'Georgia', 'serif'],
+        mono: [
+          'JetBrains Mono',
+          'SF Mono',
+          'ui-monospace',
+          'Menlo',
+          'Monaco',
+          'monospace',
+        ],
+
       },
 
       fontSize: {

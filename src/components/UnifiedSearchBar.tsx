@@ -210,15 +210,21 @@ export const UnifiedSearchBar = forwardRef<
   const showExamples = !query;
   const [showAllExamples, setShowAllExamples] = useState(false);
 
-  const visibleExamples = useMemo(() => {
-    const maxVisible = isMobile && !showAllExamples ? 4 : EXAMPLE_QUERIES.length;
-    return EXAMPLE_QUERIES.slice(0, maxVisible).map((q, i) => ({
-      query: q,
-      position: i,
-    }));
-  }, [isMobile, showAllExamples]);
+  const collapsedCount = isMobile ? 4 : 6;
 
-  const hasHiddenExamples = isMobile && !showAllExamples && EXAMPLE_QUERIES.length > 4;
+  const visibleExamples = useMemo(() => {
+    const maxVisible = showAllExamples
+      ? EXAMPLE_QUERIES.length
+      : collapsedCount;
+    return EXAMPLE_QUERIES.slice(0, maxVisible).map((query, position) => ({
+      query,
+      position,
+    }));
+  }, [collapsedCount, showAllExamples]);
+
+  const hasHiddenExamples =
+    !showAllExamples && EXAMPLE_QUERIES.length > collapsedCount;
+
 
   const flattenedVisibleExamples = visibleExamples;
 
@@ -442,59 +448,46 @@ export const UnifiedSearchBar = forwardRef<
       {/* Example queries - shown when no query typed */}
       {showExamples && (
         <div
-          className="animate-reveal rounded-3xl border border-border/60 bg-card/60 p-4 shadow-sm sm:p-5"
+          className="animate-reveal flex flex-wrap items-center justify-center gap-x-2 gap-y-2"
           role="group"
           aria-label={t('search.trySearchingFor')}
         >
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Sparkles className="h-4 w-4 text-accent" aria-hidden="true" />
-            <span className="text-sm font-semibold text-foreground tracking-wide">
-              {t('search.trySearchingFor')}
-            </span>
-          </div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {visibleExamples.map(({ query: example, position }) => (
-              <button
-                key={example}
-                type="button"
-                onClick={() => {
-                  trackExampleQueryClick({
-                    query: example,
-                    category: 'flat',
-                    position,
-                    visible_count: flattenedVisibleExamples.length,
-                    is_mobile: isMobile,
-                  });
-                  setQuery(example);
-                  handleSearch(example);
-                }}
-                className="group flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 focus-ring text-muted-foreground hover:text-foreground border border-border/60 hover:border-accent/40 hover:bg-accent/10 active:scale-[0.97] hover:scale-105 hover:shadow-md hover:shadow-accent/5"
-                aria-label={t('search.searchFor').replace(
-                  '{query}',
-                  example,
-                )}
-              >
-                <Search
-                  className="h-3 w-3 flex-shrink-0 text-accent/40 group-hover:text-accent transition-colors duration-200"
-                  aria-hidden="true"
-                />
-                <span className="group-hover:text-foreground transition-colors duration-200">
-                  {example}
-                </span>
-              </button>
-            ))}
-          </div>
+          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70">
+            {t('search.trySearchingFor')} →
+          </span>
+          {visibleExamples.map(({ query: example, position }) => (
+            <button
+              key={example}
+              type="button"
+              onClick={() => {
+                trackExampleQueryClick({
+                  query: example,
+                  category: 'flat',
+                  position,
+                  visible_count: flattenedVisibleExamples.length,
+                  is_mobile: isMobile,
+                });
+                setQuery(example);
+                handleSearch(example);
+              }}
+              className="focus-ring rounded-full border border-border/60 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:border-accent/50 hover:bg-accent/10 hover:text-foreground"
+              aria-label={t('search.searchFor').replace('{query}', example)}
+            >
+              {example}
+            </button>
+          ))}
           {hasHiddenExamples && (
             <button
               type="button"
               onClick={() => setShowAllExamples(true)}
-              className="mt-3 mx-auto block text-xs text-accent hover:text-accent/80 transition-colors"
+              className="font-mono text-[11px] uppercase tracking-[0.12em] text-accent transition-colors hover:text-accent/80"
             >
-              Show more example search queries ▾
+              More ▾
             </button>
           )}
         </div>
       )}
+
     </div>
   );
 });
