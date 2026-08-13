@@ -55,7 +55,7 @@
     /* Semantic status tokens */
     --success: 152 62% 32%;
     --success-foreground: 0 0% 100%;
-    --warning: 32 90% 38%;
+    --warning: 32 90% 33%;
     --warning-foreground: 0 0% 100%;
     --info: 205 82% 38%;
     --info-foreground: 0 0% 100%;
@@ -71,21 +71,21 @@
     --mtg-red-foreground: 0 0% 100%;
     --mtg-green: 142 55% 30%;
     --mtg-green-foreground: 0 0% 100%;
-    --mtg-colorless: 250 8% 62%;
+    --mtg-colorless: 250 8% 56%;
     --mtg-colorless-foreground: 250 15% 16%;
 
     /* Domain data visualization tokens */
     --rarity-common: 250 18% 90%;
     --rarity-common-foreground: 250 12% 34%;
-    --rarity-uncommon: 220 10% 52%;
+    --rarity-uncommon: 220 10% 42%;
     --rarity-uncommon-foreground: 0 0% 100%;
-    --rarity-rare: 38 88% 40%;
+    --rarity-rare: 38 88% 32%;
     --rarity-rare-foreground: 0 0% 100%;
-    --rarity-mythic: 24 88% 44%;
+    --rarity-mythic: 24 88% 36%;
     --rarity-mythic-foreground: 0 0% 100%;
     --analytics-local: 152 58% 32%;
     --analytics-cache: 205 82% 38%;
-    --analytics-scryfall: 32 90% 38%;
+    --analytics-scryfall: 32 90% 33%;
     --deck-creature: 142 55% 32%;
     --deck-instant: 205 80% 40%;
     --deck-sorcery: 0 68% 48%;
@@ -99,8 +99,8 @@
     --contrast-foreground: 0 0% 100%;
 
     /* Borders */
-    --border: 250 16% 86%;
-    --input: 250 16% 86%;
+    --border: 250 16% 80%;
+    --input: 250 14% 58%;
     --ring: 265 62% 44%;
 
     /* Radius */
