@@ -398,38 +398,10 @@ export const UnifiedSearchBar = forwardRef<
           </Suspense>
         </div>
 
-        {/* Secondary row: Mobile-only auxiliary actions */}
-        <div className="flex sm:hidden items-center justify-center gap-2 flex-wrap">
-          <Suspense fallback={null}>
-            <SearchFeedback
-              originalQuery={query}
-              translatedQuery={lastTranslatedQuery}
-            />
-            <SearchHelpModal
-              onTryExample={(exampleQuery) => {
-                setQuery(exampleQuery);
-                handleSearch(exampleQuery);
-              }}
-            />
-          </Suspense>
-        </div>
-
         <p id="search-hint" className="sr-only">
           {t('search.hint')}
         </p>
       </div>
-
-      {/* Trust signals — compact single line, only on landing */}
-      {showExamples && (
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground/70">
-          <span>✦ Free to use</span>
-          <span>✦ Powered by Scryfall</span>
-          <span>✦ No account required</span>
-          <Suspense fallback={null}>
-            <SearchCountBadge />
-          </Suspense>
-        </div>
-      )}
 
       {/* Progressive loading phase indicator */}
       <PhaseIndicator phase={searchPhase} isCardFetching={isCardFetching} />
@@ -437,7 +409,7 @@ export const UnifiedSearchBar = forwardRef<
       {/* Example queries - shown when no query typed */}
       {showExamples && (
         <div
-          className="animate-reveal flex flex-wrap items-center justify-center gap-x-2 gap-y-2"
+          className="flex flex-wrap items-baseline gap-x-5 gap-y-2"
           role="group"
           aria-label={t('search.trySearchingFor')}
         >
@@ -459,7 +431,7 @@ export const UnifiedSearchBar = forwardRef<
                 setQuery(example);
                 handleSearch(example);
               }}
-              className="focus-ring rounded-full border border-border/60 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:border-accent/50 hover:bg-accent/10 hover:text-foreground"
+              className="focus-ring font-mono text-[11px] lowercase tracking-[0.06em] text-muted-foreground underline decoration-border underline-offset-[6px] transition-colors hover:text-foreground hover:decoration-foreground"
               aria-label={t('search.searchFor').replace('{query}', example)}
             >
               {example}
