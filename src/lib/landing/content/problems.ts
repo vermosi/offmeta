@@ -253,7 +253,12 @@ export const PROBLEM_PAGES: LandingPageConfig[] = [
         label: 'Prevent creation',
         description: 'Replacement effects, not removal.',
         query: 'tokens are not created',
-        match: ["tokens can't be created", "aren't created", 'would create one or more tokens'],
+        match: [
+          "tokens can't be created",
+          "token isn't created",
+          "tokens aren't created",
+          "can't create tokens",
+        ],
       },
       {
         label: 'Sweep',
@@ -279,7 +284,7 @@ export const PROBLEM_PAGES: LandingPageConfig[] = [
       },
     ],
     representativeQuery:
-      '(o:"tokens can\'t be created" or o:"would create one or more tokens" or o:"destroy all creatures" or o:"whenever a creature attacks you") -t:land',
+      '(o:"tokens can\'t be created" or o:"tokens aren\'t created" or o:"destroy all creatures" or o:"whenever a creature attacks you") -t:land',
     summaryTopic: 'Token hate',
     explanation: {
       title: 'About / token hate',
