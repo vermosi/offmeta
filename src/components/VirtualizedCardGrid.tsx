@@ -178,7 +178,10 @@ export function VirtualizedCardGrid({
   const { t } = useTranslation();
   // Use ceil to avoid underestimated row heights (which can cause overlap).
   const cardHeight = Math.ceil(cardWidth / CARD_ASPECT_RATIO);
-  const rowHeight = cardHeight + gap;
+  // Footer row beneath each card holds the save/owned/why controls.
+  const cardFooterHeight = 32;
+  const rowHeight = cardHeight + cardFooterHeight + gap;
+
   const rowCount = Math.ceil(cards.length / columns);
   const showLoadMoreRow =
     cards.length > 0 && (hasNextPage || isFetchingNextPage || isError);
