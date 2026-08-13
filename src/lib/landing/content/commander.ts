@@ -247,7 +247,7 @@ export const COMMANDER_PAGES: LandingPageConfig[] = [
     family: 'commander-role',
     indexable: true,
     indexTrail: ['COMMANDER', 'PROTECTION'],
-    title: 'Commander protection — keep your commander on the battlefield',
+    title: 'Commander protection — keep your commander alive',
     description:
       'Commander protection by threat: instant-speed saves, static hexproof, board-wide indestructible, counterspell backup and command-zone recursion.',
     headline: 'PROTECT THE',
