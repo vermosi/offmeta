@@ -278,8 +278,6 @@ export function SearchResultsArea({
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
-                            whyReport={buildWhyItMatches(card, effectiveIntent)}
-                            onRefineWithMatch={onRefineWithMatch}
                           />
                         </div>
                       );
