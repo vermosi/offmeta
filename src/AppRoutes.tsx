@@ -20,6 +20,7 @@ const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'));
 const AdminCuratedSearches = lazy(() => import('./pages/AdminCuratedSearches'));
 const FindMyCombos = lazy(() => import('./pages/FindMyCombos'));
+const DeckCheck = lazy(() => import('./pages/DeckCheck'));
 const BrowseSearches = lazy(() => import('./pages/BrowseSearches'));
 const About = lazy(() => import('./pages/About'));
 const MarketTrends = lazy(() => import('./pages/MarketTrends'));
@@ -86,6 +87,7 @@ export default function AppRoutes() {
               element={withFullApp(<AdminCuratedSearches />)}
             />
             <Route path="/combos" element={withFullApp(<FindMyCombos />)} />
+            <Route path="/deck-check" element={withFullApp(<DeckCheck />)} />
             <Route
               path="/browse-searches"
               element={withFullApp(<BrowseSearches />)}
