@@ -136,3 +136,104 @@ export function matchSetQuery(rawQuery: string): SetMatch | null {
 
   return null;
 }
+
+/**
+ * Set names that double as ordinary Magic vocabulary. Matching these inside a
+ * larger query would hijack functional searches ("red dwarf commander"), so
+ * they only resolve when the user types them as the entire query.
+ */
+const RESERVED_PHRASE_NAMES = new Set([
+  'commander',
+  'conspiracy',
+  'archenemy',
+  'planechase',
+  'vanguard',
+  'legends',
+  'invasion',
+  'foundations',
+  'starter',
+  'battlebond',
+  'portal',
+  'mystery booster',
+  'jumpstart',
+  'unlimited',
+  'revised',
+  'alliances',
+  'prophecy',
+  'nemesis',
+  'exodus',
+  'stronghold',
+  'tempest',
+  'visions',
+  'homelands',
+  'chronicles',
+  'apocalypse',
+  'judgment',
+  'torment',
+  'odyssey',
+  'onslaught',
+  'legions',
+  'scourge',
+  'eventide',
+  'morningtide',
+  'conflux',
+  'worldwake',
+  'planeshift',
+]);
+
+export interface SetPhraseMatch extends SetMatch {
+  /** The words of the original query that named the set. */
+  matchedPhrase: string;
+  /** Everything else the user typed, with the set phrase removed. */
+  remainder: string;
+}
+
+/**
+ * Finds a set name *inside* a longer query so mixed intents still work:
+ * "the hobbit red dwarf" → `(e:hob or e:hoc)` plus the leftover "red dwarf",
+ * which the normal deterministic parser turns into `c:r t:dwarf`.
+ *
+ * Deliberately conservative: only full set names match (never bare codes),
+ * single-word names must be at least five characters, and names that are also
+ * everyday Magic vocabulary are excluded.
+ */
+export function matchSetPhrase(rawQuery: string): SetPhraseMatch | null {
+  const tokens = normalize(rawQuery).split(' ').filter(Boolean);
+  if (tokens.length < 2) return null;
+
+  for (let size = Math.min(tokens.length - 1, 6); size >= 1; size -= 1) {
+    for (let start = 0; start + size <= tokens.length; start += 1) {
+      const window = tokens.slice(start, start + size);
+      const windowSignature = window.filter((word) => !FILLER_WORDS.has(word)).join(' ');
+      if (!windowSignature) continue;
+      if (RESERVED_PHRASE_NAMES.has(windowSignature)) continue;
+      if (!windowSignature.includes(' ') && windowSignature.length < 5) continue;
+
+      const nameMatches = SCRYFALL_SETS.filter(
+        (set) => signature(set.name) === windowSignature,
+      );
+      if (nameMatches.length === 0) continue;
+
+      const remainder = [...tokens.slice(0, start), ...tokens.slice(start + size)]
+        .filter((word) => !FILLER_WORDS.has(word))
+        .join(' ')
+        .trim();
+      if (!remainder) continue;
+
+      const codes = new Set(nameMatches.map((set) => set.code));
+      const children = SCRYFALL_SETS.filter(
+        (set) => set.parentSetCode && codes.has(set.parentSetCode) && !codes.has(set.code),
+      );
+      const sets = [...nameMatches, ...children].sort(byRelease);
+      return {
+        sets,
+        query: renderQuery(sets),
+        reason: 'exact-name',
+        matchedPhrase: window.join(' '),
+        remainder,
+      };
+    }
+  }
+
+  return null;
+}
