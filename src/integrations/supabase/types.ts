@@ -335,6 +335,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ops_watchdog_runs: {
+        Row: {
+          checks: Json
+          finished_at: string | null
+          id: string
+          problems: number
+          remediations: number
+          started_at: string
+          status: string
+        }
+        Insert: {
+          checks?: Json
+          finished_at?: string | null
+          id?: string
+          problems?: number
+          remediations?: number
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          checks?: Json
+          finished_at?: string | null
+          id?: string
+          problems?: number
+          remediations?: number
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       price_snapshots: {
         Row: {
           card_name: string
@@ -970,6 +1000,7 @@ export type Database = {
         }[]
       }
       get_error_monitor_summary: { Args: { days_back?: number }; Returns: Json }
+      get_ops_freshness: { Args: never; Returns: Json }
       get_price_movers: {
         Args: { days_back?: number; limit_count?: number; min_price?: number }
         Returns: {
@@ -1015,6 +1046,16 @@ export type Database = {
           successful_searches: number
           total_searches: number
           updated_at: string
+        }[]
+      }
+      get_recent_cron_failures: {
+        Args: { p_hours?: number }
+        Returns: {
+          failures: number
+          jobid: number
+          jobname: string
+          last_message: string
+          last_run: string
         }[]
       }
       get_search_analytics: {

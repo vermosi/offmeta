@@ -1,0 +1,1 @@
+SELECT cron.unschedule('price-snapshot-test');
