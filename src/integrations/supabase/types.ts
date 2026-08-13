@@ -288,6 +288,7 @@ export type Database = {
           last_fix_result: Json | null
           last_seen_at: string
           message: string
+          next_attempt_at: string
           occurrence_count: number
           severity: string
           source: string
@@ -307,6 +308,7 @@ export type Database = {
           last_fix_result?: Json | null
           last_seen_at?: string
           message: string
+          next_attempt_at?: string
           occurrence_count?: number
           severity?: string
           source: string
@@ -326,12 +328,34 @@ export type Database = {
           last_fix_result?: Json | null
           last_seen_at?: string
           message?: string
+          next_attempt_at?: string
           occurrence_count?: number
           severity?: string
           source?: string
           status?: string
           updated_at?: string
           url?: string | null
+        }
+        Relationships: []
+      }
+      job_locks: {
+        Row: {
+          expires_at: string
+          holder: string
+          job_name: string
+          locked_at: string
+        }
+        Insert: {
+          expires_at: string
+          holder: string
+          job_name: string
+          locked_at?: string
+        }
+        Update: {
+          expires_at?: string
+          holder?: string
+          job_name?: string
+          locked_at?: string
         }
         Relationships: []
       }
@@ -1145,6 +1169,10 @@ export type Database = {
         }[]
       }
       refresh_price_mover_stats: { Args: never; Returns: undefined }
+      release_job_lock: {
+        Args: { p_holder: string; p_job: string }
+        Returns: undefined
+      }
       report_error_event: {
         Args: {
           p_context?: Json
@@ -1155,6 +1183,10 @@ export type Database = {
           p_url?: string
         }
         Returns: undefined
+      }
+      try_acquire_job_lock: {
+        Args: { p_holder: string; p_job: string; p_ttl_seconds?: number }
+        Returns: boolean
       }
     }
     Enums: {
