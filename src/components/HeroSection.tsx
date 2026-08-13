@@ -52,7 +52,7 @@ export function HeroSection() {
         <div className="grid gap-6 pt-8 sm:pt-10 lg:grid-cols-12 lg:items-end">
           <h1
             id="hero-heading"
-            className="lg:col-span-8 font-display text-[clamp(2.75rem,8vw,6rem)] font-extrabold uppercase leading-[0.85] tracking-tight text-foreground"
+            className="lg:col-span-8 font-display text-[clamp(2.5rem,6.4vw,5rem)] font-extrabold uppercase leading-[0.85] tracking-tight text-foreground"
           >
             <span className="sr-only">
               OffMeta. Search Magic cards in plain English.{' '}
