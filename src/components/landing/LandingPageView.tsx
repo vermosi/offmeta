@@ -12,7 +12,9 @@ import { SkipLinks } from '@/components/SkipLinks';
 import { PageSearchBar } from '@/components/PageSearchBar';
 import { applySeoMeta, buildBreadcrumbJsonLd, injectJsonLd } from '@/lib/seo';
 import type { LandingPageConfig } from '@/lib/landing/types';
+import { getLandingPage } from '@/lib/landing/registry';
 import {
+  AdjacentConcepts,
   EditorialExplanation,
   EditorialHero,
   IndexHeader,
@@ -33,7 +35,8 @@ function buildCrumbs(config: LandingPageConfig) {
     const root = segments[0];
     crumbs.push({
       label: root === 'mtg' ? 'Card index' : root.replace(/-/g, ' '),
-      href: `/${root}`,
+      // Only link the parent when a real page exists there.
+      href: getLandingPage(`/${root}`) ? `/${root}` : undefined,
     });
   }
   crumbs.push({ label: config.breadcrumbLabel, href: config.path });
@@ -104,6 +107,7 @@ export function LandingPageView({ config }: { config: LandingPageConfig }) {
           <PageSearchBar
             initialValue={config.searchQuery}
             placeholder={config.searchQuery}
+            size="lg"
           />
           <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
             Edit the query, or start from a path below
@@ -119,6 +123,8 @@ export function LandingPageView({ config }: { config: LandingPageConfig }) {
           <RepresentativeResults
             query={config.representativeQuery}
             label={config.representativeLabel ?? 'Representative results'}
+            intentPaths={config.intentPaths}
+            summaryTopic={config.summaryTopic ?? config.breadcrumbLabel}
           />
         ) : null}
 
@@ -129,7 +135,9 @@ export function LandingPageView({ config }: { config: LandingPageConfig }) {
           />
         ) : null}
 
-        {config.relatedSearches?.length ? (
+        {config.adjacentConcepts?.length ? (
+          <AdjacentConcepts concepts={config.adjacentConcepts} />
+        ) : config.relatedSearches?.length ? (
           <RelatedSearches queries={config.relatedSearches} />
         ) : null}
 

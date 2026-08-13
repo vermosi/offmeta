@@ -29,24 +29,38 @@ export const PROBLEM_PAGES: LandingPageConfig[] = [
         label: 'Punish sacrifice',
         description: 'Make each sacrifice cost them something.',
         query: 'punish opponents for sacrificing artifacts',
+        match: ['sacrifices an artifact', 'whenever a player sacrifices'],
       },
       {
         label: 'Punish creation',
         description: 'Tax the token generation itself.',
         query: 'hurt opponents for creating artifact tokens',
+        match: [
+          'whenever a player creates',
+          'whenever an opponent creates',
+          'if a player would create',
+          'if an opponent would create',
+        ],
       },
       {
         label: 'Remove them',
         description: 'Asymmetric artifact sweepers.',
         query: 'destroy all artifacts except mine',
+        match: ['destroy all artifacts', 'exile all artifacts'],
       },
       {
         label: 'Shut them off',
         description: 'Turn off activated abilities entirely.',
         query: 'stop activated abilities of artifacts',
+        match: [
+          'activated abilities of artifacts',
+          "abilities of artifacts can't be activated",
+        ],
       },
     ],
-    representativeQuery: 'o:"artifact" (o:"can\'t" or o:"loses life") -t:land',
+    representativeQuery:
+      '(o:"activated abilities of artifacts" or o:"destroy all artifacts" or o:"exile all artifacts" or o:"sacrifices an artifact" or o:"whenever a player creates" or o:"whenever an opponent creates") -t:land',
+    summaryTopic: 'Treasure hate',
     explanation: {
       title: 'About / treasure hate',
       paragraphs: [
@@ -54,10 +68,29 @@ export const PROBLEM_PAGES: LandingPageConfig[] = [
         'Searching Scryfall for "treasure" returns mostly cards that make Treasures. The answer cards rarely mention the word at all, which is precisely why intent-first search finds them and keyword search does not.',
       ],
     },
-    relatedSearches: [
-      'stop opponents from sacrificing permanents',
-      'tax effects for artifact tokens',
-      'asymmetric artifact board wipes',
+    adjacentConcepts: [
+      {
+        label: 'Artifact hate',
+        query: 'artifact hate that hits combo pieces',
+        href: '/mtg/artifact-hate',
+      },
+      {
+        label: 'Token hate',
+        query: 'cards that stop opponents from making tokens',
+        href: '/mtg/token-hate',
+      },
+      {
+        label: 'Sacrifice hate',
+        query: 'stop opponents from sacrificing permanents',
+      },
+      {
+        label: 'Mana denial',
+        query: 'tax effects that make artifact mana worse',
+      },
+      {
+        label: 'Asymmetric sweepers',
+        query: 'asymmetric artifact board wipes',
+      },
     ],
     relatedPages: [
       { label: 'Artifact hate', href: '/mtg/artifact-hate' },
@@ -89,11 +122,17 @@ export const PROBLEM_PAGES: LandingPageConfig[] = [
         label: 'Static lock',
         description: 'Cards never reach the graveyard at all.',
         query: 'permanents that exile cards instead of putting them in graveyards',
+        match: ['instead of putting', 'exile it instead', 'exiles it instead'],
       },
       {
         label: 'One-sided',
         description: 'Keep your own graveyard intact.',
         query: 'exile opponents graveyards but not mine',
+        match: [
+          "opponents' graveyards",
+          "each opponent's graveyard",
+          "target opponent's graveyard",
+        ],
       },
       {
         label: 'Colourless',
@@ -107,6 +146,7 @@ export const PROBLEM_PAGES: LandingPageConfig[] = [
       },
     ],
     representativeQuery: 'o:"exile" o:"graveyard" (t:artifact or t:enchantment)',
+    summaryTopic: 'Graveyard hate',
     explanation: {
       title: 'About / graveyard hate',
       paragraphs: [
@@ -144,6 +184,7 @@ export const PROBLEM_PAGES: LandingPageConfig[] = [
         label: 'Single target',
         description: 'Cheap, clean, instant speed.',
         query: 'cheap instants that exile an artifact',
+        match: ['destroy target artifact', 'exile target artifact'],
       },
       {
         label: 'Repeatable',
@@ -154,19 +195,27 @@ export const PROBLEM_PAGES: LandingPageConfig[] = [
         label: 'Mass',
         description: 'Sweep the whole class.',
         query: 'destroy all artifacts',
+        match: ['destroy all artifacts', 'exile all artifacts'],
       },
       {
         label: 'Switch off',
         description: 'Stop abilities without removing anything.',
         query: 'artifacts abilities do not function',
+        match: [
+          'activated abilities of artifacts',
+          "abilities of artifacts can't be activated",
+        ],
       },
       {
         label: 'Tax',
         description: 'Make artifacts expensive to use.',
         query: 'make artifact spells and abilities cost more',
+        match: ['artifact spells cost', 'artifact spells your opponents cast cost'],
       },
     ],
-    representativeQuery: '(o:"destroy target artifact" or o:"exile target artifact") mv<=3',
+    representativeQuery:
+      '(o:"destroy target artifact" or o:"exile target artifact" or o:"destroy all artifacts" or o:"activated abilities of artifacts" or o:"artifact spells cost") -t:land',
+    summaryTopic: 'Artifact hate',
     explanation: {
       title: 'About / artifact hate',
       paragraphs: [
@@ -204,16 +253,24 @@ export const PROBLEM_PAGES: LandingPageConfig[] = [
         label: 'Prevent creation',
         description: 'Replacement effects, not removal.',
         query: 'tokens are not created',
+        match: [
+          "tokens can't be created",
+          "token isn't created",
+          "tokens aren't created",
+          "can't create tokens",
+        ],
       },
       {
         label: 'Sweep',
         description: 'Cheap mass removal that scales.',
         query: 'destroy all creatures with power two or less',
+        match: ['destroy all creatures', 'exile all creatures'],
       },
       {
         label: 'Punish attacks',
         description: 'Make swarming expensive.',
         query: 'punish opponents for attacking with multiple creatures',
+        match: ['whenever a creature attacks you', 'for each attacking creature'],
       },
       {
         label: 'Tax',
@@ -226,7 +283,9 @@ export const PROBLEM_PAGES: LandingPageConfig[] = [
         query: 'creatures that block multiple attackers',
       },
     ],
-    representativeQuery: 'o:"token" o:"can\'t" -t:land',
+    representativeQuery:
+      '(o:"tokens can\'t be created" or o:"tokens aren\'t created" or o:"destroy all creatures" or o:"whenever a creature attacks you") -t:land',
+    summaryTopic: 'Token hate',
     explanation: {
       title: 'About / token hate',
       paragraphs: [
@@ -264,11 +323,13 @@ export const PROBLEM_PAGES: LandingPageConfig[] = [
         label: 'Prevent',
         description: 'Players simply cannot gain life.',
         query: 'players cannot gain life',
+        match: ["can't gain life", 'gain no life'],
       },
       {
         label: 'Punish',
         description: 'Turn their gain into a cost.',
         query: 'punish opponents for gaining life',
+        match: ['whenever a player gains life', 'whenever an opponent gains life'],
       },
       {
         label: 'Drain',
@@ -286,7 +347,9 @@ export const PROBLEM_PAGES: LandingPageConfig[] = [
         query: 'prevent damage from being dealt by creatures with lifelink',
       },
     ],
-    representativeQuery: 'o:"can\'t gain life"',
+    representativeQuery:
+      '(o:"can\'t gain life" or o:"whenever a player gains life" or o:"whenever an opponent gains life") -t:land',
+    summaryTopic: 'Lifegain hate',
     explanation: {
       title: 'About / lifegain hate',
       paragraphs: [
