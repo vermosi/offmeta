@@ -98,7 +98,7 @@ export async function searchByConcepts(
 
   const { data, error } = await supabase.rpc('search_card_profiles', {
     p_tag_keys: concepts,
-    p_colors: colors.length > 0 ? colors : null,
+    p_colors: colors.length > 0 ? colors : undefined,
     p_match: options.match === 'all' ? 'all' : 'any',
     p_limit: Math.min(Math.max(options.limit ?? 40, 1), 200),
   });
