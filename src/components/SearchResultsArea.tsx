@@ -92,7 +92,6 @@ interface SearchResultsAreaProps {
    * Handler for one-click refinement from the "Why this matches" badge.
    * Receives the Scryfall token (e.g. `otag:treasure`) to append to the query.
    */
-  onRefineWithMatch?: (token: string, label: string) => void;
 }
 
 export function SearchResultsArea({
@@ -128,7 +127,6 @@ export function SearchResultsArea({
   onApplyFilterPatch,
   onClearAllFilters,
   intent,
-  onRefineWithMatch,
 }: SearchResultsAreaProps) {
   const topSourceCard = useMemo(
     () => (cards.length > 0 ? cards[0] : null),
