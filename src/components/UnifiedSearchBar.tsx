@@ -13,7 +13,6 @@ import {
   useImperativeHandle,
   forwardRef,
 } from 'react';
-import { Button } from '@/components/ui/button';
 import { Search, Loader2, X, Clock, Sparkles, Database } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useSearchContext } from '@/hooks/useSearchContext';
@@ -34,11 +33,6 @@ import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 import { useTranslation } from '@/lib/i18n';
 
-const SearchCountBadge = lazy(() =>
-  import('@/components/SearchCountBadge').then((m) => ({
-    default: m.SearchCountBadge,
-  })),
-);
 const VoiceSearchControl = lazy(() =>
   import('@/components/VoiceSearchControl').then((m) => ({
     default: m.VoiceSearchControl,
@@ -94,17 +88,13 @@ function PhaseIndicator({
 
   return (
     <div
-      className="flex items-center justify-center gap-2 animate-fade-in"
+      className="flex items-center gap-2"
       role="status"
       aria-live="polite"
       aria-label={label}
     >
       <div
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-300 ${
-          isTranslating
-            ? 'bg-primary/10 border-primary/20 text-primary'
-            : 'bg-accent/10 border-accent/20 text-accent-foreground'
-        }`}
+        className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground"
       >
         {isTranslating ? (
           <>
