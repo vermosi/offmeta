@@ -56,6 +56,15 @@ export default function DocsIndex() {
         icon: Sparkles,
       },
       {
+        title: t('docs.apiTitle', 'Semantic API'),
+        description: t(
+          'docs.apiDesc',
+          'Read-only API for card roles, methods, problems addressed and characteristics.',
+        ),
+        href: '/api',
+        icon: Code2,
+      },
+      {
         title: t('nav.guides', 'Guides'),
         description: `${GUIDES.length} ${t('docs.guidesDesc', 'progressive guides')}`,
         href: '/guides',
