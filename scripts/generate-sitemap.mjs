@@ -28,6 +28,11 @@ const STATIC_PATHS = [
   '/docs',
   '/docs/syntax',
   '/about',
+  '/search-intents',
+  '/search-intents/budget',
+  '/search-intents/hate',
+  '/search-intents/similar',
+  '/cards-like',
 ];
 
 const GUIDE_SLUGS = [
@@ -43,6 +48,30 @@ const GUIDE_SLUGS = [
   'multi-constraint-complex-search',
   'cards-like-x',
 ];
+
+// Editorial landing pages. This node script cannot import the TypeScript
+// registry, so the indexable paths are read straight out of the config
+// sources — the registry stays the single source of truth.
+const LANDING_CONTENT_DIR = 'src/lib/landing/content';
+const MIN_EXPECTED_LANDING_PAGES = 28;
+
+async function readIndexableLandingPaths() {
+  const files = await fs.readdir(LANDING_CONTENT_DIR);
+  const paths = [];
+  for (const file of files) {
+    if (!file.endsWith('.ts')) continue;
+    const source = await fs.readFile(`${LANDING_CONTENT_DIR}/${file}`, 'utf8');
+    // Each config declares `path: '/...'` and, shortly after, `indexable: <bool>`.
+    const configRe = /path:\s*'([^']+)'[\s\S]{0,400}?indexable:\s*(true|false)/g;
+    let match;
+    while ((match = configRe.exec(source)) !== null) {
+      const [, path, indexable] = match;
+      if (indexable === 'true' && path.startsWith('/')) paths.push(path);
+    }
+  }
+  return [...new Set(paths)];
+}
+
 
 // Truly-offline fallback — only used when SUPABASE env vars are absent.
 // If env is present but a request fails, we throw so CI/build surfaces it.
@@ -254,6 +283,18 @@ for (const slug of GUIDE_SLUGS) {
   pushUnique(`/guides/${slug}`, null);
 }
 
+const landingPaths = await readIndexableLandingPaths();
+if (landingPaths.length < MIN_EXPECTED_LANDING_PAGES) {
+  console.error(
+    `[sitemap] Only ${landingPaths.length} indexable landing pages found ` +
+      `(expected >= ${MIN_EXPECTED_LANDING_PAGES}) — refusing to drop landing coverage.`,
+  );
+  process.exit(1);
+}
+for (const path of landingPaths) {
+  pushUnique(path, null);
+}
+
 for (const row of curated) {
   pushUnique(`/search/${row.slug}`, toLastmodDate(row.updated_at));
 }
@@ -300,7 +341,8 @@ await fs.writeFile(OUTPUT, xml, 'utf8');
 console.log(
   `[sitemap] Wrote ${seen.size} URLs ` +
     `(cards=${cards.length}, search=${curated.length}, ai=${seoPages.length}, ` +
-    `guides=${GUIDE_SLUGS.length}, static=${STATIC_PATHS.length}, ` +
+    `guides=${GUIDE_SLUGS.length}, landing=${landingPaths.length}, ` +
+    `static=${STATIC_PATHS.length}, ` +
     `supabase=${HAS_SUPABASE ? 'on' : 'off'}).`,
 );
 

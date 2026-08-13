@@ -8,6 +8,11 @@
   <url><loc>https://offmeta.app/docs</loc></url>
   <url><loc>https://offmeta.app/docs/syntax</loc></url>
   <url><loc>https://offmeta.app/about</loc></url>
+  <url><loc>https://offmeta.app/search-intents</loc></url>
+  <url><loc>https://offmeta.app/search-intents/budget</loc></url>
+  <url><loc>https://offmeta.app/search-intents/hate</loc></url>
+  <url><loc>https://offmeta.app/search-intents/similar</loc></url>
+  <url><loc>https://offmeta.app/cards-like</loc></url>
   <url><loc>https://offmeta.app/guides/search-by-creature-type</loc></url>
   <url><loc>https://offmeta.app/guides/filter-by-color</loc></url>
   <url><loc>https://offmeta.app/guides/budget-price-filters</loc></url>
@@ -19,6 +24,34 @@
   <url><loc>https://offmeta.app/guides/etb-and-flicker-combos</loc></url>
   <url><loc>https://offmeta.app/guides/multi-constraint-complex-search</loc></url>
   <url><loc>https://offmeta.app/guides/cards-like-x</loc></url>
+  <url><loc>https://offmeta.app/alternatives/rhystic-study</loc></url>
+  <url><loc>https://offmeta.app/alternatives/smothering-tithe</loc></url>
+  <url><loc>https://offmeta.app/alternatives/cyclonic-rift</loc></url>
+  <url><loc>https://offmeta.app/alternatives/demonic-tutor</loc></url>
+  <url><loc>https://offmeta.app/alternatives/dockside-extortionist</loc></url>
+  <url><loc>https://offmeta.app/mtg/red/card-draw</loc></url>
+  <url><loc>https://offmeta.app/mtg/white/card-draw</loc></url>
+  <url><loc>https://offmeta.app/mtg/black/ramp</loc></url>
+  <url><loc>https://offmeta.app/mtg/red/ramp</loc></url>
+  <url><loc>https://offmeta.app/mtg/green/removal</loc></url>
+  <url><loc>https://offmeta.app/commander/card-draw</loc></url>
+  <url><loc>https://offmeta.app/commander/ramp</loc></url>
+  <url><loc>https://offmeta.app/commander/removal</loc></url>
+  <url><loc>https://offmeta.app/commander/board-wipes</loc></url>
+  <url><loc>https://offmeta.app/commander/protection</loc></url>
+  <url><loc>https://offmeta.app/scryfall-alternative</loc></url>
+  <url><loc>https://offmeta.app/mtg/treasure-hate</loc></url>
+  <url><loc>https://offmeta.app/mtg/graveyard-hate</loc></url>
+  <url><loc>https://offmeta.app/mtg/artifact-hate</loc></url>
+  <url><loc>https://offmeta.app/mtg/token-hate</loc></url>
+  <url><loc>https://offmeta.app/mtg/lifegain-hate</loc></url>
+  <url><loc>https://offmeta.app/mtg/card-draw</loc></url>
+  <url><loc>https://offmeta.app/mtg/ramp</loc></url>
+  <url><loc>https://offmeta.app/mtg/removal</loc></url>
+  <url><loc>https://offmeta.app/mtg/board-wipes</loc></url>
+  <url><loc>https://offmeta.app/mtg/protection</loc></url>
+  <url><loc>https://offmeta.app/mtg/recursion</loc></url>
+  <url><loc>https://offmeta.app/mtg/tutors</loc></url>
   <url><loc>https://offmeta.app/search/best-commander-board-wipes</loc><lastmod>2026-03-14</lastmod></url>
   <url><loc>https://offmeta.app/search/best-commander-ramp-spells</loc><lastmod>2026-03-14</lastmod></url>
   <url><loc>https://offmeta.app/search/best-commander-card-draw</loc><lastmod>2026-03-14</lastmod></url>
@@ -109,6 +142,22 @@
   <url><loc>https://offmeta.app/search/city-of-death</loc><lastmod>2026-05-17</lastmod></url>
   <url><loc>https://offmeta.app/search/transform-target-creature</loc><lastmod>2026-05-17</lastmod></url>
   <url><loc>https://offmeta.app/search/cards-with-the-mutate-ability</loc><lastmod>2026-05-24</lastmod></url>
+  <url><loc>https://offmeta.app/ai/shirtless-commanders</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/return-permanent-to-hand</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/goblin</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/give-commander-indestructible</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/cards-similar-to-seedborn-muse</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/budget-alternatives-to-rhystic-study</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/utility-lands-for-commander-in-esper-under-5</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/creatures-that-make-treasure</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/rune-scarred-demon</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/cards-that-separate-into-piles</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/ritual-effects</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/etb-combos</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/goblins-that-sacrifice-artifacts</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/commander-ramp</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/cheap-red-treasure-cards</loc><lastmod>2026-08-13</lastmod></url>
+  <url><loc>https://offmeta.app/ai/cards-that-punish-treasure-decks</loc><lastmod>2026-08-13</lastmod></url>
   <url><loc>https://offmeta.app/ai/creatures-that-make-treasure-tokens</loc><lastmod>2026-03-22</lastmod></url>
   <url><loc>https://offmeta.app/ai/artifacts-that-produce-2-mana</loc><lastmod>2026-03-22</lastmod></url>
   <url><loc>https://offmeta.app/ai/lightning-bolt</loc><lastmod>2026-03-22</lastmod></url>

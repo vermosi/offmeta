@@ -20,6 +20,11 @@ const similarityData = {
   budgetResults: { data: [{ id: 'card-3' }] },
 };
 
+// The page renders the shared Header, which reads auth context.
+vi.mock('@/components/Header', () => ({
+  Header: () => <header data-testid="header" />,
+}));
+
 vi.mock('@/hooks/useAnalytics', () => ({
   useAnalytics: () => ({ trackEvent }),
 }));

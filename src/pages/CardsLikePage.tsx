@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, Search, Sparkles } from 'lucide-react';
-import { applySeoMeta } from '@/lib/seo';
+import { applySeoMeta, injectJsonLd, buildBreadcrumbJsonLd } from '@/lib/seo';
 import { useSimilarCards } from '@/hooks/useSimilarCards';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { SimilarCardsPanel } from '@/components/SimilarCardsPanel';
@@ -85,14 +85,51 @@ export default function CardsLikePage() {
   const attribution = useMemo(readAttribution, []);
 
   useEffect(() => {
+    const cardName = cardSlug ? slugToCardName(cardSlug) : null;
+    const pageUrl = `https://offmeta.app${cardSlug ? `/cards-like/${cardSlug}` : '/cards-like'}`;
+    const pageTitle = cardName
+      ? `Cards Like ${cardName} | OffMeta`
+      : 'Find Cards Like Any MTG Card | OffMeta';
+    const pageDescription = cardName
+      ? `Alternatives and functionally similar Magic: The Gathering cards to ${cardName}, ranked by how they play.`
+      : 'Search any Magic: The Gathering card and discover similar cards, alternatives, and related options with OffMeta.';
+
     const cleanupMeta = applySeoMeta({
-      title: 'Find Cards Like Any MTG Card | OffMeta',
-      description:
-        'Search any Magic: The Gathering card and discover similar cards, alternatives, and related options with OffMeta.',
-      url: `https://offmeta.app${cardSlug ? `/cards-like/${cardSlug}` : '/cards-like'}`,
+      title: pageTitle,
+      description: pageDescription,
+      url: pageUrl,
       type: 'website',
     });
-    return cleanupMeta;
+
+    const crumbs = [
+      { name: 'OffMeta', url: 'https://offmeta.app/' },
+      { name: 'Cards Like', url: 'https://offmeta.app/cards-like' },
+    ];
+    if (cardName) crumbs.push({ name: cardName, url: pageUrl });
+
+    const cleanupLd = injectJsonLd({
+      '@context': 'https://schema.org',
+      '@graph': [
+        buildBreadcrumbJsonLd(crumbs),
+        {
+          '@type': 'CollectionPage',
+          name: pageTitle,
+          description: pageDescription,
+          url: pageUrl,
+          inLanguage: 'en',
+          isPartOf: {
+            '@type': 'WebSite',
+            name: 'OffMeta',
+            url: 'https://offmeta.app/',
+          },
+        },
+      ],
+    });
+
+    return () => {
+      cleanupMeta();
+      cleanupLd();
+    };
   }, [cardSlug]);
 
   useEffect(() => {

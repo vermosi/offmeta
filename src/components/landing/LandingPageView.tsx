@@ -75,8 +75,23 @@ export function LandingPageView({ config }: { config: LandingPageConfig }) {
           url,
           inLanguage: 'en',
           isPartOf: { '@type': 'WebSite', name: 'OffMeta', url: `${SITE}/` },
+          // The curated intent paths are the page's real content — expose
+          // them so the CollectionPage is not an empty shell.
+          mainEntity: {
+            '@type': 'ItemList',
+            name: config.intentPathsTitle ?? 'Explore',
+            numberOfItems: config.intentPaths.length,
+            itemListElement: config.intentPaths.map((path, index) => ({
+              '@type': 'ListItem',
+              position: index + 1,
+              name: path.label,
+              description: path.description,
+              url: `${SITE}/?q=${encodeURIComponent(path.query)}`,
+            })),
+          },
         },
       ],
+
     });
 
     return () => {
