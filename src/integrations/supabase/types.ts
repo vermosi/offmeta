@@ -1283,6 +1283,7 @@ export type Database = {
           tag_key: string
         }[]
       }
+      get_card_profiles: { Args: { p_names: string[] }; Returns: Json }
       get_card_recommendations: {
         Args: {
           result_limit?: number
@@ -1453,6 +1454,18 @@ export type Database = {
         Args: { client_ip: string; limit_count: number; window_seconds: number }
         Returns: Json
       }
+      list_ontology_concepts: {
+        Args: never
+        Returns: {
+          approaches: string[]
+          card_count: number
+          description: string
+          dimension: string
+          label: string
+          related: string[]
+          tag_key: string
+        }[]
+      }
       match_concepts_by_alias: {
         Args: { match_count?: number; search_term: string }
         Returns: {
@@ -1514,6 +1527,26 @@ export type Database = {
           p_url?: string
         }
         Returns: undefined
+      }
+      search_card_profiles: {
+        Args: {
+          p_colors?: string[]
+          p_limit?: number
+          p_match?: string
+          p_tag_keys: string[]
+        }
+        Returns: {
+          cmc: number
+          colors: string[]
+          image_url: string
+          mana_cost: string
+          match_count: number
+          matched_tags: string[]
+          name: string
+          oracle_id: string
+          rarity: string
+          type_line: string
+        }[]
       }
       try_acquire_job_lock: {
         Args: { p_holder: string; p_job: string; p_ttl_seconds?: number }
