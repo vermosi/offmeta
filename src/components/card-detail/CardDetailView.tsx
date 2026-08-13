@@ -1,7 +1,8 @@
 /**
  * Full card detail view — the single source of truth for card presentation.
- * Rendered by the card page route (/cards/:slug). Replaces the old CardModal so
- * the in-app card experience and the indexable page are identical.
+ * Rendered by the card page route (/cards/:slug). Editorial "reference entry"
+ * layout: artwork first, then rulings, legality, pricing/history, printings,
+ * and metadata, each as a numbered, hairline-ruled section.
  * @module components/card-detail/CardDetailView
  */
 
@@ -16,27 +17,70 @@ import {
 } from '@/lib/scryfall/client';
 import { getCardPrintings, type CardPrinting } from '@/lib/scryfall/printings';
 
-import { Shield } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { ManaCost } from '@/components/ManaSymbol';
+import { cn } from '@/lib/core/utils';
+import { ManaCost, OracleText } from '@/components/ManaSymbol';
 import { useAnalytics, useAffiliateConfig } from '@/hooks';
 import { useTranslation } from '@/lib/i18n';
 
 import { CardModalImage } from '@/components/CardModal/CardModalImage';
 import { CardModalDetails } from '@/components/CardModal/CardModalDetails';
-import { getRarityVariant } from '@/components/CardModal/rarity';
 import { CardModalPurchaseLinks } from '@/components/CardModal/CardModalPurchaseLinks';
 import { CardModalRulings } from '@/components/CardModal/CardModalRulings';
 import { CardModalLegalities } from '@/components/CardModal/CardModalLegalities';
 import { CardModalPrintings } from '@/components/CardModal/CardModalPrintings';
 import { CardModalToolbox } from '@/components/CardModal/CardModalToolbox';
-import { CardModalBentoTile } from '@/components/CardModal/CardModalBentoTile';
 import { CardPriceHistoryChart } from '@/components/CardPriceHistoryChart';
 import { CardModalCombos } from '@/components/CardModal/CardModalCombos';
 import type { DisplayPrices } from '@/components/CardModal/types';
 
 export interface CardDetailViewProps {
   card: ScryfallCard;
+}
+
+/** Numbered, hairline-ruled section header in the editorial index style. */
+function SectionRule({
+  index,
+  label,
+  note,
+  className,
+}: {
+  index: string;
+  label: string;
+  note?: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        'flex items-baseline gap-3 border-b border-border/60 pb-2',
+        className,
+      )}
+    >
+      <span className="font-mono text-[10px] tracking-[0.28em] text-muted-foreground/70">
+        {index}
+      </span>
+      <h2 className="font-mono text-[11px] uppercase tracking-[0.28em] text-foreground">
+        {label}
+      </h2>
+      {note && (
+        <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+          {note}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function MetaRow({ label, value }: { label: string; value?: string | null }) {
+  if (!value) return null;
+  return (
+    <div className="flex items-baseline justify-between gap-4 border-b border-border/30 py-1.5">
+      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+        {label}
+      </span>
+      <span className="text-sm text-foreground text-right break-words">{value}</span>
+    </div>
+  );
 }
 
 export function CardDetailView({ card }: CardDetailViewProps) {
@@ -52,7 +96,7 @@ export function CardDetailView({ card }: CardDetailViewProps) {
   const [isFlipping, setIsFlipping] = useState(false);
   const [rulings, setRulings] = useState<CardRuling[]>([]);
   const [isLoadingRulings, setIsLoadingRulings] = useState(true);
-  const [showRulings, setShowRulings] = useState(false);
+  const [showRulings, setShowRulings] = useState(true);
   const [comboCount, setComboCount] = useState(0);
 
   const isDoubleFaced = isDoubleFacedCard(card);
@@ -65,7 +109,7 @@ export function CardDetailView({ card }: CardDetailViewProps) {
     setSelectedPrinting(null);
     setRefreshedPrices(null);
     setRulings([]);
-    setShowRulings(false);
+    setShowRulings(true);
     setIsLoadingRulings(true);
     setIsLoadingPrintings(true);
     setComboCount(0);
@@ -177,20 +221,110 @@ export function CardDetailView({ card }: CardDetailViewProps) {
     );
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-6 items-start">
-      {/* Sidebar: art, purchase, price history */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col items-center">
-          <CardModalImage
-            displayImageUrl={displayImageUrl}
-            cardName={faceDetails.name}
-            isDoubleFaced={isDoubleFaced}
-            isFlipping={isFlipping}
-            onTransform={handleTransform}
-          />
-        </div>
+    <article className="space-y-10">
+      {/* ── 01 · Artwork + entry head ─────────────────────────────────────── */}
+      <section aria-labelledby="card-entry-title" className="space-y-5">
+        <SectionRule
+          index="01"
+          label={t('card.artwork', 'Artwork')}
+          note={`${displaySetName}${displayCollectorNumber ? ` · #${displayCollectorNumber}` : ''}`}
+        />
 
-        <CardModalBentoTile className="bg-muted/30 border-border/30">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:gap-10 items-start">
+          <div className="mx-auto w-full max-w-[300px] sm:max-w-[340px] lg:mx-0 lg:sticky lg:top-20">
+            <CardModalImage
+              displayImageUrl={displayImageUrl}
+              cardName={faceDetails.name}
+              isDoubleFaced={isDoubleFaced}
+              isFlipping={isFlipping}
+              onTransform={handleTransform}
+            />
+            {displayArtist && (
+              <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-center lg:text-left">
+                {t('card.illustratedBy', 'Illustrated by')} {displayArtist}
+              </p>
+            )}
+          </div>
+
+          <div className="min-w-0 space-y-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0">
+                <h1
+                  id="card-entry-title"
+                  className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground leading-[1.05] break-words"
+                >
+                  {faceDetails.name}
+                </h1>
+                <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                  {faceDetails.type_line}
+                </p>
+              </div>
+              {faceDetails.mana_cost && (
+                <ManaCost cost={faceDetails.mana_cost} size="md" />
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-x-6 gap-y-1 border-y border-border/50 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              <span>{displayRarity}</span>
+              {faceDetails.power && faceDetails.toughness && (
+                <span>
+                  {faceDetails.power}/{faceDetails.toughness}
+                </span>
+              )}
+              {faceDetails.loyalty && <span>Loyalty {faceDetails.loyalty}</span>}
+              {card.reserved && (
+                <span className="text-rarity-rare">
+                  {t('card.reservedList', 'Reserved List')}
+                </span>
+              )}
+            </div>
+
+            {faceDetails.oracle_text && (
+              <div className="text-[15px] leading-relaxed text-foreground whitespace-pre-line">
+                <OracleText text={faceDetails.oracle_text} />
+              </div>
+            )}
+
+            {faceDetails.flavor_text && (
+              <p className="border-l border-border/60 pl-4 font-serif italic text-sm text-muted-foreground">
+                {faceDetails.flavor_text}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 02 · Rulings ─────────────────────────────────────────────────── */}
+      <section aria-label={t('card.rulingsSection', 'Rulings')} className="space-y-4">
+        <SectionRule
+          index="02"
+          label={t('card.rulingsLabel', 'Rulings')}
+          note={isLoadingRulings ? '—' : String(rulings.length)}
+        />
+        {!isLoadingRulings && rulings.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {t('card.noRulings', 'No official rulings published for this card.')}
+          </p>
+        ) : (
+          <CardModalRulings
+            rulings={rulings}
+            isLoading={isLoadingRulings}
+            showRulings={showRulings}
+            onToggleRulings={() => setShowRulings(!showRulings)}
+          />
+        )}
+      </section>
+
+      {/* ── 03 · Legality ────────────────────────────────────────────────── */}
+      <section aria-label={t('card.formatLegality', 'Format Legality')} className="space-y-4">
+        <SectionRule index="03" label={t('card.formatLegality', 'Format Legality')} />
+        <CardModalLegalities legalities={card.legalities} />
+      </section>
+
+      {/* ── 04 · Pricing & history ───────────────────────────────────────── */}
+      <section aria-label={t('card.pricing', 'Pricing')} className="space-y-4">
+        <SectionRule index="04" label={t('card.pricing', 'Pricing & History')} />
+        <div className="grid gap-6 lg:grid-cols-2 items-start">
           <CardModalPurchaseLinks
             card={card}
             displayPrices={displayPrices}
@@ -199,111 +333,72 @@ export function CardDetailView({ card }: CardDetailViewProps) {
             isLoadingPrintings={isLoadingPrintings}
             onAffiliateClick={handleAffiliateClick}
           />
-        </CardModalBentoTile>
-
-        <CardPriceHistoryChart
-          cardName={card.name}
-          scryfallId={selectedPrinting?.id ?? card.id}
-        />
-
-
-        <CardModalBentoTile>
-          <CardModalToolbox cardName={card.name} scryfallUri={card.scryfall_uri} />
-        </CardModalBentoTile>
-      </div>
-
-      {/* Main content */}
-      <div className="flex flex-col gap-4 min-w-0">
-        <CardModalBentoTile className="bg-gradient-to-br from-primary/5 via-card/80 to-accent/5 border-primary/20">
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground leading-tight break-words">
-                  {faceDetails.name}
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1.5">
-                  {faceDetails.type_line}
-                </p>
-                <div className="flex items-center gap-2 flex-wrap mt-3">
-                  <Badge variant={getRarityVariant(displayRarity)} className="capitalize">
-                    {displayRarity}
-                  </Badge>
-                  <Badge variant="secondary">
-                    {displaySetName}
-                    {displayCollectorNumber && ` #${displayCollectorNumber}`}
-                  </Badge>
-                  {card.reserved && (
-                    <Badge
-                      variant="outline"
-                      className="bg-rarity-rare/10 text-rarity-rare border-rarity-rare/30 gap-1"
-                    >
-                      <Shield className="h-3 w-3" />
-                      {t('card.reservedList', 'Reserved List')}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              {faceDetails.mana_cost && (
-                <div className="flex-shrink-0 sm:pt-1">
-                  <ManaCost cost={faceDetails.mana_cost} size="md" />
-                </div>
-              )}
-            </div>
-
-            <div className="border-t border-border/40 pt-4">
-              <CardModalDetails
-                faceDetails={faceDetails}
-                displaySetName={displaySetName}
-                displayRarity={displayRarity}
-                displayCollectorNumber={displayCollectorNumber}
-                displayArtist={displayArtist}
-                isReserved={card.reserved}
-                englishPrintings={englishPrintings}
-                selectedPrintingId={selectedPrinting?.id}
-                cardId={card.id}
-                showHeader={false}
-              />
-            </div>
-          </div>
-        </CardModalBentoTile>
-
-        <CardModalBentoTile>
-          <CardModalRulings
-            rulings={rulings}
-            isLoading={isLoadingRulings}
-            showRulings={showRulings}
-            onToggleRulings={() => setShowRulings(!showRulings)}
+          <CardPriceHistoryChart
+            cardName={card.name}
+            scryfallId={selectedPrinting?.id ?? card.id}
           />
-        </CardModalBentoTile>
-
-        <div className={comboCount > 0 ? undefined : 'hidden'}>
-          <CardModalBentoTile>
-            <CardModalCombos
-              cardName={card.name}
-              onComboCountChange={setComboCount}
-            />
-          </CardModalBentoTile>
         </div>
+      </section>
 
-        <div className="grid gap-4 lg:grid-cols-2 items-start">
-          <CardModalBentoTile>
-            <CardModalPrintings
-              printings={englishPrintings}
-              isLoading={isLoadingPrintings}
+      {/* ── 05 · Printings ───────────────────────────────────────────────── */}
+      <section aria-label={t('card.printingsSection', 'Printings')} className="space-y-4">
+        <SectionRule
+          index="05"
+          label={t('card.printingsLabel', 'Printings')}
+          note={isLoadingPrintings ? '—' : String(englishPrintings.length)}
+        />
+        <CardModalPrintings
+          printings={englishPrintings}
+          isLoading={isLoadingPrintings}
+          selectedPrintingId={selectedPrinting?.id}
+          cardId={card.id}
+          onSelectPrinting={handleSelectPrinting}
+        />
+      </section>
+
+      {/* ── 06 · Metadata ────────────────────────────────────────────────── */}
+      <section aria-label={t('card.metadata', 'Metadata')} className="space-y-4">
+        <SectionRule index="06" label={t('card.metadata', 'Metadata')} />
+        <div className="grid gap-6 lg:grid-cols-2 items-start">
+          <div>
+            <MetaRow label={t('card.set', 'Set')} value={displaySetName} />
+            <MetaRow
+              label={t('card.collectorNumber', 'Collector №')}
+              value={displayCollectorNumber || undefined}
+            />
+            <MetaRow label={t('card.rarity', 'Rarity')} value={displayRarity} />
+            <MetaRow label={t('card.artist', 'Artist')} value={displayArtist} />
+            <MetaRow
+              label={t('card.manaValue', 'Mana Value')}
+              value={card.cmc !== undefined ? String(card.cmc) : undefined}
+            />
+          </div>
+          <div className="min-w-0">
+            <CardModalDetails
+              faceDetails={faceDetails}
+              displaySetName={displaySetName}
+              displayRarity={displayRarity}
+              displayCollectorNumber={displayCollectorNumber}
+              displayArtist={displayArtist}
+              isReserved={card.reserved}
+              englishPrintings={englishPrintings}
               selectedPrintingId={selectedPrinting?.id}
               cardId={card.id}
-              onSelectPrinting={handleSelectPrinting}
+              showHeader={false}
             />
-          </CardModalBentoTile>
-
-          <CardModalBentoTile>
-            <CardModalLegalities legalities={card.legalities} />
-          </CardModalBentoTile>
+          </div>
         </div>
-      </div>
-    </div>
+
+        <div className={comboCount > 0 ? 'pt-2' : 'hidden'}>
+          <CardModalCombos cardName={card.name} onComboCountChange={setComboCount} />
+        </div>
+
+        <div className="pt-2">
+          <CardModalToolbox cardName={card.name} scryfallUri={card.scryfall_uri} />
+        </div>
+      </section>
+    </article>
   );
 }
-
 
 export default CardDetailView;
