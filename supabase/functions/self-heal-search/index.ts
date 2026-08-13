@@ -82,6 +82,31 @@ interface Candidate {
 
 type Detail = Record<string, unknown>;
 
+/** Stable failure buckets, so diagnostics can be aggregated over time. */
+export type ReasonCode =
+  | 'no_model_response'
+  | 'unparseable_response'
+  | 'low_confidence'
+  | 'duplicate_syntax'
+  | 'invalid_otag'
+  | 'scryfall_rejected'
+  | 'zero_results'
+  | 'below_threshold';
+
+interface AttemptRecord extends Record<string, unknown> {
+  attempt: number;
+  temperature: number;
+  syntax: string;
+  code: ReasonCode;
+  reason: string;
+}
+
+function countReasonCodes(attempts: AttemptRecord[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const a of attempts) counts[a.code] = (counts[a.code] ?? 0) + 1;
+  return counts;
+}
+
 /** Exact-name Scryfall syntax matches a single card by name (e.g. !"..." or name:"..."). */
 function isExactNameSyntax(syntax: string): boolean {
   const trimmed = syntax.trim().toLowerCase();
