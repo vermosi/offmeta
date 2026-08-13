@@ -304,7 +304,7 @@ export const UnifiedSearchBar = forwardRef<
                     setTimeout(() => setShowHistoryDropdown(false), 200);
                   }
                 }}
-                className="flex-1 min-w-0 w-full bg-transparent text-base sm:text-lg text-foreground placeholder:text-muted-foreground focus:outline-none py-3 px-3 sm:px-2"
+                className="w-full min-w-0 flex-1 bg-transparent px-4 py-4 text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none sm:px-5 sm:py-5 sm:text-lg"
                 autoComplete="off"
                 autoCorrect="off"
                 spellCheck="false"
