@@ -29,6 +29,10 @@ const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 /** Hard cap on tracked users so a flood can't grow memory unbounded. */
 const RATE_LIMIT_MAX_USERS = 5_000;
+/** Repeat clicks on the same results link by the same actor collapse into one. */
+const CLICK_DEDUPE_WINDOW_MS = 30_000;
+/** Hard cap on tracked click keys so a flood can't grow memory unbounded. */
+const CLICK_DEDUPE_MAX_KEYS = 5_000;
 
 const InteractionType = { PING: 1, APPLICATION_COMMAND: 2 } as const;
 const InteractionResponseType = {
