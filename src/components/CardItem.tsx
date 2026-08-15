@@ -35,7 +35,10 @@ interface CardItemProps {
   tabIndex?: number;
   isOwned?: boolean;
   sparklineData?: SparklinePoint[];
+  /** Deterministic match explanation, shown as a compact caption on the tile. */
+  whyReport?: WhyItMatchesReport | null;
 }
+
 
 /** Format a price string to a compact display. */
 function formatPrice(card: ScryfallCard): string | null {
