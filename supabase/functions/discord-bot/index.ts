@@ -490,6 +490,23 @@ const MAX_BROWSABLE_CARDS = 500;
 /** custom_id prefix for the pagination buttons. */
 export const PAGE_BUTTON_PREFIX = 'offmeta_page';
 
+/**
+ * Recover the search behind a paginated message. The original query is the
+ * embed title and the translated query lives in the "Interpreted as" field,
+ * so the buttons need no state store and survive cold starts.
+ */
+export function extractEmbedContext(
+  interaction: { message?: { embeds?: Array<{ title?: string; fields?: Array<{ name?: string; value?: string }> }> } },
+): { query: string; scryfallQuery: string } | null {
+  const embed = interaction.message?.embeds?.[0];
+  if (!embed?.title) return null;
+  const field = embed.fields?.find((f) => f.name === 'Interpreted as');
+  const scryfallQuery = (field?.value ?? '').replace(/`/g, '').trim();
+  if (!scryfallQuery) return null;
+  return { query: embed.title.slice(0, MAX_QUERY_LENGTH), scryfallQuery };
+}
+
+
 /** Parse a pagination button custom_id back into a zero-based page index. */
 export function parsePageCustomId(customId: string | undefined): number | null {
   if (!customId) return null;
