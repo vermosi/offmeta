@@ -421,9 +421,10 @@ export default function FindMyCombos() {
                   ).length
                 : 0;
             return (
-              <div className="space-y-6">
+              <div className="mt-14 space-y-8 border-t border-border pt-8">
                 {/* Filter toolbar */}
-                <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border/50 bg-muted/30 p-3">
+                <div className="flex flex-wrap items-center gap-3 border border-border/60 bg-muted/20 p-3">
+
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs text-muted-foreground mr-1">
                       {t('combos.colorsLabel', 'Colors:')}
