@@ -4,10 +4,12 @@
  * @module pages/BrowseSearches
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search,
+  SearchX,
+  ServerCrash,
   Sword,
   DollarSign,
   Users,
@@ -18,9 +20,11 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
+import { StateMessage } from '@/components/StateMessage';
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 import { logger } from '@/lib/core/logger';
 import { useTranslation } from '@/lib/i18n';
+
 
 interface CuratedSearch {
   slug: string;
