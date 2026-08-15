@@ -24,11 +24,21 @@ const SITE_URL = 'https://offmeta.app';
 const MAX_QUERY_LENGTH = 300;
 const MAX_CARDS = 5;
 
+/** Per-user sliding-window limit: searches allowed per RATE_LIMIT_WINDOW_MS. */
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+/** Hard cap on tracked users so a flood can't grow memory unbounded. */
+const RATE_LIMIT_MAX_USERS = 5_000;
+
 const InteractionType = { PING: 1, APPLICATION_COMMAND: 2 } as const;
 const InteractionResponseType = {
   PONG: 1,
+  CHANNEL_MESSAGE: 4,
   DEFERRED_CHANNEL_MESSAGE: 5,
 } as const;
+
+/** Discord message flag: only the invoking user sees the reply. */
+const EPHEMERAL = 1 << 6;
 
 interface DiscordOption {
   name: string;
@@ -39,8 +49,57 @@ interface DiscordInteraction {
   type: number;
   token?: string;
   application_id?: string;
+  user?: { id?: string };
+  member?: { user?: { id?: string } };
   data?: { name?: string; options?: DiscordOption[] };
 }
+
+/** In-memory sliding window. Resets on cold start — abuse brake, not billing. */
+const rateBuckets = new Map<string, number[]>();
+
+export interface RateLimitResult {
+  allowed: boolean;
+  retryAfterSeconds: number;
+}
+
+/**
+ * Record an attempt for `userId` and report whether it is allowed.
+ * Pure aside from the module-level bucket map; `now` is injectable for tests.
+ */
+export function checkRateLimit(userId: string, now = Date.now()): RateLimitResult {
+  const cutoff = now - RATE_LIMIT_WINDOW_MS;
+  const recent = (rateBuckets.get(userId) ?? []).filter((ts) => ts > cutoff);
+
+  if (recent.length >= RATE_LIMIT_MAX) {
+    rateBuckets.set(userId, recent);
+    const oldest = recent[0];
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.max(
+        1,
+        Math.ceil((oldest + RATE_LIMIT_WINDOW_MS - now) / 1000),
+      ),
+    };
+  }
+
+  recent.push(now);
+  rateBuckets.set(userId, recent);
+
+  if (rateBuckets.size > RATE_LIMIT_MAX_USERS) {
+    for (const [key, stamps] of rateBuckets) {
+      if (stamps.every((ts) => ts <= cutoff)) rateBuckets.delete(key);
+      if (rateBuckets.size <= RATE_LIMIT_MAX_USERS) break;
+    }
+  }
+
+  return { allowed: true, retryAfterSeconds: 0 };
+}
+
+/** Discord user id for the interaction (guild member or DM user). */
+export function extractUserId(interaction: DiscordInteraction): string {
+  return interaction.member?.user?.id ?? interaction.user?.id ?? '';
+}
+
 
 function hexToBytes(hex: string): Uint8Array {
   const clean = hex.trim();
