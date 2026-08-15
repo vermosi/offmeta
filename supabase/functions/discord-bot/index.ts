@@ -287,7 +287,7 @@ export function buildClickRow(event: DiscordClickEvent) {
 }
 
 /** Best-effort analytics write. Never blocks or fails the interaction. */
-async function recordAnalytics(event: DiscordAnalyticsEvent): Promise<void> {
+async function insertAnalyticsRow(row: unknown): Promise<void> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!supabaseUrl || !serviceRoleKey) return;
@@ -301,7 +301,7 @@ async function recordAnalytics(event: DiscordAnalyticsEvent): Promise<void> {
         'Content-Type': 'application/json',
         Prefer: 'return=minimal',
       },
-      body: JSON.stringify(buildAnalyticsRow(event)),
+      body: JSON.stringify(row),
     });
     if (!response.ok) {
       log.error('analytics_write_failed', { status: response.status });
@@ -311,6 +311,16 @@ async function recordAnalytics(event: DiscordAnalyticsEvent): Promise<void> {
       message: error instanceof Error ? error.message : 'unknown',
     });
   }
+}
+
+/** Record a search interaction. */
+function recordAnalytics(event: DiscordAnalyticsEvent): Promise<void> {
+  return insertAnalyticsRow(buildAnalyticsRow(event));
+}
+
+/** Record an outbound results-link click, tied to the same actor hash. */
+function recordClick(event: DiscordClickEvent): Promise<void> {
+  return insertAnalyticsRow(buildClickRow(event));
 }
 
 
