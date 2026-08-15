@@ -339,20 +339,30 @@ serve(withLogging('card-similarity', async (req: Request): Promise<Response> => 
       );
     }
 
-    // Build deterministic queries
+    // Functional tags first: they describe what the card does. Type/mana-value
+    // heuristics are only a fallback when nothing functional matches.
+    const functionalTags = deriveFunctionalTags(body);
+    const functionalQuery = isStrongFingerprint(functionalTags)
+      ? await resolveFunctionalQuery(body, functionalTags)
+      : null;
+
     const mechanics = await getMechanicsForCard(body);
-    const similarQuery = buildSimilarQuery(body, mechanics);
-    const budgetQuery = buildBudgetQuery(body, mechanics);
+    const similarQuery = functionalQuery ?? buildSimilarQuery(body, mechanics);
+    const budgetQuery = functionalQuery
+      ? `${functionalQuery} usd<${budgetCeiling(body)}`
+      : buildBudgetQuery(body, mechanics);
 
     return new Response(
       JSON.stringify({
         success: true,
         similarQuery,
         budgetQuery,
+        functionalTags,
         cached: false,
       } satisfies SimilarityResponse),
       { status: 200, headers },
     );
+
   } catch (e) {
     console.error('card-similarity error:', e);
     return new Response(
