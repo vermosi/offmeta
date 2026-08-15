@@ -719,6 +719,22 @@ export function scryfallPageFor(offset: number): {
   };
 }
 
+/**
+ * Upstream budgets. Discord shows "thinking" until the deferred message is
+ * edited, so every stage must fail fast rather than hang.
+ */
+const SCRYFALL_TIMEOUT_MS = 8000;
+const TRANSLATE_TIMEOUT_MS = 12000;
+const SEARCH_BUDGET_MS = 20000;
+
+/** Reject with `<label>_timeout` when `work` outlives its budget. */
+function withTimeout<T>(work: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label}_timeout`)), ms);
+    work.then(resolve, reject).finally(() => clearTimeout(timer));
+  });
+}
+
 interface ScryfallSlice {
   outcome: SearchOutcome;
   cards: CardSummary[];
@@ -742,6 +758,7 @@ async function fetchScryfallSlice(
           'User-Agent': 'OffMetaDiscordBot/1.0',
           Accept: 'application/json',
         },
+        signal: AbortSignal.timeout(SCRYFALL_TIMEOUT_MS),
       },
     );
   } catch (error) {
@@ -813,6 +830,7 @@ async function runSearch(
             Authorization: `Bearer ${serviceRoleKey}`,
             'Content-Type': 'application/json',
           },
+          signal: AbortSignal.timeout(TRANSLATE_TIMEOUT_MS),
           body: JSON.stringify({ query, useCache: true }),
         },
       );
@@ -858,14 +876,21 @@ async function sendFollowup(
   token: string,
   body: Record<string, unknown>,
 ): Promise<void> {
-  await fetch(
+  const res = await fetch(
     `https://discord.com/api/v10/webhooks/${applicationId}/${token}/messages/@original`,
     {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(SCRYFALL_TIMEOUT_MS),
     },
   );
+  if (!res.ok) {
+    log.error('followup_failed', {
+      status: res.status,
+      detail: (await res.text().catch(() => '')).slice(0, 200),
+    });
+  }
 }
 
 /**
@@ -1249,6 +1274,11 @@ function trackPending(work: Promise<unknown>): void {
     pendingWork.delete(tracked);
   });
   pendingWork.add(tracked);
+  // Without waitUntil the edge runtime may tear the isolate down as soon as the
+  // deferred ack is returned, leaving Discord stuck on "thinking" forever.
+  const runtime = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } })
+    .EdgeRuntime;
+  runtime?.waitUntil?.(tracked);
 }
 
 /** Await all in-flight follow-up work. Test/shutdown helper. */
@@ -1347,7 +1377,7 @@ export async function handleDiscordRequest(req: Request): Promise<Response> {
             serviceRoleKey,
           );
           try {
-            const { outcome, cards, totalCards } = await runPagedSearch(
+            const { outcome, cards, totalCards } = await withTimeout(runPagedSearch(
               context.scryfallQuery,
               page * PAGE_SIZE,
             );
@@ -1461,7 +1491,7 @@ export async function handleDiscordRequest(req: Request): Promise<Response> {
 
         try {
           const { outcome, scryfallQuery, cards, totalCards } =
-            await runSearch(query);
+            await withTimeout(runSearch(query), SEARCH_BUDGET_MS, 'search');
           await sendFollowup(applicationId, token, {
             embeds: [
               buildEmbed(
