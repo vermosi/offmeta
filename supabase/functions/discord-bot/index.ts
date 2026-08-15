@@ -19,8 +19,23 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
 import { resolveAlternativesQuery } from './alternatives.ts';
 
+function normalizeDiacritics(str: string): string {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+/** Convert a card name to the canonical /cards/:slug URL shape used by the site. */
+export function cardNameToSlug(name: string): string {
+  return normalizeDiacritics(name)
+    .toLowerCase()
+    .replace(/['']/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
 
 const log = createLogger('discord-bot');
+
 
 const SITE_URL = 'https://offmeta.app';
 const MAX_QUERY_LENGTH = 300;
