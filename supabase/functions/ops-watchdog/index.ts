@@ -270,6 +270,44 @@ async function unstickSelfHealRuns(checks: Check[]): Promise<number> {
   return count;
 }
 
+/**
+ * 3a-bis. Convergence guard: if recent self-heal runs keep harvesting the same
+ * candidate volume without repairing anything, the loop is spinning on queries
+ * it cannot fix. Surface it instead of letting it burn budget silently.
+ */
+async function checkSelfHealConvergence(checks: Check[]): Promise<void> {
+  const { data, error } = await supabase
+    .from('self_heal_runs')
+    .select('candidates, repaired, verified')
+    .eq('status', 'completed')
+    .order('started_at', { ascending: false })
+    .limit(3);
+  if (error) {
+    checks.push({ check: 'self_heal_convergence', status: 'error', detail: error.message });
+    return;
+  }
+  const runs = (data ?? []) as Array<{
+    candidates: number;
+    repaired: number;
+    verified: number;
+  }>;
+  if (runs.length < 3) {
+    checks.push({ check: 'self_heal_convergence', status: 'ok', data: { runs: runs.length } });
+    return;
+  }
+  const totalRepaired = runs.reduce((sum, r) => sum + (r.repaired ?? 0), 0);
+  const sameBacklog = runs.every((r) => r.candidates === runs[0].candidates);
+  const stalled = sameBacklog && runs[0].candidates > 0 && totalRepaired === 0;
+  checks.push({
+    check: 'self_heal_convergence',
+    status: stalled ? 'warn' : 'ok',
+    detail: stalled
+      ? `self-heal harvested ${runs[0].candidates} candidates in each of the last 3 runs and repaired none`
+      : undefined,
+    data: { candidates: runs[0].candidates, repairedLast3: totalRepaired },
+  });
+}
+
 /** 3b. Give exhausted error_events one more window, then close them out. */
 async function rotateExhaustedErrors(checks: Check[]): Promise<number> {
   const cooldown = new Date(Date.now() - RETRY_COOLDOWN_HOURS * 3_600_000).toISOString();
@@ -384,6 +422,7 @@ serve(
       await checkCronFailures(checks);
       remediations += await checkFreshness(checks);
       remediations += await unstickSelfHealRuns(checks);
+      await checkSelfHealConvergence(checks);
       remediations += await rotateExhaustedErrors(checks);
       remediations += await drainErrorQueue(checks);
     } catch (err) {
