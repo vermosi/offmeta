@@ -1,60 +1,41 @@
-# Low-Bandwidth Growth Engine
+# Follow-up work after the Discord + Combos changes
 
-## What already exists (reuse, don't rebuild)
+Recent work (Discord pagination, branded `/go` links, functional similarity, Find My Combos restyle) left a few loose ends. Here is what is worth closing out, in priority order.
 
-- **Analytics**: `analytics_events` table + `useAnalytics` hook (session id, bot filtering, rate limiting, UTM capture) and `src/lib/analytics/context.ts` (session + first-touch attribution, PostHog super properties). Funnel events already exist in `src/lib/analytics/funnels.ts`.
-- **Events already tracked**: `search_started`, `search_success`, `search_failure`, `card_click`, `share_clicked`, `first_return_visit`, `route_view`.
-- **Sharing**: `CopyLinkButton` (in the results toolbar), `SharePageButton`, `ShareSearchButton`.
-- **Search URLs**: `/?q=...` and a `/search/:slug` route, both rendering `SearchExperience`; filters already encode into the URL.
-- **SEO**: `SeoManager` sets per-search title/description/canonical/OG; curated searches + sitemap already handle the indexable set.
-- **Admin**: `admin-rpc` edge function with `admin_api.*` server-side aggregation and a `ConversionFunnelPanel` that already breaks traffic down by UTM source.
+## 1. Publish so the branded Discord links resolve
 
-So this is mostly an **extension** job: add `ref` as a first-class attribution dimension, sharpen the share affordance, add one admin view, and add a `/creators` page.
+`/go` exists in the app router (`src/AppRoutes.tsx` → `src/pages/GoRedirect.tsx`) but the live site has not been published since the route was added, so every tracked Discord result link 404s in production. Publishing is the fix; nothing to code.
 
-## P0 — Referral attribution
+## 2. Bring the Discord docs up to date
 
-- Add `ref` (plus `via`) to the attribution keys in `src/lib/analytics/context.ts`, sanitized and normalized (lowercase, alphanumeric + dashes, max 32 chars).
-- Persist like UTMs: session-scoped value wins for the visit, first-touch value stored in localStorage for lifetime attribution.
-- Attach `ref` / `initial_ref` to every Supabase `analytics_events` row and every PostHog event via the existing super-property path. No new tracking stack, no account needed, no personal data.
-- Emit a once-per-session `referral_visit` event, and add `second_search` (fired when a session's second successful search completes) to the allow-list. The remaining requested events already exist under current names (`search_started`, `search_success`, `share_clicked`, `card_click`, `first_return_visit`).
+`docs/discord-bot.md` still describes the original one-shot embed. It does not mention:
+- Prev / Next pagination buttons, the 500-result browse ceiling, and the fact that paging reuses the already-translated query.
+- The branded `offmeta.app/go` link flow, HMAC signing, 7-day link expiry, and click analytics.
+- Per-user rate limiting (5 searches/min) and how paging clicks count against it.
+- The `?health=1` startup check and the protected `?register=1` command-registration endpoint (the doc still tells you to register by hand via curl).
+- `cards like X` routing through the card-similarity engine with functional tag fingerprinting.
 
-## P0 — Referral analytics in admin
+## 3. Finish the i18n pass on Find My Combos
 
-- New `admin_api.get_referral_acquisition(days_back)` SQL function + public admin-guarded wrapper, following the existing `get_conversion_funnel` pattern (migration included).
-- Per source: visitors (distinct sessions), searches, searches/visitor, second-search rate, shares, return visitors.
-- Surface as an "Acquisition" table inside the existing analytics area (new panel next to `ConversionFunnelPanel`), sorted by engaged users, not raw visits.
+The restyled page introduced new labels with inline English fallbacks (for example `combos.eyebrow`). Add the missing keys to all 11 locale files so nothing falls back to English, and confirm the removed search bar left no orphaned keys behind.
 
-## P0 — Shareable search URLs + share action
+## 4. Update the Find My Combos test
 
-- Keep the current `?q=` URL as the canonical shareable link (it already restores query, filters, and view mode).
-- When a visit arrives with a `q` param and an external referrer, show a quiet one-line context strip above the results: what was searched, plus a clear "Search something else" affordance that focuses the search bar. Styled with the existing editorial tokens — not a marketing banner.
-- Upgrade the toolbar's copy-link control into a small share control: native `navigator.share` when available, clipboard copy otherwise, same visual weight as today. Emits `share_clicked` with `surface` and `ref`.
+`src/pages/__tests__/FindMyCombos.test.tsx` predates the restyle and the search-bar removal. Update assertions to the current header/structure and add a case asserting the page no longer renders a search input.
 
-## P1 — Share card image
+## 5. Editorial shell consistency sweep
 
-- `src/lib/share/shareCard.ts` renders a share image client-side on `<canvas>`: the plain-English question, up to 3 result card arts, and a small `offmeta.app` wordmark. No gradients, no logo wall.
-- Used by the share control (`files` share when supported, otherwise download). Server-side dynamic OG image generation is deferred — the client version needs no infrastructure and the module boundary keeps a future edge function drop-in.
+Deck Check and Combos now share the editorial shell (mono eyebrow, display h1, `max-w-4xl`, squared corners). Audit the remaining secondary routes for the same treatment and fix the outliers: `/market`, `/browse-searches`, `/about`, `/docs`, `/creators`, `/guides`.
 
-## P1 — /creators page
+## 6. Add a GoRedirect route test
 
-Single lean route reusing the existing editorial landing primitives:
-- Two-paragraph explanation of what OffMeta does.
-- 10 demo-worthy searches as clickable links (each one a real search URL).
-- A small input that turns a name into `https://offmeta.app/?ref=name` with a copy button. No accounts, no dashboard, no rewards.
-- One short note on the built-in share action.
-Route is indexable; linked from the footer only.
+There is no test for `src/pages/GoRedirect.tsx`. Cover the three paths: valid signature redirects, invalid signature shows the 400 message, expired link shows the 410 message.
 
-## P2 — Discord / content tooling (documented, minimal build)
+## 7. Refresh the backlog
 
-- The existing `offmeta-api` edge function already exposes search without frontend assumptions, so a Discord bot needs no new backend. I'll document the smallest bot implementation (slash command → `offmeta-api` → embed + result link) in `docs/` rather than shipping a bot.
-- Interesting-search admin tooling is deferred; the referral/acquisition panel lands first and the curated-searches admin already lists high-value queries.
-
-## SEO decision
-
-No change to indexing behaviour: user-generated `?q=` searches stay non-indexable through the existing canonical strategy, curated searches remain the indexable surface, and `/creators` is a single new indexable page. `ref` params never enter canonical URLs.
+Log the above in `docs/autonomous-improvement-backlog.md` with priorities so the autonomous loop picks them up in order.
 
 ## Technical notes
 
-- Migration: one new `admin_api` function + admin-guarded public wrapper with explicit GRANTs.
-- Tests: attribution parsing/persistence for `ref`, share-URL construction, share-card text layout helpers, referral analytics panel rendering.
-- Verification: lint, typecheck, unit tests, and bundle-size check after implementation.
+- No schema or edge-function behaviour changes are proposed here beyond documentation; the bot code itself is deployed and working.
+- Tests run with `npm run test`; i18n key additions should be verified with the existing missing-key check before shipping.
