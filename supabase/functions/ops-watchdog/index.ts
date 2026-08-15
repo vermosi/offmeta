@@ -71,7 +71,7 @@ const DISPATCH_TIMEOUT_MS = 5_000;
 
 type Check = {
   check: string;
-  status: 'ok' | 'problem' | 'remediated' | 'error';
+  status: 'ok' | 'problem' | 'warn' | 'remediated' | 'error';
   detail?: string;
   data?: Record<string, unknown>;
 };
