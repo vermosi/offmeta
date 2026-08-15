@@ -423,6 +423,38 @@ interface CardSummary {
   manaCost: string;
   scryfallUri: string;
   imageUrl?: string;
+  /** Condensed rules text so players can judge the card without clicking. */
+  oracleSnippet?: string;
+  /** Power/toughness or loyalty, when the card has one. */
+  stats?: string;
+  /** Cheapest USD price seen on Scryfall, formatted. */
+  price?: string;
+  /** EDHREC popularity rank, lower is more played. */
+  edhrecRank?: number;
+}
+
+const ORACLE_SNIPPET_MAX = 180;
+
+/** Collapse reminder text/newlines and clip oracle text to a readable length. */
+export function condenseOracle(text: string, max = ORACLE_SNIPPET_MAX): string {
+  const cleaned = text
+    .replace(/\([^)]*\)/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (cleaned.length <= max) return cleaned;
+  const clipped = cleaned.slice(0, max);
+  const lastStop = clipped.lastIndexOf('. ');
+  if (lastStop > max * 0.5) return clipped.slice(0, lastStop + 1);
+  return `${clipped.replace(/\s+\S*$/, '')}…`;
+}
+
+/** Build the compact metadata line (stats · price · EDHREC rank). */
+function metaLine(card: CardSummary): string {
+  const parts: string[] = [];
+  if (card.stats) parts.push(card.stats);
+  if (card.price) parts.push(card.price);
+  if (card.edhrecRank) parts.push(`EDHREC #${card.edhrecRank.toLocaleString('en-US')}`);
+  return parts.join(' · ');
 }
 
 /** Format the Discord embed payload for a completed search. */
@@ -435,10 +467,16 @@ export function buildEmbed(
   /** Click-tracked link; defaults to the plain results URL. */
   resultsUrl: string = buildResultsUrl(query),
 ): Record<string, unknown> {
-  const lines = cards.map(
-    (card) =>
-      `**[${card.name}](${card.scryfallUri})** ${card.manaCost}\n${card.typeLine}`,
-  );
+  const lines = cards.map((card) => {
+    const meta = metaLine(card);
+    return [
+      `**[${card.name}](${card.scryfallUri})** ${card.manaCost}`.trim(),
+      `*${card.typeLine}*${meta ? ` — ${meta}` : ''}`,
+      card.oracleSnippet ? card.oracleSnippet : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+  });
   const failed =
     outcome === 'search_unavailable' || outcome === 'card_data_unavailable';
 
@@ -471,18 +509,52 @@ export function buildEmbed(
 
 function summarize(card: Record<string, unknown>): CardSummary {
   const faces = card.card_faces as
-    | Array<{ image_uris?: { normal?: string }; mana_cost?: string }>
+    | Array<{
+        image_uris?: { normal?: string };
+        mana_cost?: string;
+        oracle_text?: string;
+        type_line?: string;
+        power?: string;
+        toughness?: string;
+      }>
     | undefined;
   const imageUris = card.image_uris as { normal?: string } | undefined;
   const name = String(card.name ?? 'Unknown');
+  const oracleText = String(
+    card.oracle_text ??
+      faces
+        ?.map((face) => face.oracle_text ?? '')
+        .filter(Boolean)
+        .join(' // ') ??
+      '',
+  );
+  const power = card.power ?? faces?.[0]?.power;
+  const toughness = card.toughness ?? faces?.[0]?.toughness;
+  const loyalty = card.loyalty;
+  const prices = card.prices as
+    | { usd?: string | null; usd_foil?: string | null }
+    | undefined;
+  const rawPrice = prices?.usd ?? prices?.usd_foil ?? null;
+  const edhrecRank = typeof card.edhrec_rank === 'number' ? card.edhrec_rank : undefined;
+
   return {
     name,
-    typeLine: String(card.type_line ?? ''),
+    typeLine: String(card.type_line ?? faces?.[0]?.type_line ?? ''),
     manaCost: String(card.mana_cost ?? faces?.[0]?.mana_cost ?? ''),
     scryfallUri: `${SITE_URL}/cards/${cardNameToSlug(name)}`,
     imageUrl: imageUris?.normal ?? faces?.[0]?.image_uris?.normal,
+    oracleSnippet: oracleText ? condenseOracle(oracleText) : undefined,
+    stats:
+      power !== undefined && toughness !== undefined
+        ? `${power}/${toughness}`
+        : loyalty !== undefined
+          ? `${loyalty} loyalty`
+          : undefined,
+    price: rawPrice ? `$${rawPrice}` : undefined,
+    edhrecRank,
   };
 }
+
 
 /**
  * Outcome of a search attempt. Only user-facing states — never leaks which
