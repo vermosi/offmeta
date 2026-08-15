@@ -346,7 +346,8 @@ const clickDedupe = new Map<string, number>();
 
 /** Stable dedupe key for one actor clicking one results URL. */
 export function clickDedupeKey(event: DiscordClickEvent): string {
-  return `${event.actorHash || 'anon'}|${buildResultsUrl(event.query)}`;
+  const outcome = event.outcome ?? 'success';
+  return `${outcome}|${event.actorHash || 'anon'}|${buildResultsUrl(event.query)}`;
 }
 
 /**
