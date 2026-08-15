@@ -64,6 +64,50 @@ const MIN_CONFIDENCE = 0.6;
 const PROBATION_HOURS = 24;
 /** Consecutive verification failures before a rule is rolled back. */
 const MAX_RULE_FAILURES = 2;
+/**
+ * How long a candidate the loop could not repair is quarantined. Without this
+ * the same unrepairable queries are re-harvested every run, so the loop spends
+ * its whole budget re-failing instead of converging on new candidates.
+ */
+const UNREPAIRABLE_QUARANTINE_DAYS = 7;
+
+const quarantineKey = (query: string) =>
+  `self_heal_unrepairable:${query.toLowerCase().trim()}`;
+
+/** Queries currently quarantined as unrepairable. */
+async function loadQuarantine(): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from('job_dedupe')
+    .select('dedupe_key')
+    .like('dedupe_key', 'self_heal_unrepairable:%')
+    .gt('expires_at', new Date().toISOString());
+  if (error) {
+    logger.warn('quarantine_read_failed', { error: error.message });
+    return new Set();
+  }
+  return new Set((data ?? []).map((r: { dedupe_key: string }) => r.dedupe_key));
+}
+
+/** Park an unrepairable candidate so the next run skips it. */
+async function quarantineCandidate(
+  query: string,
+  reasonCode: string,
+  attempts: number,
+): Promise<void> {
+  const now = Date.now();
+  const { error } = await supabase.from('job_dedupe').upsert(
+    {
+      dedupe_key: quarantineKey(query),
+      decision: { query, reasonCode, attempts },
+      claimed_at: new Date(now).toISOString(),
+      expires_at: new Date(
+        now + UNREPAIRABLE_QUARANTINE_DAYS * 86_400_000,
+      ).toISOString(),
+    },
+    { onConflict: 'dedupe_key' },
+  );
+  if (error) logger.warn('quarantine_write_failed', { error: error.message });
+}
 
 interface RuleRow {
   id: string;
@@ -224,7 +268,10 @@ async function harvestCandidates(): Promise<Candidate[]> {
     return [];
   }
 
-  return ((data as Candidate[]) ?? []).filter((c) => isRepairableQuery(c.query));
+  const quarantined = await loadQuarantine();
+  return ((data as Candidate[]) ?? []).filter(
+    (c) => isRepairableQuery(c.query) && !quarantined.has(quarantineKey(c.query)),
+  );
 }
 
 async function ruleExists(pattern: string): Promise<boolean> {
@@ -421,6 +468,11 @@ async function repairCandidate(
       reasonCode: last?.code ?? 'no_model_response',
       attempts: priorAttempts.length,
     });
+    await quarantineCandidate(
+      candidate.query,
+      last?.code ?? 'no_model_response',
+      priorAttempts.length,
+    );
     return 'skipped';
   }
 
