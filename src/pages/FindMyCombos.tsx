@@ -277,14 +277,6 @@ export default function FindMyCombos() {
           </a>
         </p>
 
-        <div className="mt-8">
-          <PageSearchBar
-            placeholder={t(
-              'combos.searchPlaceholder',
-              'Search Magic cards in plain English…',
-            )}
-          />
-        </div>
 
         {/* Input */}
         <section className="mt-10 border-t border-border pt-8 grid gap-8 md:grid-cols-2">
