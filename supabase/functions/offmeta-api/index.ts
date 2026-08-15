@@ -5,7 +5,12 @@
  * (roles / methods / problems / characteristics / approaches) so other tools
  * can consume the semantic layer Scryfall does not provide.
  *
- * Endpoints (all GET, all public, all rate limited):
+ * ACCESS: private. Every request must carry a valid `x-offmeta-key` header
+ * (or `Authorization: Bearer <key>`) matching the `OFFMETA_API_KEY` secret.
+ * Unauthenticated callers get a bare 404 so the surface is undiscoverable.
+ * There is no public documentation for these endpoints yet.
+ *
+ * Endpoints (all GET, all key-gated, all rate limited):
  *   /v1/concepts                    → concept directory
  *   /v1/cards?name=A&name=B         → semantic profiles for named cards
  *   /v1/search?concepts=a,b&colors=WU&match=any&limit=40
@@ -23,7 +28,7 @@ import { buildOpenApiDocument } from './openapi.ts';
 
 const log = createLogger('offmeta-api');
 
-/** Public API budget: generous enough to browse, tight enough to survive abuse. */
+/** Internal API budget: generous enough to browse, tight enough to survive abuse. */
 const IP_LIMIT = 60;
 const GLOBAL_LIMIT = 3000;
 const WINDOW_MS = 60_000;
@@ -78,6 +83,30 @@ export function parseColors(params: URLSearchParams): string[] {
   );
 }
 
+/** Constant-time-ish comparison so key checks don't leak length/prefix info. */
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+/**
+ * Private-access gate. The API is not open to the public: callers must present
+ * the shared `OFFMETA_API_KEY`. If the secret is unset the API stays closed.
+ */
+export function isAuthorized(req: Request): boolean {
+  const expected = Deno.env.get('OFFMETA_API_KEY');
+  if (!expected) return false;
+
+  const header = req.headers.get('x-offmeta-key');
+  if (header && safeEqual(header, expected)) return true;
+
+  const auth = req.headers.get('authorization') ?? '';
+  const bearer = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7) : '';
+  return bearer.length > 0 && safeEqual(bearer, expected);
+}
+
 serve(
   withLogging('offmeta-api', async (req: Request): Promise<Response> => {
     const corsHeaders = getCorsHeaders(req);
@@ -87,6 +116,11 @@ serve(
     }
     if (req.method !== 'GET') {
       return json({ error: 'Method not allowed. This API is read-only.' }, 405, corsHeaders);
+    }
+
+    if (!isAuthorized(req)) {
+      // Deliberately indistinguishable from a non-existent function.
+      return new Response('Not Found', { status: 404, headers: corsHeaders });
     }
 
     const url = new URL(req.url);
@@ -206,7 +240,7 @@ serve(
             description:
               'Functional metadata for Magic: The Gathering cards — roles, methods, problems addressed, characteristics and strategic approaches.',
             endpoints: ['/v1/concepts', '/v1/cards', '/v1/search', '/v1/openapi.json'],
-            docs: 'https://offmeta.app/api',
+            docs: 'internal',
             attribution: 'Card data © Scryfall. Semantic layer © OffMeta.',
           },
           200,

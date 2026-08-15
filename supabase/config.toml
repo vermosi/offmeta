@@ -15,3 +15,8 @@ verify_jwt = false
 # Public XML sitemap endpoint consumed by search engines.
 [functions.sitemap]
 verify_jwt = false
+
+# Discord Interactions webhook. Discord cannot send a Supabase JWT; every
+# request is instead verified in-code with the app's Ed25519 public key.
+[functions.discord-bot]
+verify_jwt = false

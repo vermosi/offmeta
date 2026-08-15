@@ -24,7 +24,6 @@ const STATIC_PATHS = [
   '/browse-searches',
   '/combos',
   '/deck-check',
-  '/api',
   '/guides',
   '/ai',
   '/docs',
