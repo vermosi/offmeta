@@ -42,6 +42,8 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const SearchExperience = lazy(() => import('./pages/SearchExperience'));
 const OAuthConsent = lazy(() => import('./pages/OAuthConsent'));
 const LandingRoute = lazy(() => import('./pages/LandingRoute'));
+const GoRedirect = lazy(() => import('./pages/GoRedirect'));
+
 
 
 const routeFallback = <div className="min-h-screen bg-background" />;
