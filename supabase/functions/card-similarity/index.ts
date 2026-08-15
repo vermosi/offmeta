@@ -7,6 +7,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
 import { withLogging } from '../_shared/logger.ts';
+import { deriveFunctionalTags, isStrongFingerprint } from './functional.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -39,6 +40,8 @@ interface SimilarityResponse {
   success: boolean;
   similarQuery?: string;
   budgetQuery?: string;
+  /** Scryfall oracle tags describing what the reference card does. */
+  functionalTags?: string[];
   cached?: boolean;
   error?: string;
 }
