@@ -1292,9 +1292,80 @@ if (import.meta.main) {
         return Response.json({ type: InteractionResponseType.PONG });
       }
 
+      // Prev/Next buttons: re-run the already-translated query for a new page
+      // and edit the same message in place.
+      if (interaction.type === InteractionType.MESSAGE_COMPONENT) {
+        const page = parsePageCustomId(interaction.data?.custom_id);
+        const context = extractEmbedContext(interaction);
+        const componentAppId = interaction.application_id ?? '';
+        const componentToken = interaction.token ?? '';
+        const ack = Response.json({
+          type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+        });
+        if (page === null || !context || !componentAppId || !componentToken) {
+          return ack;
+        }
+
+        const clickUserId = extractUserId(interaction);
+        if (clickUserId) {
+          const { allowed } = checkRateLimit(clickUserId);
+          if (!allowed) return ack;
+        }
+
+        (async () => {
+          const startedAt = Date.now();
+          const actorHash = await hashActor(clickUserId);
+          const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+          const resultsUrl = await buildTrackedResultsUrl(
+            context.query,
+            actorHash,
+            interaction.guild_id ?? '',
+            undefined,
+            serviceRoleKey,
+          );
+          try {
+            const { outcome, cards, totalCards } = await runPagedSearch(
+              context.scryfallQuery,
+              page * PAGE_SIZE,
+            );
+            await sendFollowup(componentAppId, componentToken, {
+              embeds: [
+                buildEmbed(
+                  context.query,
+                  context.scryfallQuery,
+                  cards,
+                  totalCards,
+                  outcome,
+                  resultsUrl,
+                  page,
+                ),
+              ],
+              components: buildPaginationComponents(page, totalCards),
+            });
+            await recordAnalytics({
+              query: context.query,
+              scryfallQuery: context.scryfallQuery,
+              outcome,
+              cardCount: cards.length,
+              totalCards,
+              actorHash,
+              guildId: interaction.guild_id,
+              durationMs: Date.now() - startedAt,
+            });
+          } catch (error) {
+            log.error('pagination_failed', {
+              message: error instanceof Error ? error.message : 'unknown',
+            });
+          }
+        })();
+
+        return ack;
+      }
+
       if (interaction.type !== InteractionType.APPLICATION_COMMAND) {
         return Response.json({ type: InteractionResponseType.PONG });
       }
+
 
       if (interaction.data?.name !== 'offmeta') {
         return Response.json({ type: InteractionResponseType.PONG });
