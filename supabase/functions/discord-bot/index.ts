@@ -387,6 +387,21 @@ serve(
       return Response.json({ type: InteractionResponseType.PONG });
     }
 
+    const userId = extractUserId(interaction);
+    if (userId) {
+      const { allowed, retryAfterSeconds } = checkRateLimit(userId);
+      if (!allowed) {
+        // Immediate ephemeral reply — no search work is started.
+        return Response.json({
+          type: InteractionResponseType.CHANNEL_MESSAGE,
+          data: {
+            flags: EPHEMERAL,
+            content: `You're searching a bit fast — up to ${RATE_LIMIT_MAX} searches per minute. Try again in ${retryAfterSeconds}s.`,
+          },
+        });
+      }
+    }
+
     const query = extractQuery(interaction);
     const applicationId = interaction.application_id ?? '';
     const token = interaction.token ?? '';
