@@ -42,6 +42,8 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const SearchExperience = lazy(() => import('./pages/SearchExperience'));
 const OAuthConsent = lazy(() => import('./pages/OAuthConsent'));
 const LandingRoute = lazy(() => import('./pages/LandingRoute'));
+const GoRedirect = lazy(() => import('./pages/GoRedirect'));
+
 
 
 const routeFallback = <div className="min-h-screen bg-background" />;
@@ -142,10 +144,12 @@ export default function AppRoutes() {
               path="/admin/seo-pages"
               element={withFullApp(<AdminSeoPages />)}
             />
+            <Route path="/go" element={withFullApp(<GoRedirect />)} />
             <Route
               path="/.lovable/oauth/consent"
               element={withFullApp(<OAuthConsent />)}
             />
+
             {/* Registry-declared landing pages (roles, problems, colors,
                 commander, alternatives, comparison). Unknown slugs render 404. */}
             <Route path="/mtg/*" element={withFullApp(<LandingRoute />)} />
