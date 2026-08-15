@@ -1213,7 +1213,33 @@ const startupCheck = runStartupCheck()
   });
 
 /**
- * Registers (upserts) the global `/offmeta` slash command with Discord.
+ * Global command set. `/offmeta-privacy` exists because the Discord Developer
+ * Policy requires users to be able to see what data an app collects and how to
+ * have it deleted, from inside Discord.
+ */
+export const SLASH_COMMANDS = [
+  {
+    name: 'offmeta',
+    description: 'Search Magic cards in plain English',
+    type: 1,
+    options: [
+      {
+        name: 'query',
+        description: 'What kind of card are you after?',
+        type: 3,
+        required: true,
+      },
+    ],
+  },
+  {
+    name: 'offmeta-privacy',
+    description: 'What data OffMeta stores, and how to have it deleted',
+    type: 1,
+  },
+];
+
+/**
+ * Registers (upserts) the global slash commands with Discord.
  * Requires DISCORD_APPLICATION_ID and DISCORD_BOT_TOKEN secrets.
  */
 async function registerSlashCommand(): Promise<Response> {
@@ -1231,24 +1257,12 @@ async function registerSlashCommand(): Promise<Response> {
   }
 
   const res = await fetch(`https://discord.com/api/v10/applications/${appId}/commands`, {
-    method: 'POST',
+    method: 'PUT',
     headers: {
       Authorization: /^Bot\s/i.test(botToken.trim()) ? botToken.trim() : `Bot ${botToken.trim()}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      name: 'offmeta',
-      description: 'Search Magic cards in plain English',
-      type: 1,
-      options: [
-        {
-          name: 'query',
-          description: 'What kind of card are you after?',
-          type: 3,
-          required: true,
-        },
-      ],
-    }),
+    body: JSON.stringify(SLASH_COMMANDS),
   });
 
   const bodyText = await res.text();
@@ -1260,7 +1274,7 @@ async function registerSlashCommand(): Promise<Response> {
   }
 
   log.info('register_succeeded', { status: res.status });
-  return Response.json({ ok: true, command: 'offmeta' });
+  return Response.json({ ok: true, commands: SLASH_COMMANDS.map((c) => c.name) });
 }
 
 /**
