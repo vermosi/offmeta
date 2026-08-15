@@ -567,13 +567,14 @@ export default function FindMyCombos() {
 
                 {/* Almost included */}
                 {filteredAlmost.length > 0 && (
-                  <section className="space-y-3">
+                  <section className="space-y-3 border-t border-border pt-8">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-muted-foreground" />
-                      <h2 className="text-lg font-semibold text-muted-foreground">
+                      <Sparkles className="h-4 w-4 text-muted-foreground" />
+                      <h2 className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
                         {t('combos.almostIncluded')} ({filteredAlmost.length})
                       </h2>
                     </div>
+
                     <p className="text-xs text-muted-foreground">
                       {t('combos.almostDesc')}
                     </p>
