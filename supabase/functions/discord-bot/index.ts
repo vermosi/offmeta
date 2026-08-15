@@ -466,11 +466,12 @@ function summarize(card: Record<string, unknown>): CardSummary {
     | Array<{ image_uris?: { normal?: string }; mana_cost?: string }>
     | undefined;
   const imageUris = card.image_uris as { normal?: string } | undefined;
+  const name = String(card.name ?? 'Unknown');
   return {
-    name: String(card.name ?? 'Unknown'),
+    name,
     typeLine: String(card.type_line ?? ''),
     manaCost: String(card.mana_cost ?? faces?.[0]?.mana_cost ?? ''),
-    scryfallUri: String(card.scryfall_uri ?? SITE_URL),
+    scryfallUri: `${SITE_URL}/cards/${cardNameToSlug(name)}`,
     imageUrl: imageUris?.normal ?? faces?.[0]?.image_uris?.normal,
   };
 }
