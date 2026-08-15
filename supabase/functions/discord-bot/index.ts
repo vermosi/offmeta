@@ -200,9 +200,14 @@ export function clickPayload(
   query: string,
   actorHash: string,
   guildId: string,
+  expiresAt?: number,
 ): string {
-  return `${query}|${actorHash}|${guildId}`;
+  const base = `${query}|${actorHash}|${guildId}`;
+  return expiresAt ? `${base}|${expiresAt}` : base;
 }
+
+/** Signed click links stay valid for this long after the search. */
+const CLICK_LINK_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * Click-tracked wrapper around the results link. Points at this function's
@@ -215,13 +220,19 @@ export async function buildTrackedResultsUrl(
   guildId: string,
   functionUrl?: string,
   secret?: string,
+  now = Date.now(),
 ): Promise<string> {
   if (!functionUrl || !secret) return buildResultsUrl(query);
+  const expiresAt = now + CLICK_LINK_TTL_MS;
   const params = new URLSearchParams({
     q: query,
     a: actorHash,
     g: guildId,
-    s: await signClick(clickPayload(query, actorHash, guildId), secret),
+    x: String(expiresAt),
+    s: await signClick(
+      clickPayload(query, actorHash, guildId, expiresAt),
+      secret,
+    ),
   });
   return `${functionUrl}?${params.toString()}`;
 }
@@ -271,7 +282,11 @@ export function buildAnalyticsRow(event: DiscordAnalyticsEvent) {
 }
 
 /** Outcome of a click-redirect request. */
-export type DiscordClickOutcome = 'success' | 'invalid_signature';
+export type DiscordClickOutcome =
+  | 'success'
+  | 'invalid_signature'
+  | 'expired'
+  | 'malformed';
 
 export interface DiscordClickEvent {
   query: string;
@@ -580,6 +595,44 @@ async function sendFollowup(
  * pseudonymous actor, then forwards to the public results page. Only ever
  * redirects to `buildResultsUrl`, so it can't be used as an open redirect.
  */
+/** User-facing copy for each non-redirecting click outcome. */
+const CLICK_ERROR_COPY: Record<
+  Exclude<DiscordClickOutcome, 'success'>,
+  { status: number; title: string; detail: string }
+> = {
+  malformed: {
+    status: 400,
+    title: 'This link is incomplete',
+    detail: 'Run the /offmeta command again in Discord to get a fresh link.',
+  },
+  invalid_signature: {
+    status: 400,
+    title: 'This link could not be verified',
+    detail:
+      'It looks modified or was not created by OffMeta. Run /offmeta again in Discord for a valid link.',
+  },
+  expired: {
+    status: 410,
+    title: 'This link has expired',
+    detail: 'Search links stay valid for 7 days. Run /offmeta again in Discord.',
+  },
+};
+
+/** Plain-text error response — no internal details, no redirect. */
+function clickErrorResponse(
+  outcome: Exclude<DiscordClickOutcome, 'success'>,
+): Response {
+  const copy = CLICK_ERROR_COPY[outcome];
+  return new Response(`${copy.title}\n\n${copy.detail}\n`, {
+    status: copy.status,
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'X-Click-Outcome': outcome,
+    },
+  });
+}
+
 async function handleClickRedirect(req: Request): Promise<Response> {
   const startedAt = Date.now();
   const url = new URL(req.url);
@@ -587,6 +640,7 @@ async function handleClickRedirect(req: Request): Promise<Response> {
   const actorHash = url.searchParams.get('a') ?? '';
   const guildId = url.searchParams.get('g') ?? '';
   const signature = url.searchParams.get('s') ?? '';
+  const expiresRaw = url.searchParams.get('x') ?? '';
   const secret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
   /** Record once per dedupe window, with the handler duration so far. */
@@ -603,17 +657,37 @@ async function handleClickRedirect(req: Request): Promise<Response> {
     }
   };
 
-  if (!query || !signature || !secret) {
+  /** Track the failure, then answer with the matching explanation. */
+  const fail = async (outcome: Exclude<DiscordClickOutcome, 'success'>) => {
+    await track(outcome);
+    return clickErrorResponse(outcome);
+  };
+
+  if (!secret) {
+    // Misconfiguration, not a user error — stay quiet and don't log noise.
     return new Response('Not Found', { status: 404 });
   }
 
+  if (!query || !signature) {
+    return await fail('malformed');
+  }
+
+  const expiresAt = expiresRaw ? Number(expiresRaw) : undefined;
+  if (expiresRaw && !Number.isFinite(expiresAt)) {
+    return await fail('malformed');
+  }
+
   const expected = await signClick(
-    clickPayload(query, actorHash, guildId),
+    clickPayload(query, actorHash, guildId, expiresAt),
     secret,
   );
   if (expected !== signature) {
-    await track('invalid_signature');
-    return new Response('Not Found', { status: 404 });
+    return await fail('invalid_signature');
+  }
+
+  // Expiry is checked only after the signature proves the value is ours.
+  if (expiresAt !== undefined && Date.now() > expiresAt) {
+    return await fail('expired');
   }
 
   await track('success');
