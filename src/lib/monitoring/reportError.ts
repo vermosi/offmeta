@@ -79,6 +79,7 @@ export async function reportClientError({
 }: ClientErrorReport): Promise<void> {
   const trimmed = (message ?? '').toString().trim();
   if (!trimmed) return;
+  if (isIgnorableClientError(trimmed)) return;
 
   if (typeof window !== 'undefined' && !isMonitoredOrigin(hostname())) {
     return;
@@ -111,8 +112,29 @@ export async function reportClientError({
   }
 }
 
+/**
+ * Known-benign browser noise. These fire during normal operation, carry no
+ * actionable stack, and cannot be auto-repaired — reporting them only creates
+ * permanently "open" rows that mask real failures.
+ */
+export function isIgnorableClientError(message: string): boolean {
+  if (!message) return true;
+  // Web Locks contention from the auth client refreshing a token in another tab.
+  if (/Lock broken by another request with the 'steal' option/i.test(message)) {
+    return true;
+  }
+  if (/ResizeObserver loop (limit exceeded|completed)/i.test(message)) return true;
+  if (/^Non-Error promise rejection captured/i.test(message)) return true;
+  return false;
+}
+
 /** Classify a raw runtime error message into a stable error_type. */
 export function classifyClientError(message: string): string {
+  // Cross-origin scripts report a bare "Script error." with no stack. Keep them
+  // in their own bucket so they never dilute real unhandled exceptions.
+  if (/^script error\.?$/i.test(message.trim())) {
+    return 'cross_origin_script_error';
+  }
   if (
     /dynamically imported module|Importing a module script failed|ChunkLoadError/i.test(
       message,
@@ -138,12 +160,21 @@ export function initErrorMonitoring(): void {
   window.addEventListener('error', (event) => {
     const message = String(event.error?.message ?? event.message ?? '');
     if (!message) return;
+    const errorType = classifyClientError(message);
     void reportClientError({
-      errorType: classifyClientError(message),
-      message,
+      errorType,
+      // A bare cross-origin "Script error." is indistinguishable from every
+      // other one unless the offending script and position ride along.
+      message:
+        errorType === 'cross_origin_script_error'
+          ? `Script error from ${event.filename || 'unknown script'}:${event.lineno ?? 0}`
+          : message,
+      severity: errorType === 'cross_origin_script_error' ? 'warning' : 'error',
       context: {
         stack: String(event.error?.stack ?? '').slice(0, 1500),
         filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
       },
     });
   });
