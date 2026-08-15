@@ -179,7 +179,19 @@ export const CardItem = memo(function CardItem({
       )}
 
 
+      {whyLabel && (
+        <span
+          className={`pointer-events-none absolute inset-x-0 top-0 z-20 block truncate bg-gradient-to-b from-overlay/90 via-overlay/50 to-transparent px-2 pb-4 pt-1.5 font-mono text-[9px] uppercase tracking-[0.16em] text-contrast/85 ${
+            isOwned ? 'pl-7' : ''
+          }`}
+          title={whyReport?.summary ?? undefined}
+        >
+          {whyLabel}
+        </span>
+      )}
+
       {/* Info overlay — always visible on mobile, hover on desktop */}
+
       <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-overlay/90 via-overlay/55 to-transparent pt-6 sm:pt-8 pb-1.5 sm:pb-2 px-2 sm:px-2.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity duration-200 pointer-events-none">
         <div className="flex items-end justify-between gap-1">
           <div className="min-w-0 flex-1">
