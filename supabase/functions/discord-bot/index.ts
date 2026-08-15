@@ -616,13 +616,40 @@ export function buildEmbed(
           ],
         }
       : {}),
-    footer: { text: `offmeta.app${showing}` },
+    footer: { text: `offmeta.app${showing} · /offmeta-privacy for data use` },
 
     ...(cards[0]?.imageUrl ? { thumbnail: { url: cards[0].imageUrl } } : {}),
   };
 }
 
 
+
+/**
+ * Ephemeral data-use notice for `/offmeta-privacy`.
+ *
+ * The Discord Developer Policy requires users to be able to find out what data
+ * an app collects, why, how long it is kept, and how to have it removed. This
+ * mirrors the Privacy Policy at offmeta.app/privacy.
+ */
+export function buildPrivacyEmbed() {
+  return {
+    title: 'OffMeta — what the bot stores',
+    url: `${SITE_URL}/privacy`,
+    color: 0x1c1b22,
+    description: [
+      'OffMeta only ever sees what Discord sends with a slash command.',
+      '',
+      '**Stored:** the search text you typed, the generated Scryfall query, the result count, the server ID, and timing.',
+      '**Not stored:** your Discord user ID in raw form (it is one-way hashed and used only for rate limiting), your username, avatar, email, roles, or any message content. The bot needs no message-content intent.',
+      '**Kept for:** 30 days, then deleted automatically.',
+      '**Never:** sold, used for ads or profiling, or used to train models.',
+      '',
+      `[Privacy Policy](${SITE_URL}/privacy) · [Terms of Service](${SITE_URL}/terms)`,
+      'To have your data deleted, ask in the OffMeta Discord server or open a GitHub issue.',
+    ].join('\n'),
+    footer: { text: 'offmeta.app/privacy' },
+  };
+}
 
 function summarize(card: Record<string, unknown>): CardSummary {
   const faces = card.card_faces as
@@ -1213,7 +1240,33 @@ const startupCheck = runStartupCheck()
   });
 
 /**
- * Registers (upserts) the global `/offmeta` slash command with Discord.
+ * Global command set. `/offmeta-privacy` exists because the Discord Developer
+ * Policy requires users to be able to see what data an app collects and how to
+ * have it deleted, from inside Discord.
+ */
+export const SLASH_COMMANDS = [
+  {
+    name: 'offmeta',
+    description: 'Search Magic cards in plain English',
+    type: 1,
+    options: [
+      {
+        name: 'query',
+        description: 'What kind of card are you after?',
+        type: 3,
+        required: true,
+      },
+    ],
+  },
+  {
+    name: 'offmeta-privacy',
+    description: 'What data OffMeta stores, and how to have it deleted',
+    type: 1,
+  },
+];
+
+/**
+ * Registers (upserts) the global slash commands with Discord.
  * Requires DISCORD_APPLICATION_ID and DISCORD_BOT_TOKEN secrets.
  */
 async function registerSlashCommand(): Promise<Response> {
@@ -1231,24 +1284,12 @@ async function registerSlashCommand(): Promise<Response> {
   }
 
   const res = await fetch(`https://discord.com/api/v10/applications/${appId}/commands`, {
-    method: 'POST',
+    method: 'PUT',
     headers: {
       Authorization: /^Bot\s/i.test(botToken.trim()) ? botToken.trim() : `Bot ${botToken.trim()}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      name: 'offmeta',
-      description: 'Search Magic cards in plain English',
-      type: 1,
-      options: [
-        {
-          name: 'query',
-          description: 'What kind of card are you after?',
-          type: 3,
-          required: true,
-        },
-      ],
-    }),
+    body: JSON.stringify(SLASH_COMMANDS),
   });
 
   const bodyText = await res.text();
@@ -1260,7 +1301,7 @@ async function registerSlashCommand(): Promise<Response> {
   }
 
   log.info('register_succeeded', { status: res.status });
-  return Response.json({ ok: true, command: 'offmeta' });
+  return Response.json({ ok: true, commands: SLASH_COMMANDS.map((c) => c.name) });
 }
 
 /**
@@ -1421,6 +1462,13 @@ export async function handleDiscordRequest(req: Request): Promise<Response> {
         return Response.json({ type: InteractionResponseType.PONG });
       }
 
+
+      if (interaction.data?.name === 'offmeta-privacy') {
+        return Response.json({
+          type: InteractionResponseType.CHANNEL_MESSAGE,
+          data: { flags: EPHEMERAL, embeds: [buildPrivacyEmbed()] },
+        });
+      }
 
       if (interaction.data?.name !== 'offmeta') {
         return Response.json({ type: InteractionResponseType.PONG });
