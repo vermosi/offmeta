@@ -855,7 +855,7 @@ async function registerSlashCommand(): Promise<Response> {
   const res = await fetch(`https://discord.com/api/v10/applications/${appId}/commands`, {
     method: 'POST',
     headers: {
-      Authorization: `Bot ${botToken}`,
+      Authorization: /^Bot\s/i.test(botToken.trim()) ? botToken.trim() : `Bot ${botToken.trim()}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
