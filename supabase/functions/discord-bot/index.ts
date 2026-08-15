@@ -327,6 +327,43 @@ function recordClick(event: DiscordClickEvent): Promise<void> {
   return insertAnalyticsRow(buildClickRow(event));
 }
 
+/**
+ * In-memory click dedupe: last recorded timestamp per actor+destination.
+ * Resets on cold start — a noise brake, not an exactness guarantee.
+ */
+const clickDedupe = new Map<string, number>();
+
+/** Stable dedupe key for one actor clicking one results URL. */
+export function clickDedupeKey(event: DiscordClickEvent): string {
+  return `${event.actorHash || 'anon'}|${buildResultsUrl(event.query)}`;
+}
+
+/**
+ * Report whether this click should be recorded, marking it as seen when it is.
+ * `now` is injectable for tests.
+ */
+export function shouldRecordClick(
+  event: DiscordClickEvent,
+  now = Date.now(),
+): boolean {
+  const key = clickDedupeKey(event);
+  const cutoff = now - CLICK_DEDUPE_WINDOW_MS;
+  const last = clickDedupe.get(key);
+
+  if (last !== undefined && last > cutoff) return false;
+
+  clickDedupe.set(key, now);
+
+  if (clickDedupe.size > CLICK_DEDUPE_MAX_KEYS) {
+    for (const [existing, ts] of clickDedupe) {
+      if (ts <= cutoff) clickDedupe.delete(existing);
+      if (clickDedupe.size <= CLICK_DEDUPE_MAX_KEYS) break;
+    }
+  }
+
+  return true;
+}
+
 
 interface CardSummary {
   name: string;
