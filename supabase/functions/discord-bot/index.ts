@@ -849,9 +849,20 @@ serve(
       });
     }
 
+    // Protected one-off command registration: POST ?register=1 with the pipeline key.
+    if (req.method === 'POST' && new URL(req.url).searchParams.has('register')) {
+      const pipelineKey = Deno.env.get('OFFMETA_PIPELINE_KEY');
+      const provided = req.headers.get('x-offmeta-key') ?? '';
+      if (!pipelineKey || provided !== pipelineKey) {
+        return new Response('Not Found', { status: 404 });
+      }
+      return registerSlashCommand();
+    }
+
     if (req.method !== 'POST') {
       return new Response('Not Found', { status: 404 });
     }
+
 
     const rawBody = await req.text();
     const valid = await verifyDiscordSignature(
