@@ -83,11 +83,11 @@ const SIGNATURES: readonly Signature[] = [
     test: /(?:destroy|exile) target (?:creature|permanent|nonland permanent|artifact|enchantment)/i,
   },
   { tag: 'bounce', test: /return target (?:creature|permanent|nonland permanent) to (?:its owner|their owner)/i },
-  { tag: 'hand-attack', test: /target (?:opponent|player) discards/i },
+  { tag: 'discard', test: /target (?:opponent|player) discards|each opponent discards/i },
 
   // Engines / payoffs
   { tag: 'sacrifice-outlet', test: /sacrifice (?:a|another|an)\s+(?:creature|permanent|artifact)\s*:/i },
-  { tag: 'creates-token', test: /create[s]?\s+.*\btoken/i },
+  { tag: 'repeatable-token-generator', test: /whenever .*create[s]?\s+.*\btoken/i },
   { tag: 'flicker', test: /exile .*\breturn (?:it|them|that card) to the battlefield/i },
   { tag: 'untapper', test: /untap target (?:creature|permanent|artifact|land)/i },
   { tag: 'extra-turn', test: /take an extra turn/i },
