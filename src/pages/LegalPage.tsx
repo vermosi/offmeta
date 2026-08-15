@@ -270,7 +270,7 @@ export default function LegalPage({ document: doc }: { document: LegalDocument }
     applySeoMeta({
       title: page.title,
       description: page.description,
-      canonical: `https://offmeta.app${page.path}`,
+      url: `https://offmeta.app${page.path}`,
     });
   }, [page]);
 
