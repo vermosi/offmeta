@@ -80,6 +80,7 @@ Disallow: /
 # ChatGPT-User, OAI-SearchBot, etc.)
 User-agent: *
 Allow: /
+Disallow: /api
 Disallow: /api/
 # Block legacy parameterised search URLs — redirected to /search/:slug
 Disallow: /?q=
