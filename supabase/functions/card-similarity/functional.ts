@@ -100,7 +100,7 @@ const SIGNATURES: readonly Signature[] = [
 ];
 
 /** Signatures whose tag is too broad to stand alone as a fingerprint. */
-const GENERIC_TAGS = new Set(['draw', 'ramp', 'mill', 'lifegain', 'creates-token']);
+const GENERIC_TAGS = new Set(['draw', 'ramp', 'mill', 'lifegain', 'discard']);
 
 /**
  * Derives up to two Scryfall oracle tags describing what the card *does*.
