@@ -701,10 +701,152 @@ async function handleClickRedirect(req: Request): Promise<Response> {
   });
 }
 
+export interface StartupCheckResult {
+  ok: boolean;
+  keyPresent: boolean;
+  keyWellFormed: boolean;
+  /** A locally signed test payload verified through the real code path. */
+  signatureRoundTrip: boolean;
+  /** True when the configured key correctly REJECTS a foreign signature. */
+  rejectsForeignSignature: boolean;
+  errors: string[];
+}
+
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/**
+ * Boot-time self-check: confirms `DISCORD_PUBLIC_KEY` exists, is a valid
+ * 32-byte Ed25519 key, and that `verifyDiscordSignature` accepts a genuine
+ * signature and rejects a foreign one. Runs once per cold start so a missing
+ * or malformed key surfaces in logs instead of as a silent 401 loop when
+ * Discord tries to verify the interactions endpoint.
+ */
+export async function runStartupCheck(
+  publicKeyHex = Deno.env.get('DISCORD_PUBLIC_KEY'),
+): Promise<StartupCheckResult> {
+  const errors: string[] = [];
+  const keyPresent = Boolean(publicKeyHex && publicKeyHex.trim());
+  if (!keyPresent) errors.push('DISCORD_PUBLIC_KEY is not set');
+
+  const trimmed = (publicKeyHex ?? '').trim();
+  const keyWellFormed =
+    keyPresent && /^[0-9a-f]{64}$/i.test(trimmed);
+  if (keyPresent && !keyWellFormed) {
+    errors.push('DISCORD_PUBLIC_KEY is not a 64-character hex Ed25519 key');
+  }
+
+  let signatureRoundTrip = false;
+  let rejectsForeignSignature = false;
+
+  if (keyWellFormed) {
+    try {
+      // Import the configured key to prove WebCrypto accepts it verbatim.
+      await crypto.subtle.importKey(
+        'raw',
+        hexToBytes(trimmed),
+        { name: 'Ed25519' },
+        false,
+        ['verify'],
+      );
+    } catch (err) {
+      errors.push(
+        `DISCORD_PUBLIC_KEY failed Ed25519 import: ${(err as Error).message}`,
+      );
+    }
+
+    try {
+      // Exercise the real verification path with a throwaway keypair.
+      const pair = (await crypto.subtle.generateKey({ name: 'Ed25519' }, true, [
+        'sign',
+        'verify',
+      ])) as CryptoKeyPair;
+      const timestamp = String(Math.floor(Date.now() / 1000));
+      const body = JSON.stringify({ type: 1 });
+      const signature = new Uint8Array(
+        await crypto.subtle.sign(
+          { name: 'Ed25519' },
+          pair.privateKey,
+          new TextEncoder().encode(timestamp + body),
+        ),
+      );
+      const testKeyHex = bytesToHex(
+        new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKey)),
+      );
+      const sigHex = bytesToHex(signature);
+
+      signatureRoundTrip = await verifyDiscordSignature(
+        body,
+        sigHex,
+        timestamp,
+        testKeyHex,
+      );
+      if (!signatureRoundTrip) {
+        errors.push('signature verification rejected a valid test payload');
+      }
+
+      // The configured production key must not validate this foreign signature.
+      rejectsForeignSignature = !(await verifyDiscordSignature(
+        body,
+        sigHex,
+        timestamp,
+        trimmed,
+      ));
+      if (!rejectsForeignSignature) {
+        errors.push('configured key accepted a foreign signature');
+      }
+    } catch (err) {
+      errors.push(
+        `signature self-test failed: ${(err as Error).message}`,
+      );
+    }
+  }
+
+  return {
+    ok: errors.length === 0,
+    keyPresent,
+    keyWellFormed,
+    signatureRoundTrip,
+    rejectsForeignSignature,
+    errors,
+  };
+}
+
+/** Cold-start check; awaited by the health endpoint, never blocks requests. */
+const startupCheck = runStartupCheck()
+  .then((result) => {
+    if (result.ok) log.info('startup_check_passed', { ...result });
+    else log.error('startup_check_failed', { ...result });
+    return result;
+  })
+  .catch((err) => {
+    log.error('startup_check_errored', err);
+    return {
+      ok: false,
+      keyPresent: false,
+      keyWellFormed: false,
+      signatureRoundTrip: false,
+      rejectsForeignSignature: false,
+      errors: [String(err)],
+    } satisfies StartupCheckResult;
+  });
+
 serve(
   withLogging('discord-bot', async (req: Request): Promise<Response> => {
     if (req.method === 'GET' && new URL(req.url).searchParams.has('s')) {
       return handleClickRedirect(req);
+    }
+
+    if (req.method === 'GET' && new URL(req.url).searchParams.has('health')) {
+      const result = await startupCheck;
+      // No secrets in the payload — booleans and error strings only.
+      return Response.json(result, {
+        status: result.ok ? 200 : 503,
+        headers: { 'Cache-Control': 'no-store' },
+      });
     }
 
     if (req.method !== 'POST') {
