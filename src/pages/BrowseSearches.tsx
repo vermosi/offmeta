@@ -134,20 +134,24 @@ export default function BrowseSearches() {
       <Header />
       <main className="container-main py-8 sm:py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+          <div className="mb-10">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              {t('browse.eyebrow', 'OffMeta / Searches')}
+            </p>
+            <h1 className="mt-4 font-display text-4xl uppercase leading-[0.95] tracking-tight text-foreground md:text-5xl">
               {t('browse.heading')}
             </h1>
-            <p className="text-muted-foreground max-w-xl mx-auto">
+            <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground">
               {t('browse.subheading')}
             </p>
           </div>
 
           {categoryJumpLinks.length > 1 && (
             <div className="mb-8">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
-                Jump to section
+              <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-3">
+                {t('browse.jumpToSection', 'Jump to section')}
               </p>
+
               <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
                 {categoryJumpLinks.map((item) => (
                   <a
