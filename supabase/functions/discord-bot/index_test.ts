@@ -6,6 +6,8 @@ import {
 import {
   buildTrackedResultsUrl,
   cardNameToSlug,
+  buildEmbed,
+  condenseOracle,
   handleClickRedirect,
   signClick,
   clickPayload,
