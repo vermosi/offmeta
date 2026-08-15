@@ -39,7 +39,8 @@ const SIGNATURES: readonly Signature[] = [
   {
     tag: 'self-mill',
     test:
-      /put(?:s)?\s+(?:all\s+)?(?:those\s+)?cards?\s+(?:revealed\s+this\s+way\s+)?into\s+your\s+graveyard|mill(?:s)?\s+(?:yourself|\w+\s+cards?)\s*(?:\.|,|$)|you\s+mill\b/i,
+      /puts?\b[^.]{0,80}\bcards?\b[^.]{0,80}\binto your graveyard\b|\byou mill\b|mills?\s+(?:yourself|\d+|\w+\s+cards?)/i,
+
   },
   { tag: 'mill-opponent', test: /(?:target\s+)?opponent\s+mills|each\s+opponent\s+mills/i },
   { tag: 'mill', test: /\bmills?\b/i },
