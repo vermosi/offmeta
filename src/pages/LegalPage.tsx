@@ -47,7 +47,14 @@ function Prose({ sections }: { sections: Section[] }) {
 
 const CONTACT = (
   <p>
-    Contact us in the{' '}
+    Email{' '}
+    <a
+      className="text-primary underline underline-offset-4"
+      href="mailto:admin@offmeta.app"
+    >
+      admin@offmeta.app
+    </a>
+    , contact us in the{' '}
     <a
       className="text-primary underline underline-offset-4"
       href={DISCORD_INVITE}
@@ -55,8 +62,8 @@ const CONTACT = (
       rel="noopener noreferrer"
     >
       OffMeta Discord server
-    </a>{' '}
-    or open an issue on{' '}
+    </a>
+    , or open an issue on{' '}
     <a
       className="text-primary underline underline-offset-4"
       href={GITHUB_ISSUES}
