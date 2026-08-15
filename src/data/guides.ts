@@ -425,3 +425,83 @@ export const GUIDES: Guide[] = [
 export function getGuideBySlug(slug: string): Guide | undefined {
   return GUIDES.find((g) => g.slug === slug);
 }
+
+/**
+ * Concrete searches each guide should send readers into. Kept next to the
+ * guide data so the internal-linking pass has a single source of truth:
+ * every guide links out to 3-5 real queries, not just to other guides.
+ */
+const GUIDE_RELATED_SEARCHES: Record<string, string[]> = {
+  'search-by-creature-type': [
+    'legendary dragons',
+    'elves that make mana',
+    'goblins under $1',
+    'slivers for commander',
+  ],
+  'filter-by-color': [
+    'mono black removal',
+    'azorius counterspells',
+    'colorless ramp',
+    'five color legends',
+  ],
+  'budget-price-filters': [
+    'budget board wipes under $2',
+    'cheap tutors for commander',
+    'budget mana rocks',
+    'commander staples under $5',
+  ],
+  'format-legality-search': [
+    'commander legal fast mana',
+    'pauper legal removal',
+    'modern legal counterspells',
+    'standard legal card draw',
+  ],
+  'keyword-ability-search': [
+    'cards with flash',
+    'creatures with deathtouch and lifelink',
+    'haste enablers',
+    'cards with ward',
+  ],
+  'ramp-and-card-draw': [
+    'green ramp spells under $3',
+    'repeatable card draw for commander',
+    'land ramp that fetches basics',
+    'wheel effects',
+  ],
+  'tribal-synergies-for-commander': [
+    'elf tribal payoffs for commander',
+    'goblin lords',
+    'zombie sacrifice payoffs',
+    'changeling creatures',
+  ],
+  'token-and-sacrifice-synergies': [
+    'sacrifice outlets',
+    'cards that make treasure tokens',
+    'aristocrats payoffs',
+    'token doublers',
+  ],
+  'etb-and-flicker-combos': [
+    'flicker effects for commander',
+    'creatures with strong etb triggers',
+    'blink payoffs under $5',
+    'cards that copy etb triggers',
+  ],
+  'multi-constraint-complex-search': [
+    'esper utility lands under $5 for commander',
+    'red instants that deal 3 damage under $2',
+    'green creatures with reach and trample',
+    'artifacts that untap lands',
+  ],
+  'cards-like-x': [
+    'cards like rhystic study',
+    'budget alternatives to smothering tithe',
+    'cards like cyclonic rift',
+    'cheaper alternatives to mana crypt',
+  ],
+};
+
+/** Returns the concrete searches a guide should link into (may be empty). */
+export function getGuideRelatedSearches(slug: string): string[] {
+  return GUIDE_RELATED_SEARCHES[slug] ?? [];
+}
+

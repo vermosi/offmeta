@@ -68,6 +68,7 @@ vi.mock('sonner', () => ({
   }),
 }));
 vi.mock('@/hooks/useAnalytics', () => ({
+  trackEventDirect: vi.fn().mockResolvedValue(undefined),
   useAnalytics: () => ({
     trackSearch: vi.fn(),
     trackCardClick: vi.fn(),

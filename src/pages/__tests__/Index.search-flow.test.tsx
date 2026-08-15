@@ -74,6 +74,7 @@ vi.mock('sonner', () => ({
   }),
 }));
 vi.mock('@/hooks/useAnalytics', () => ({
+  trackEventDirect: vi.fn().mockResolvedValue(undefined),
   useAnalytics: () => ({
     toLatencyBucket: vi.fn(),
     trackSearch: vi.fn(),

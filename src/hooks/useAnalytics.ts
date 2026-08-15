@@ -289,6 +289,7 @@ const ALLOWED_EVENT_TYPES = [
   'card_click',
   'card_modal_view',
   'card_page_view', // Dedicated /cards/:slug route view (distinct from in-app modal)
+  'card_page_exit_action', // Click on the card page next-step rail (cheaper | plays_with | role_search)
   'deck_click', // NEW: click into a public deck from any surface (browse, archetype, similar)
   'share_clicked', // NEW: fired by SharePageButton / ShareSearchButton on click
   'affiliate_click',

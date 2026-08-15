@@ -24,6 +24,7 @@ import { StateMessage } from '@/components/StateMessage';
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 import { logger } from '@/lib/core/logger';
 import { useTranslation } from '@/lib/i18n';
+import { GUIDES } from '@/data/guides';
 
 
 interface CuratedSearch {
@@ -268,6 +269,29 @@ export default function BrowseSearches() {
               })}
             </div>
           )}
+
+          {/* Back into the guides: every curated search has a guide that
+              teaches the syntax behind it. */}
+          <section className="mt-12 border-t border-border/50 pt-8">
+            <h2 className="font-display text-lg font-extrabold uppercase tracking-tight text-foreground">
+              {t('browse.learnTheSyntax', 'Learn the searches behind these')}
+            </h2>
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {[...GUIDES]
+                .sort((a, b) => a.level - b.level)
+                .slice(0, 6)
+                .map((guide) => (
+                  <li key={guide.slug}>
+                    <Link
+                      to={`/guides/${guide.slug}`}
+                      className="inline-flex min-h-9 items-center rounded-lg border border-border/60 bg-card px-3 py-1.5 text-sm text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                    >
+                      {t(`guide.title.${guide.slug}`, guide.title)}
+                    </Link>
+                  </li>
+                ))}
+            </ul>
+          </section>
         </div>
       </main>
     </div>
