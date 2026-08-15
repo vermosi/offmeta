@@ -1447,9 +1447,13 @@ if (import.meta.main) {
                 totalCards,
                 outcome,
                 resultsUrl,
+                0,
               ),
             ],
+            components:
+              outcome === 'ok' ? buildPaginationComponents(0, totalCards) : [],
           });
+
           await recordAnalytics({
             query,
             scryfallQuery,
