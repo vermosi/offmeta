@@ -631,7 +631,7 @@ export function buildEmbed(
  * an app collects, why, how long it is kept, and how to have it removed. This
  * mirrors the Privacy Policy at offmeta.app/privacy.
  */
-export function buildPrivacyEmbed(): DiscordEmbed {
+export function buildPrivacyEmbed() {
   return {
     title: 'OffMeta — what the bot stores',
     url: `${SITE_URL}/privacy`,
