@@ -262,6 +262,7 @@ const ALLOWED_EVENT_TYPES = [
   'search_results',
   'search_success', // Search returned >=1 result, includes latency bucket + data source
   'search_failure', // Track 0-result and error searches
+  'search_outcome', // Terminal outcome for every started search (results | zero_results | timeout | error | abandoned)
   'first_search_start',
   'first_search_success',
   'first_result_click',

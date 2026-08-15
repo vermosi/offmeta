@@ -21,6 +21,11 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 
 import { validateSearchInput } from '@/lib/validation/clientInput';
 import {
+  beginSearchOutcome,
+  markSearchDegradation,
+  reportSearchOutcome,
+} from '@/lib/analytics/searchOutcome';
+import {
   startSearchTrace,
   markSearchPhase,
   endSearchTrace,
@@ -173,6 +178,7 @@ export function useSearchHandler({
       const cacheSalt = options?.cacheSalt;
       const requestId = generateRequestId();
       setCurrentRequestId(requestId);
+      beginSearchOutcome(requestId, rawQuery);
       trackEvent('search_started', {
         query: rawQuery,
         request_id: requestId,
@@ -310,6 +316,7 @@ export function useSearchHandler({
         });
 
         if (errorMessage === 'Search timeout') {
+          markSearchDegradation('translate_timeout');
           const fallbackQuery = buildClientFallbackQuery(queryToSearch);
           logger.warn('[SearchDiag] FALLBACK: timeout', {
             query: queryToSearch,
@@ -362,11 +369,14 @@ export function useSearchHandler({
             elapsedMs: responseMs,
           });
 
+          markSearchDegradation('rate_limited');
+          reportSearchOutcome('rate_limited', { requestId });
           setRateLimitedUntil(Date.now() + 30000);
           toast.error('Too many searches', {
             description: 'Please wait a moment before searching again',
           });
         } else {
+          markSearchDegradation('translate_error');
           const fallbackQuery = buildClientFallbackQuery(queryToSearch);
           logger.warn('[SearchDiag] FALLBACK: error', {
             query: queryToSearch,
