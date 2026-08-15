@@ -502,33 +502,53 @@ async function runSearch(query: string): Promise<SearchResultPayload> {
     return { outcome: 'search_unavailable', ...empty };
   }
 
-  let translated: { scryfallQuery?: string } = {};
+  // "cards like X" must resolve through card similarity — the generic
+  // translator decomposes the card name into noisy oracle-text fragments.
+  let scryfallQuery = '';
   try {
-    const translateResponse = await fetch(
-      `${supabaseUrl}/functions/v1/semantic-search`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${serviceRoleKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query, useCache: true }),
-      },
-    );
-    if (!translateResponse.ok) {
-      log.error('translate_failed', { status: translateResponse.status });
-      return { outcome: 'search_unavailable', ...empty };
-    }
-    translated = (await translateResponse.json()) as { scryfallQuery?: string };
+    const alternatives = await resolveAlternativesQuery(query, {
+      supabaseUrl,
+      serviceRoleKey,
+    });
+    if (alternatives) scryfallQuery = alternatives.scryfallQuery;
   } catch (error) {
-    log.error('translate_error', {
+    log.error('alternatives_error', {
       message: error instanceof Error ? error.message : 'unknown',
     });
-    return { outcome: 'search_unavailable', ...empty };
   }
 
-  const scryfallQuery = translated.scryfallQuery?.trim() ?? '';
+  if (!scryfallQuery) {
+    let translated: { scryfallQuery?: string } = {};
+    try {
+      const translateResponse = await fetch(
+        `${supabaseUrl}/functions/v1/semantic-search`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${serviceRoleKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query, useCache: true }),
+        },
+      );
+      if (!translateResponse.ok) {
+        log.error('translate_failed', { status: translateResponse.status });
+        return { outcome: 'search_unavailable', ...empty };
+      }
+      translated = (await translateResponse.json()) as {
+        scryfallQuery?: string;
+      };
+    } catch (error) {
+      log.error('translate_error', {
+        message: error instanceof Error ? error.message : 'unknown',
+      });
+      return { outcome: 'search_unavailable', ...empty };
+    }
+    scryfallQuery = translated.scryfallQuery?.trim() ?? '';
+  }
+
   if (!scryfallQuery) return { outcome: 'not_understood', ...empty };
+
 
   let scryfallResponse: Response;
   try {
