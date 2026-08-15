@@ -63,8 +63,10 @@ export const CardItem = memo(function CardItem({
   tabIndex = 0,
   isOwned,
   sparklineData,
+  whyReport,
 }: CardItemProps) {
   const imageUrl = getCardImage(card, 'small');
+
   const imageSrcSet = `${getCardImage(card, 'small')} 146w, ${getCardImage(card, 'normal')} 488w, ${getCardImage(card, 'large')} 672w`;
   const [imgError, setImgError] = useState(false);
   const { locale, t } = useTranslation();
