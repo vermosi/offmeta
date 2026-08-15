@@ -588,7 +588,10 @@ async function handleClickRedirect(req: Request): Promise<Response> {
     return new Response('Not Found', { status: 404 });
   }
 
-  await recordClick({ query, actorHash, guildId }).catch(() => undefined);
+  const clickEvent = { query, actorHash, guildId };
+  if (shouldRecordClick(clickEvent)) {
+    await recordClick(clickEvent).catch(() => undefined);
+  }
 
   return new Response(null, {
     status: 302,
