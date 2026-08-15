@@ -616,13 +616,40 @@ export function buildEmbed(
           ],
         }
       : {}),
-    footer: { text: `offmeta.app${showing}` },
+    footer: { text: `offmeta.app${showing} · /offmeta-privacy for data use` },
 
     ...(cards[0]?.imageUrl ? { thumbnail: { url: cards[0].imageUrl } } : {}),
   };
 }
 
 
+
+/**
+ * Ephemeral data-use notice for `/offmeta-privacy`.
+ *
+ * The Discord Developer Policy requires users to be able to find out what data
+ * an app collects, why, how long it is kept, and how to have it removed. This
+ * mirrors the Privacy Policy at offmeta.app/privacy.
+ */
+export function buildPrivacyEmbed(): DiscordEmbed {
+  return {
+    title: 'OffMeta — what the bot stores',
+    url: `${SITE_URL}/privacy`,
+    color: 0x1c1b22,
+    description: [
+      'OffMeta only ever sees what Discord sends with a slash command.',
+      '',
+      '**Stored:** the search text you typed, the generated Scryfall query, the result count, the server ID, and timing.',
+      '**Not stored:** your Discord user ID in raw form (it is one-way hashed and used only for rate limiting), your username, avatar, email, roles, or any message content. The bot needs no message-content intent.',
+      '**Kept for:** 30 days, then deleted automatically.',
+      '**Never:** sold, used for ads or profiling, or used to train models.',
+      '',
+      `[Privacy Policy](${SITE_URL}/privacy) · [Terms of Service](${SITE_URL}/terms)`,
+      'To have your data deleted, ask in the OffMeta Discord server or open a GitHub issue.',
+    ].join('\n'),
+    footer: { text: 'offmeta.app/privacy' },
+  };
+}
 
 function summarize(card: Record<string, unknown>): CardSummary {
   const faces = card.card_faces as
@@ -1435,6 +1462,13 @@ export async function handleDiscordRequest(req: Request): Promise<Response> {
         return Response.json({ type: InteractionResponseType.PONG });
       }
 
+
+      if (interaction.data?.name === 'offmeta-privacy') {
+        return Response.json({
+          type: InteractionResponseType.CHANNEL_MESSAGE,
+          data: { flags: EPHEMERAL, embeds: [buildPrivacyEmbed()] },
+        });
+      }
 
       if (interaction.data?.name !== 'offmeta') {
         return Response.json({ type: InteractionResponseType.PONG });
