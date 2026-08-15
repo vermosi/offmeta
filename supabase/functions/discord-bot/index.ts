@@ -110,26 +110,31 @@ export function buildEmbed(
   scryfallQuery: string,
   cards: CardSummary[],
   totalCards: number,
+  outcome: SearchOutcome = cards.length > 0 ? 'ok' : 'no_results',
 ): Record<string, unknown> {
   const lines = cards.map(
     (card) =>
       `**[${card.name}](${card.scryfallUri})** ${card.manaCost}\n${card.typeLine}`,
   );
+  const failed =
+    outcome === 'search_unavailable' || outcome === 'card_data_unavailable';
 
   return {
     title: query.slice(0, 250),
-    url: buildResultsUrl(query),
+    ...(failed ? {} : { url: buildResultsUrl(query) }),
     description:
-      lines.length > 0
-        ? lines.join('\n\n')
-        : 'No cards matched that description. Try rephrasing it.',
-    color: 0x1c1b22,
-    fields: [
-      {
-        name: 'Interpreted as',
-        value: `\`${scryfallQuery.slice(0, 900) || '—'}\``,
-      },
-    ],
+      lines.length > 0 ? lines.join('\n\n') : outcomeMessage(outcome, query),
+    color: failed ? 0x8b2f3a : 0x1c1b22,
+    ...(scryfallQuery
+      ? {
+          fields: [
+            {
+              name: 'Interpreted as',
+              value: `\`${scryfallQuery.slice(0, 900)}\``,
+            },
+          ],
+        }
+      : {}),
     footer: {
       text:
         totalCards > cards.length
@@ -139,6 +144,7 @@ export function buildEmbed(
     ...(cards[0]?.imageUrl ? { thumbnail: { url: cards[0].imageUrl } } : {}),
   };
 }
+
 
 function summarize(card: Record<string, unknown>): CardSummary {
   const faces = card.card_faces as
