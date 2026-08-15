@@ -340,19 +340,23 @@ serve(
     // Fire-and-forget: the follow-up edits the deferred message.
     (async () => {
       try {
-        const { scryfallQuery, cards, totalCards } = await runSearch(query);
+        const { outcome, scryfallQuery, cards, totalCards } =
+          await runSearch(query);
         await sendFollowup(applicationId, token, {
-          embeds: [buildEmbed(query, scryfallQuery, cards, totalCards)],
+          embeds: [
+            buildEmbed(query, scryfallQuery, cards, totalCards, outcome),
+          ],
         });
       } catch (error) {
         log.error('command_failed', {
           message: error instanceof Error ? error.message : 'unknown',
         });
         await sendFollowup(applicationId, token, {
-          content: 'OffMeta could not complete that search. Try again shortly.',
+          content: outcomeMessage('search_unavailable', query),
         }).catch(() => undefined);
       }
     })();
+
 
     return deferred;
   }),
