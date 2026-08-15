@@ -53,6 +53,14 @@ export default function BrowseSearches() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const retry = useCallback(() => {
+    setIsLoading(true);
+    setError(null);
+    setReloadKey((k) => k + 1);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -86,7 +94,8 @@ export default function BrowseSearches() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
+
 
   const grouped = useMemo(() => {
     const groups = new Map<string, CuratedSearch[]>();
