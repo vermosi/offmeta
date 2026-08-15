@@ -522,8 +522,48 @@ async function sendFollowup(
   );
 }
 
+/**
+ * Signed click redirect: records the outbound click against the same
+ * pseudonymous actor, then forwards to the public results page. Only ever
+ * redirects to `buildResultsUrl`, so it can't be used as an open redirect.
+ */
+async function handleClickRedirect(req: Request): Promise<Response> {
+  const url = new URL(req.url);
+  const query = (url.searchParams.get('q') ?? '').slice(0, MAX_QUERY_LENGTH);
+  const actorHash = url.searchParams.get('a') ?? '';
+  const guildId = url.searchParams.get('g') ?? '';
+  const signature = url.searchParams.get('s') ?? '';
+  const secret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (!query || !signature || !secret) {
+    return new Response('Not Found', { status: 404 });
+  }
+
+  const expected = await signClick(
+    clickPayload(query, actorHash, guildId),
+    secret,
+  );
+  if (expected !== signature) {
+    return new Response('Not Found', { status: 404 });
+  }
+
+  await recordClick({ query, actorHash, guildId }).catch(() => undefined);
+
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: buildResultsUrl(query),
+      'Cache-Control': 'no-store',
+    },
+  });
+}
+
 serve(
   withLogging('discord-bot', async (req: Request): Promise<Response> => {
+    if (req.method === 'GET' && new URL(req.url).searchParams.has('s')) {
+      return handleClickRedirect(req);
+    }
+
     if (req.method !== 'POST') {
       return new Response('Not Found', { status: 404 });
     }
