@@ -30,7 +30,7 @@ const ERROR_COPY: Record<string, { title: string; detail: string }> = {
   },
 };
 
-export default function GoRedirect(): JSX.Element {
+export default function GoRedirect(): ReactElement {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [error, setError] = useState<{
