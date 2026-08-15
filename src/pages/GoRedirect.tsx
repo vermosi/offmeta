@@ -7,12 +7,13 @@
  * to the real search results.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { env } from '@/lib/core/env';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
 const ERROR_COPY: Record<string, { title: string; detail: string }> = {
+
   malformed: {
     title: 'This link is incomplete',
     detail: 'Run the /offmeta command again in Discord to get a fresh link.',
