@@ -30,6 +30,7 @@ import { Footer } from '@/components/Footer';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CardDetailView } from '@/components/card-detail/CardDetailView';
+import { CardNextSteps } from '@/components/card-detail/CardNextSteps';
 import { PageSearchBar } from '@/components/PageSearchBar';
 import { ArrowLeft } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
@@ -338,6 +339,9 @@ const CardPage = () => {
 
             {/* Unified card detail view (same UI everywhere in the app) */}
             <CardDetailView card={card} />
+
+            {/* Next-step rail: cheaper alternatives, co-play, role searches */}
+            <CardNextSteps card={card} />
           </div>
 
         </main>
