@@ -51,11 +51,17 @@ const CLICK_DEDUPE_WINDOW_MS = 30_000;
 /** Hard cap on tracked click keys so a flood can't grow memory unbounded. */
 const CLICK_DEDUPE_MAX_KEYS = 5_000;
 
-const InteractionType = { PING: 1, APPLICATION_COMMAND: 2 } as const;
+const InteractionType = {
+  PING: 1,
+  APPLICATION_COMMAND: 2,
+  MESSAGE_COMPONENT: 3,
+} as const;
 const InteractionResponseType = {
   PONG: 1,
   CHANNEL_MESSAGE: 4,
   DEFERRED_CHANNEL_MESSAGE: 5,
+  /** Ack a button press; the original message is edited afterwards. */
+  DEFERRED_UPDATE_MESSAGE: 6,
 } as const;
 
 /** Discord message flag: only the invoking user sees the reply. */
@@ -66,6 +72,17 @@ interface DiscordOption {
   value?: unknown;
 }
 
+interface DiscordEmbedField {
+  name?: string;
+  value?: string;
+}
+
+interface DiscordEmbed {
+  title?: string;
+  url?: string;
+  fields?: DiscordEmbedField[];
+}
+
 interface DiscordInteraction {
   type: number;
   token?: string;
@@ -73,8 +90,10 @@ interface DiscordInteraction {
   guild_id?: string;
   user?: { id?: string };
   member?: { user?: { id?: string } };
-  data?: { name?: string; options?: DiscordOption[] };
+  data?: { name?: string; options?: DiscordOption[]; custom_id?: string };
+  message?: { embeds?: DiscordEmbed[] };
 }
+
 
 /** In-memory sliding window. Resets on cold start — abuse brake, not billing. */
 const rateBuckets = new Map<string, number[]>();
@@ -457,6 +476,86 @@ function metaLine(card: CardSummary): string {
   return parts.join(' · ');
 }
 
+/** How many cards one Discord page shows. */
+export const PAGE_SIZE = MAX_CARDS;
+
+/** Total number of browsable pages for a result count. */
+export function pageCount(totalCards: number): number {
+  return Math.max(1, Math.ceil(Math.min(totalCards, MAX_BROWSABLE_CARDS) / PAGE_SIZE));
+}
+
+/** Hard ceiling on how deep the buttons will page (keeps Scryfall calls sane). */
+const MAX_BROWSABLE_CARDS = 500;
+
+/** custom_id prefix for the pagination buttons. */
+export const PAGE_BUTTON_PREFIX = 'offmeta_page';
+
+/**
+ * Recover the search behind a paginated message. The original query is the
+ * embed title and the translated query lives in the "Interpreted as" field,
+ * so the buttons need no state store and survive cold starts.
+ */
+export function extractEmbedContext(
+  interaction: { message?: { embeds?: Array<{ title?: string; fields?: Array<{ name?: string; value?: string }> }> } },
+): { query: string; scryfallQuery: string } | null {
+  const embed = interaction.message?.embeds?.[0];
+  if (!embed?.title) return null;
+  const field = embed.fields?.find((f) => f.name === 'Interpreted as');
+  const scryfallQuery = (field?.value ?? '').replace(/`/g, '').trim();
+  if (!scryfallQuery) return null;
+  return { query: embed.title.slice(0, MAX_QUERY_LENGTH), scryfallQuery };
+}
+
+
+/** Parse a pagination button custom_id back into a zero-based page index. */
+export function parsePageCustomId(customId: string | undefined): number | null {
+  if (!customId) return null;
+  const match = /^offmeta_page:(\d+)$/.exec(customId);
+  if (!match) return null;
+  const page = Number(match[1]);
+  return Number.isFinite(page) && page >= 0 ? page : null;
+}
+
+/**
+ * Prev/Next action row. Buttons are disabled at the edges so a click can never
+ * ask for a page that does not exist. The middle button is a static label.
+ */
+export function buildPaginationComponents(
+  page: number,
+  totalCards: number,
+): Array<Record<string, unknown>> {
+  const pages = pageCount(totalCards);
+  if (pages <= 1) return [];
+  return [
+    {
+      type: 1,
+      components: [
+        {
+          type: 2,
+          style: 2,
+          label: '◀ Prev',
+          custom_id: `${PAGE_BUTTON_PREFIX}:${Math.max(0, page - 1)}`,
+          disabled: page <= 0,
+        },
+        {
+          type: 2,
+          style: 2,
+          label: `Page ${page + 1} / ${pages}`,
+          custom_id: `${PAGE_BUTTON_PREFIX}:${page}`,
+          disabled: true,
+        },
+        {
+          type: 2,
+          style: 2,
+          label: 'Next ▶',
+          custom_id: `${PAGE_BUTTON_PREFIX}:${Math.min(pages - 1, page + 1)}`,
+          disabled: page >= pages - 1,
+        },
+      ],
+    },
+  ];
+}
+
 /** Format the Discord embed payload for a completed search. */
 export function buildEmbed(
   query: string,
@@ -466,6 +565,8 @@ export function buildEmbed(
   outcome: SearchOutcome = cards.length > 0 ? 'ok' : 'no_results',
   /** Click-tracked link; defaults to the plain results URL. */
   resultsUrl: string = buildResultsUrl(query),
+  /** Zero-based page currently displayed. */
+  page = 0,
 ): Record<string, unknown> {
   const lines = cards.map((card) => {
     const meta = metaLine(card);
@@ -494,6 +595,12 @@ export function buildEmbed(
   const body =
     lines.length > 0 ? lines.join('\n\n') : outcomeMessage(outcome, query);
 
+  const pages = pageCount(totalCards);
+  const showing =
+    !failed && cards.length > 0 && pages > 1
+      ? ` · ${page * PAGE_SIZE + 1}–${page * PAGE_SIZE + cards.length} of ${totalCards.toLocaleString('en-US')}`
+      : '';
+
   return {
     title: query.slice(0, 250),
     ...(failed ? {} : { url: resultsUrl }),
@@ -509,11 +616,12 @@ export function buildEmbed(
           ],
         }
       : {}),
-    footer: { text: 'offmeta.app' },
+    footer: { text: `offmeta.app${showing}` },
 
     ...(cards[0]?.imageUrl ? { thumbnail: { url: cards[0].imageUrl } } : {}),
   };
 }
+
 
 
 function summarize(card: Record<string, unknown>): CardSummary {
@@ -599,8 +707,78 @@ export function outcomeMessage(outcome: SearchOutcome, query: string): string {
   }
 }
 
+/** Scryfall returns fixed 175-card pages; map an absolute offset onto one. */
+export function scryfallPageFor(offset: number): {
+  page: number;
+  indexInPage: number;
+} {
+  const SCRYFALL_PAGE_SIZE = 175;
+  return {
+    page: Math.floor(offset / SCRYFALL_PAGE_SIZE) + 1,
+    indexInPage: offset % SCRYFALL_PAGE_SIZE,
+  };
+}
+
+interface ScryfallSlice {
+  outcome: SearchOutcome;
+  cards: CardSummary[];
+  totalCards: number;
+}
+
+/** Fetch one PAGE_SIZE window of results for an already-translated query. */
+async function fetchScryfallSlice(
+  scryfallQuery: string,
+  offset: number,
+): Promise<ScryfallSlice> {
+  const { page, indexInPage } = scryfallPageFor(offset);
+  let scryfallResponse: Response;
+  try {
+    scryfallResponse = await fetch(
+      `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
+        `${scryfallQuery} game:paper`,
+      )}&unique=cards&page=${page}`,
+      {
+        headers: {
+          'User-Agent': 'OffMetaDiscordBot/1.0',
+          Accept: 'application/json',
+        },
+      },
+    );
+  } catch (error) {
+    log.error('scryfall_error', {
+      message: error instanceof Error ? error.message : 'unknown',
+    });
+    return { outcome: 'card_data_unavailable', cards: [], totalCards: 0 };
+  }
+
+  if (!scryfallResponse.ok) {
+    // 404 from Scryfall means "valid query, zero matches".
+    const outcome: SearchOutcome =
+      scryfallResponse.status === 404 ? 'no_results' : 'card_data_unavailable';
+    if (outcome !== 'no_results') {
+      log.error('scryfall_status', { status: scryfallResponse.status });
+    }
+    return { outcome, cards: [], totalCards: 0 };
+  }
+
+  const payload = (await scryfallResponse.json()) as {
+    data?: Array<Record<string, unknown>>;
+    total_cards?: number;
+  };
+  const data = payload.data ?? [];
+  const window = data.slice(indexInPage, indexInPage + PAGE_SIZE);
+  return {
+    outcome: window.length > 0 ? 'ok' : 'no_results',
+    cards: window.map(summarize),
+    totalCards: payload.total_cards ?? data.length,
+  };
+}
+
 /** Translate + execute the search using OffMeta's internal pipeline. */
-async function runSearch(query: string): Promise<SearchResultPayload> {
+async function runSearch(
+  query: string,
+  offset = 0,
+): Promise<SearchResultPayload> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const empty = { scryfallQuery: '', cards: [], totalCards: 0 };
@@ -656,49 +834,22 @@ async function runSearch(query: string): Promise<SearchResultPayload> {
 
   if (!scryfallQuery) return { outcome: 'not_understood', ...empty };
 
-
-  let scryfallResponse: Response;
-  try {
-    scryfallResponse = await fetch(
-      `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
-        `${scryfallQuery} game:paper`,
-      )}&unique=cards`,
-      {
-        headers: {
-          'User-Agent': 'OffMetaDiscordBot/1.0',
-          Accept: 'application/json',
-        },
-      },
-    );
-  } catch (error) {
-    log.error('scryfall_error', {
-      message: error instanceof Error ? error.message : 'unknown',
-    });
-    return { outcome: 'card_data_unavailable', scryfallQuery, cards: [], totalCards: 0 };
-  }
-
-  if (!scryfallResponse.ok) {
-    // 404 from Scryfall means "valid query, zero matches".
-    const outcome: SearchOutcome =
-      scryfallResponse.status === 404 ? 'no_results' : 'card_data_unavailable';
-    if (outcome !== 'no_results') {
-      log.error('scryfall_status', { status: scryfallResponse.status });
-    }
-    return { outcome, scryfallQuery, cards: [], totalCards: 0 };
-  }
-
-  const payload = (await scryfallResponse.json()) as {
-    data?: Array<Record<string, unknown>>;
-    total_cards?: number;
-  };
-  const data = payload.data ?? [];
-  return {
-    outcome: data.length > 0 ? 'ok' : 'no_results',
-    scryfallQuery,
-    cards: data.slice(0, MAX_CARDS).map(summarize),
-    totalCards: payload.total_cards ?? data.length,
-  };
+  const slice = await fetchScryfallSlice(scryfallQuery, offset);
+  return { ...slice, scryfallQuery };
 }
+
+/**
+ * Re-run an already-translated query for a different page. Used by the
+ * Prev/Next buttons so paging never pays the translation cost again.
+ */
+async function runPagedSearch(
+  scryfallQuery: string,
+  offset: number,
+): Promise<SearchResultPayload> {
+  const slice = await fetchScryfallSlice(scryfallQuery, offset);
+  return { ...slice, scryfallQuery };
+}
+
 
 
 /** Edit the deferred interaction response once the search resolves. */
@@ -1141,9 +1292,80 @@ if (import.meta.main) {
         return Response.json({ type: InteractionResponseType.PONG });
       }
 
+      // Prev/Next buttons: re-run the already-translated query for a new page
+      // and edit the same message in place.
+      if (interaction.type === InteractionType.MESSAGE_COMPONENT) {
+        const page = parsePageCustomId(interaction.data?.custom_id);
+        const context = extractEmbedContext(interaction);
+        const componentAppId = interaction.application_id ?? '';
+        const componentToken = interaction.token ?? '';
+        const ack = Response.json({
+          type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+        });
+        if (page === null || !context || !componentAppId || !componentToken) {
+          return ack;
+        }
+
+        const clickUserId = extractUserId(interaction);
+        if (clickUserId) {
+          const { allowed } = checkRateLimit(clickUserId);
+          if (!allowed) return ack;
+        }
+
+        (async () => {
+          const startedAt = Date.now();
+          const actorHash = await hashActor(clickUserId);
+          const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+          const resultsUrl = await buildTrackedResultsUrl(
+            context.query,
+            actorHash,
+            interaction.guild_id ?? '',
+            undefined,
+            serviceRoleKey,
+          );
+          try {
+            const { outcome, cards, totalCards } = await runPagedSearch(
+              context.scryfallQuery,
+              page * PAGE_SIZE,
+            );
+            await sendFollowup(componentAppId, componentToken, {
+              embeds: [
+                buildEmbed(
+                  context.query,
+                  context.scryfallQuery,
+                  cards,
+                  totalCards,
+                  outcome,
+                  resultsUrl,
+                  page,
+                ),
+              ],
+              components: buildPaginationComponents(page, totalCards),
+            });
+            await recordAnalytics({
+              query: context.query,
+              scryfallQuery: context.scryfallQuery,
+              outcome,
+              cardCount: cards.length,
+              totalCards,
+              actorHash,
+              guildId: interaction.guild_id,
+              durationMs: Date.now() - startedAt,
+            });
+          } catch (error) {
+            log.error('pagination_failed', {
+              message: error instanceof Error ? error.message : 'unknown',
+            });
+          }
+        })();
+
+        return ack;
+      }
+
       if (interaction.type !== InteractionType.APPLICATION_COMMAND) {
         return Response.json({ type: InteractionResponseType.PONG });
       }
+
 
       if (interaction.data?.name !== 'offmeta') {
         return Response.json({ type: InteractionResponseType.PONG });
@@ -1225,9 +1447,13 @@ if (import.meta.main) {
                 totalCards,
                 outcome,
                 resultsUrl,
+                0,
               ),
             ],
+            components:
+              outcome === 'ok' ? buildPaginationComponents(0, totalCards) : [],
           });
+
           await recordAnalytics({
             query,
             scryfallQuery,

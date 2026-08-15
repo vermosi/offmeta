@@ -11,6 +11,11 @@ import {
   handleClickRedirect,
   signClick,
   clickPayload,
+  parsePageCustomId,
+  pageCount,
+  scryfallPageFor,
+  buildPaginationComponents,
+  extractEmbedContext,
 } from './index.ts';
 
 Deno.test('cardNameToSlug converts card names to canonical OffMeta slugs', () => {
@@ -104,4 +109,79 @@ Deno.test('condenseOracle strips reminder text and clips long rules text', () =>
   );
   const long = condenseOracle('A'.repeat(400));
   assertEquals(long.length <= 181, true);
+});
+
+Deno.test('parsePageCustomId reads the page index, rejecting junk', () => {
+  assertEquals(parsePageCustomId('offmeta_page:0'), 0);
+  assertEquals(parsePageCustomId('offmeta_page:12'), 12);
+  assertEquals(parsePageCustomId('offmeta_page:-1'), null);
+  assertEquals(parsePageCustomId('other:1'), null);
+  assertEquals(parsePageCustomId(undefined), null);
+});
+
+Deno.test('pageCount caps browsable pages', () => {
+  assertEquals(pageCount(0), 1);
+  assertEquals(pageCount(5), 1);
+  assertEquals(pageCount(6), 2);
+  assertEquals(pageCount(10_000), 100);
+});
+
+Deno.test('scryfallPageFor maps offsets onto Scryfall pages', () => {
+  assertEquals(scryfallPageFor(0), { page: 1, indexInPage: 0 });
+  assertEquals(scryfallPageFor(170), { page: 1, indexInPage: 170 });
+  assertEquals(scryfallPageFor(175), { page: 2, indexInPage: 0 });
+  assertEquals(scryfallPageFor(180), { page: 2, indexInPage: 5 });
+});
+
+Deno.test('buildPaginationComponents disables edges and hides for single page', () => {
+  assertEquals(buildPaginationComponents(0, 4), []);
+
+  const first = buildPaginationComponents(0, 42) as Array<{
+    components: Array<{ label: string; custom_id: string; disabled?: boolean }>;
+  }>;
+  assertEquals(first[0].components[0].disabled, true);
+  assertEquals(first[0].components[1].label, 'Page 1 / 9');
+  assertEquals(first[0].components[2].custom_id, 'offmeta_page:1');
+  assertEquals(first[0].components[2].disabled, false);
+
+  const last = buildPaginationComponents(8, 42) as Array<{
+    components: Array<{ custom_id: string; disabled?: boolean }>;
+  }>;
+  assertEquals(last[0].components[0].custom_id, 'offmeta_page:7');
+  assertEquals(last[0].components[2].disabled, true);
+});
+
+Deno.test('extractEmbedContext recovers the query and translated query', () => {
+  const context = extractEmbedContext({
+    message: {
+      embeds: [
+        {
+          title: 'cards that make treasure',
+          fields: [{ name: 'Interpreted as', value: '`o:treasure t:creature`' }],
+        },
+      ],
+    },
+  });
+  assertEquals(context, {
+    query: 'cards that make treasure',
+    scryfallQuery: 'o:treasure t:creature',
+  });
+  assertEquals(extractEmbedContext({ message: { embeds: [] } }), null);
+  assertEquals(
+    extractEmbedContext({ message: { embeds: [{ title: 'x' }] } }),
+    null,
+  );
+});
+
+Deno.test('buildEmbed footer shows the visible range when paginated', () => {
+  const cards = Array.from({ length: 5 }, (_, i) => ({
+    name: `Card ${i}`,
+    typeLine: 'Creature',
+    manaCost: '{1}',
+    scryfallUri: 'https://offmeta.app/cards/card',
+  }));
+  const embed = buildEmbed('treasure', 'o:treasure', cards, 42, 'ok', 'https://offmeta.app/go?q=x', 2) as {
+    footer: { text: string };
+  };
+  assertStringIncludes(embed.footer.text, '11–15 of 42');
 });
