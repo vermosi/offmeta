@@ -339,6 +339,8 @@ export function buildEmbed(
   cards: CardSummary[],
   totalCards: number,
   outcome: SearchOutcome = cards.length > 0 ? 'ok' : 'no_results',
+  /** Click-tracked link; defaults to the plain results URL. */
+  resultsUrl: string = buildResultsUrl(query),
 ): Record<string, unknown> {
   const lines = cards.map(
     (card) =>
@@ -349,7 +351,7 @@ export function buildEmbed(
 
   return {
     title: query.slice(0, 250),
-    ...(failed ? {} : { url: buildResultsUrl(query) }),
+    ...(failed ? {} : { url: resultsUrl }),
     description:
       lines.length > 0 ? lines.join('\n\n') : outcomeMessage(outcome, query),
     color: failed ? 0x8b2f3a : 0x1c1b22,
