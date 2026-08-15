@@ -166,6 +166,62 @@ export function buildResultsUrl(query: string): string {
   return `${SITE_URL}/?${params.toString()}`;
 }
 
+/**
+ * HMAC signature over a tracked-click payload. Signed with a server-only
+ * secret so nobody can forge click rows for an arbitrary actor.
+ */
+export async function signClick(
+  payload: string,
+  secret: string,
+): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const sig = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(payload),
+  );
+  return Array.from(new Uint8Array(sig).slice(0, 16))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/** Canonical payload string signed for a tracked click. */
+export function clickPayload(
+  query: string,
+  actorHash: string,
+  guildId: string,
+): string {
+  return `${query}|${actorHash}|${guildId}`;
+}
+
+/**
+ * Click-tracked wrapper around the results link. Points at this function's
+ * public GET route, which records the click and 302s to `buildResultsUrl`.
+ * Falls back to the direct link when the function URL/secret is unavailable.
+ */
+export async function buildTrackedResultsUrl(
+  query: string,
+  actorHash: string,
+  guildId: string,
+  functionUrl?: string,
+  secret?: string,
+): Promise<string> {
+  if (!functionUrl || !secret) return buildResultsUrl(query);
+  const params = new URLSearchParams({
+    q: query,
+    a: actorHash,
+    g: guildId,
+    s: await signClick(clickPayload(query, actorHash, guildId), secret),
+  });
+  return `${functionUrl}?${params.toString()}`;
+}
+
 /** Pseudonymous, stable id for a Discord user — never store the raw id. */
 export async function hashActor(userId: string): Promise<string> {
   if (!userId) return '';
@@ -210,8 +266,28 @@ export function buildAnalyticsRow(event: DiscordAnalyticsEvent) {
   };
 }
 
+export interface DiscordClickEvent {
+  query: string;
+  actorHash: string;
+  guildId: string;
+}
+
+/** Build the analytics_events row for an outbound results-link click. */
+export function buildClickRow(event: DiscordClickEvent) {
+  return {
+    event_type: 'discord_click',
+    session_id: event.actorHash ? `discord:${event.actorHash}` : null,
+    event_data: {
+      source: 'discord_bot',
+      query: event.query.slice(0, MAX_QUERY_LENGTH),
+      destination: buildResultsUrl(event.query),
+      guild_id: event.guildId || null,
+    },
+  };
+}
+
 /** Best-effort analytics write. Never blocks or fails the interaction. */
-async function recordAnalytics(event: DiscordAnalyticsEvent): Promise<void> {
+async function insertAnalyticsRow(row: unknown): Promise<void> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!supabaseUrl || !serviceRoleKey) return;
@@ -225,7 +301,7 @@ async function recordAnalytics(event: DiscordAnalyticsEvent): Promise<void> {
         'Content-Type': 'application/json',
         Prefer: 'return=minimal',
       },
-      body: JSON.stringify(buildAnalyticsRow(event)),
+      body: JSON.stringify(row),
     });
     if (!response.ok) {
       log.error('analytics_write_failed', { status: response.status });
@@ -235,6 +311,16 @@ async function recordAnalytics(event: DiscordAnalyticsEvent): Promise<void> {
       message: error instanceof Error ? error.message : 'unknown',
     });
   }
+}
+
+/** Record a search interaction. */
+function recordAnalytics(event: DiscordAnalyticsEvent): Promise<void> {
+  return insertAnalyticsRow(buildAnalyticsRow(event));
+}
+
+/** Record an outbound results-link click, tied to the same actor hash. */
+function recordClick(event: DiscordClickEvent): Promise<void> {
+  return insertAnalyticsRow(buildClickRow(event));
 }
 
 
@@ -253,6 +339,8 @@ export function buildEmbed(
   cards: CardSummary[],
   totalCards: number,
   outcome: SearchOutcome = cards.length > 0 ? 'ok' : 'no_results',
+  /** Click-tracked link; defaults to the plain results URL. */
+  resultsUrl: string = buildResultsUrl(query),
 ): Record<string, unknown> {
   const lines = cards.map(
     (card) =>
@@ -263,7 +351,7 @@ export function buildEmbed(
 
   return {
     title: query.slice(0, 250),
-    ...(failed ? {} : { url: buildResultsUrl(query) }),
+    ...(failed ? {} : { url: resultsUrl }),
     description:
       lines.length > 0 ? lines.join('\n\n') : outcomeMessage(outcome, query),
     color: failed ? 0x8b2f3a : 0x1c1b22,
@@ -434,8 +522,48 @@ async function sendFollowup(
   );
 }
 
+/**
+ * Signed click redirect: records the outbound click against the same
+ * pseudonymous actor, then forwards to the public results page. Only ever
+ * redirects to `buildResultsUrl`, so it can't be used as an open redirect.
+ */
+async function handleClickRedirect(req: Request): Promise<Response> {
+  const url = new URL(req.url);
+  const query = (url.searchParams.get('q') ?? '').slice(0, MAX_QUERY_LENGTH);
+  const actorHash = url.searchParams.get('a') ?? '';
+  const guildId = url.searchParams.get('g') ?? '';
+  const signature = url.searchParams.get('s') ?? '';
+  const secret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (!query || !signature || !secret) {
+    return new Response('Not Found', { status: 404 });
+  }
+
+  const expected = await signClick(
+    clickPayload(query, actorHash, guildId),
+    secret,
+  );
+  if (expected !== signature) {
+    return new Response('Not Found', { status: 404 });
+  }
+
+  await recordClick({ query, actorHash, guildId }).catch(() => undefined);
+
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: buildResultsUrl(query),
+      'Cache-Control': 'no-store',
+    },
+  });
+}
+
 serve(
   withLogging('discord-bot', async (req: Request): Promise<Response> => {
+    if (req.method === 'GET' && new URL(req.url).searchParams.has('s')) {
+      return handleClickRedirect(req);
+    }
+
     if (req.method !== 'POST') {
       return new Response('Not Found', { status: 404 });
     }
@@ -523,12 +651,29 @@ serve(
     // Fire-and-forget: the follow-up edits the deferred message.
     (async () => {
       const startedAt = Date.now();
+      const actorHash = await hashActor(userId);
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      const resultsUrl = await buildTrackedResultsUrl(
+        query,
+        actorHash,
+        guildId ?? '',
+        supabaseUrl ? `${supabaseUrl}/functions/v1/discord-bot` : undefined,
+        serviceRoleKey,
+      );
       try {
         const { outcome, scryfallQuery, cards, totalCards } =
           await runSearch(query);
         await sendFollowup(applicationId, token, {
           embeds: [
-            buildEmbed(query, scryfallQuery, cards, totalCards, outcome),
+            buildEmbed(
+              query,
+              scryfallQuery,
+              cards,
+              totalCards,
+              outcome,
+              resultsUrl,
+            ),
           ],
         });
         await recordAnalytics({
@@ -537,7 +682,7 @@ serve(
           outcome,
           cardCount: cards.length,
           totalCards,
-          actorHash: await hashActor(userId),
+          actorHash,
           guildId,
           durationMs: Date.now() - startedAt,
         });
