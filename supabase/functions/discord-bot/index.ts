@@ -324,6 +324,10 @@ serve(
       return Response.json({ type: InteractionResponseType.PONG });
     }
 
+    if (interaction.data?.name !== 'offmeta') {
+      return Response.json({ type: InteractionResponseType.PONG });
+    }
+
     const query = extractQuery(interaction);
     const applicationId = interaction.application_id ?? '';
     const token = interaction.token ?? '';
@@ -333,7 +337,13 @@ serve(
       type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE,
     });
 
-    if (!query || !applicationId || !token) {
+    if (!applicationId || !token) return deferred;
+
+    if (!query) {
+      sendFollowup(applicationId, token, {
+        content:
+          'Give me something to search — e.g. `/offmeta query: creatures that make treasure`.',
+      }).catch(() => undefined);
       return deferred;
     }
 
