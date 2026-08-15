@@ -19,8 +19,23 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
 import { resolveAlternativesQuery } from './alternatives.ts';
 
+function normalizeDiacritics(str: string): string {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+/** Convert a card name to the canonical /cards/:slug URL shape used by the site. */
+export function cardNameToSlug(name: string): string {
+  return normalizeDiacritics(name)
+    .toLowerCase()
+    .replace(/['']/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
 
 const log = createLogger('discord-bot');
+
 
 const SITE_URL = 'https://offmeta.app';
 const MAX_QUERY_LENGTH = 300;
@@ -451,11 +466,12 @@ function summarize(card: Record<string, unknown>): CardSummary {
     | Array<{ image_uris?: { normal?: string }; mana_cost?: string }>
     | undefined;
   const imageUris = card.image_uris as { normal?: string } | undefined;
+  const name = String(card.name ?? 'Unknown');
   return {
-    name: String(card.name ?? 'Unknown'),
+    name,
     typeLine: String(card.type_line ?? ''),
     manaCost: String(card.mana_cost ?? faces?.[0]?.mana_cost ?? ''),
-    scryfallUri: String(card.scryfall_uri ?? SITE_URL),
+    scryfallUri: `${SITE_URL}/cards/${cardNameToSlug(name)}`,
     imageUrl: imageUris?.normal ?? faces?.[0]?.image_uris?.normal,
   };
 }
