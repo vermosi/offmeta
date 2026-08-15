@@ -8,6 +8,8 @@ import { memo, useState, useCallback } from 'react';
 import type { KeyboardEvent, MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import type { ScryfallCard } from '@/types/card';
+import type { WhyItMatches as WhyItMatchesReport } from '@/lib/search/whyItMatches';
+
 import { getCardImage } from '@/lib/scryfall/client';
 import { getTCGPlayerUrl } from '@/lib/scryfall/printings';
 import { ManaCost } from '@/components/ManaSymbol';
