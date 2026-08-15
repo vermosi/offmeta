@@ -4,10 +4,12 @@
  * @module pages/BrowseSearches
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search,
+  SearchX,
+  ServerCrash,
   Sword,
   DollarSign,
   Users,
@@ -18,9 +20,11 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
+import { StateMessage } from '@/components/StateMessage';
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 import { logger } from '@/lib/core/logger';
 import { useTranslation } from '@/lib/i18n';
+
 
 interface CuratedSearch {
   slug: string;
@@ -48,6 +52,14 @@ export default function BrowseSearches() {
   const [searches, setSearches] = useState<CuratedSearch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const retry = useCallback(() => {
+    setIsLoading(true);
+    setError(null);
+    setReloadKey((k) => k + 1);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,7 +94,8 @@ export default function BrowseSearches() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
+
 
   const grouped = useMemo(() => {
     const groups = new Map<string, CuratedSearch[]>();
@@ -179,16 +192,42 @@ export default function BrowseSearches() {
               ))}
             </div>
           ) : error ? (
-            <div className="text-center py-12">
-              <p className="text-sm text-destructive mb-2">
-                {t('browse.error')}
-              </p>
-              <p className="text-xs text-muted-foreground">{error.message}</p>
-            </div>
+            <StateMessage
+              tone="error"
+              icon={ServerCrash}
+              title={t('browse.error')}
+              description={t(
+                'browse.errorDescription',
+                'We could not load the curated searches. This is usually a temporary network or service hiccup.',
+              )}
+              detail={error.message}
+              actions={[
+                {
+                  label: t('common.retry', 'Try again'),
+                  onClick: retry,
+                  variant: 'default',
+                },
+                { label: t('browse.goSearch', 'Search cards instead'), href: '/' },
+              ]}
+            />
           ) : searches.length === 0 ? (
-            <p className="text-center text-muted-foreground py-12">
-              {t('browse.empty')}
-            </p>
+            <StateMessage
+              icon={SearchX}
+              title={t('browse.empty')}
+              description={t(
+                'browse.emptyDescription',
+                'No curated searches are published right now. You can still search for any card in plain English.',
+              )}
+              hints={[
+                t('browse.emptyHintOne', 'Try a query like "cheap red treasure cards".'),
+                t('browse.emptyHintTwo', 'Browse the guides for worked search examples.'),
+              ]}
+              actions={[
+                { label: t('browse.goSearch', 'Search cards instead'), href: '/', variant: 'default' },
+                { label: t('browse.goGuides', 'Read the guides'), href: '/guides' },
+              ]}
+            />
+
           ) : (
             <div className="space-y-10">
               {grouped.map(([category, items]) => {
