@@ -1238,13 +1238,35 @@ async function registerSlashCommand(): Promise<Response> {
   return Response.json({ ok: true, command: 'offmeta' });
 }
 
-if (import.meta.main) {
-  serve(
+/**
+ * Background work started by an interaction (search + follow-up edit). Tracked
+ * so end-to-end tests can await the deferred phase deterministically.
+ */
+const pendingWork = new Set<Promise<unknown>>();
 
-    withLogging('discord-bot', async (req: Request): Promise<Response> => {
+function trackPending(work: Promise<unknown>): void {
+  const tracked = work.catch(() => undefined).finally(() => {
+    pendingWork.delete(tracked);
+  });
+  pendingWork.add(tracked);
+}
+
+/** Await all in-flight follow-up work. Test/shutdown helper. */
+export async function flushPendingWork(): Promise<void> {
+  while (pendingWork.size > 0) {
+    await Promise.all([...pendingWork]);
+  }
+}
+
+/**
+ * Full request handler: click redirects, health, command registration and
+ * Discord interactions (PING, slash command, pagination buttons).
+ */
+export async function handleDiscordRequest(req: Request): Promise<Response> {
       if (req.method === 'GET' && new URL(req.url).searchParams.has('s')) {
         return handleClickRedirect(req);
       }
+
 
       if (req.method === 'GET' && new URL(req.url).searchParams.has('health')) {
         const result = await startupCheck;
