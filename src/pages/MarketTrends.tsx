@@ -371,12 +371,16 @@ export default function MarketTrends() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <main className="flex-1 container max-w-4xl mx-auto px-4 py-6 sm:py-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+      <main className="flex-1 container max-w-4xl mx-auto px-4 pb-16 pt-6 sm:pt-10">
+        <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+          {t('market.eyebrow', 'OffMeta / Market')}
+        </p>
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            <h1 className="font-display text-4xl uppercase leading-[0.95] tracking-tight text-foreground md:text-5xl">
               {t('market.title', 'Market Trends')}
             </h1>
+
             <p className="text-sm text-muted-foreground mt-1">
               {t('market.subtitle', 'Biggest price movers over the last {days} days', { days: daysBack })}
               {filteredMovers.length > 0 && (
