@@ -51,11 +51,17 @@ const CLICK_DEDUPE_WINDOW_MS = 30_000;
 /** Hard cap on tracked click keys so a flood can't grow memory unbounded. */
 const CLICK_DEDUPE_MAX_KEYS = 5_000;
 
-const InteractionType = { PING: 1, APPLICATION_COMMAND: 2 } as const;
+const InteractionType = {
+  PING: 1,
+  APPLICATION_COMMAND: 2,
+  MESSAGE_COMPONENT: 3,
+} as const;
 const InteractionResponseType = {
   PONG: 1,
   CHANNEL_MESSAGE: 4,
   DEFERRED_CHANNEL_MESSAGE: 5,
+  /** Ack a button press; the original message is edited afterwards. */
+  DEFERRED_UPDATE_MESSAGE: 6,
 } as const;
 
 /** Discord message flag: only the invoking user sees the reply. */
@@ -66,6 +72,17 @@ interface DiscordOption {
   value?: unknown;
 }
 
+interface DiscordEmbedField {
+  name?: string;
+  value?: string;
+}
+
+interface DiscordEmbed {
+  title?: string;
+  url?: string;
+  fields?: DiscordEmbedField[];
+}
+
 interface DiscordInteraction {
   type: number;
   token?: string;
@@ -73,8 +90,10 @@ interface DiscordInteraction {
   guild_id?: string;
   user?: { id?: string };
   member?: { user?: { id?: string } };
-  data?: { name?: string; options?: DiscordOption[] };
+  data?: { name?: string; options?: DiscordOption[]; custom_id?: string };
+  message?: { embeds?: DiscordEmbed[] };
 }
+
 
 /** In-memory sliding window. Resets on cold start — abuse brake, not billing. */
 const rateBuckets = new Map<string, number[]>();
