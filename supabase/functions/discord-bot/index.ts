@@ -227,9 +227,11 @@ export function clickPayload(
 const CLICK_LINK_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
- * Click-tracked wrapper around the results link. Points at this function's
- * public GET route, which records the click and 302s to `buildResultsUrl`.
- * Falls back to the direct link when the function URL/secret is unavailable.
+ * Click-tracked wrapper around the results link. The user-facing URL lives
+ * on offmeta.app (e.g. https://offmeta.app/go?q=...&s=...). The `/go` page
+ * calls this function behind the scenes to verify the signature and log the
+ * click, then redirects the user to the real results. If a direct edge-function
+ * URL is ever used (legacy or testing), it still 302-redirects to the results.
  */
 export async function buildTrackedResultsUrl(
   query: string,
@@ -239,7 +241,7 @@ export async function buildTrackedResultsUrl(
   secret?: string,
   now = Date.now(),
 ): Promise<string> {
-  if (!functionUrl || !secret) return buildResultsUrl(query);
+  if (!secret) return buildResultsUrl(query);
   const expiresAt = now + CLICK_LINK_TTL_MS;
   const params = new URLSearchParams({
     q: query,
@@ -251,8 +253,11 @@ export async function buildTrackedResultsUrl(
       secret,
     ),
   });
-  return `${functionUrl}?${params.toString()}`;
+  // Always show a clean offmeta.app URL in Discord; the redirect resolution is
+  // handled by the site so the Supabase endpoint never appears in the message.
+  return `${SITE_URL}/go?${params.toString()}`;
 }
+
 
 /** Pseudonymous, stable id for a Discord user — never store the raw id. */
 export async function hashActor(userId: string): Promise<string> {
