@@ -166,6 +166,62 @@ export function buildResultsUrl(query: string): string {
   return `${SITE_URL}/?${params.toString()}`;
 }
 
+/**
+ * HMAC signature over a tracked-click payload. Signed with a server-only
+ * secret so nobody can forge click rows for an arbitrary actor.
+ */
+export async function signClick(
+  payload: string,
+  secret: string,
+): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const sig = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(payload),
+  );
+  return Array.from(new Uint8Array(sig).slice(0, 16))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/** Canonical payload string signed for a tracked click. */
+export function clickPayload(
+  query: string,
+  actorHash: string,
+  guildId: string,
+): string {
+  return `${query}|${actorHash}|${guildId}`;
+}
+
+/**
+ * Click-tracked wrapper around the results link. Points at this function's
+ * public GET route, which records the click and 302s to `buildResultsUrl`.
+ * Falls back to the direct link when the function URL/secret is unavailable.
+ */
+export async function buildTrackedResultsUrl(
+  query: string,
+  actorHash: string,
+  guildId: string,
+  functionUrl?: string,
+  secret?: string,
+): Promise<string> {
+  if (!functionUrl || !secret) return buildResultsUrl(query);
+  const params = new URLSearchParams({
+    q: query,
+    a: actorHash,
+    g: guildId,
+    s: await signClick(clickPayload(query, actorHash, guildId), secret),
+  });
+  return `${functionUrl}?${params.toString()}`;
+}
+
 /** Pseudonymous, stable id for a Discord user — never store the raw id. */
 export async function hashActor(userId: string): Promise<string> {
   if (!userId) return '';
