@@ -527,9 +527,9 @@ export default function FindMyCombos() {
 
                 {/* Included combos */}
                 <section className="space-y-3">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Zap className="h-5 w-5 text-primary" />
-                    <h2 className="text-lg font-semibold">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Zap className="h-4 w-4 text-primary" />
+                    <h2 className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
                       {t('combos.combosInDeck')} ({filteredIncluded.length})
                     </h2>
                     <div className="ml-auto">
@@ -540,6 +540,7 @@ export default function FindMyCombos() {
                       />
                     </div>
                   </div>
+
                   {filteredIncluded.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
                       {hasActiveFilters
