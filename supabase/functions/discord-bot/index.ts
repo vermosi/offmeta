@@ -1003,177 +1003,180 @@ async function registerSlashCommand(): Promise<Response> {
   return Response.json({ ok: true, command: 'offmeta' });
 }
 
-serve(
+if (import.meta.main) {
+  serve(
 
-  withLogging('discord-bot', async (req: Request): Promise<Response> => {
-    if (req.method === 'GET' && new URL(req.url).searchParams.has('s')) {
-      return handleClickRedirect(req);
-    }
+    withLogging('discord-bot', async (req: Request): Promise<Response> => {
+      if (req.method === 'GET' && new URL(req.url).searchParams.has('s')) {
+        return handleClickRedirect(req);
+      }
 
-    if (req.method === 'GET' && new URL(req.url).searchParams.has('health')) {
-      const result = await startupCheck;
-      // No secrets in the payload — booleans and error strings only.
-      return Response.json(result, {
-        status: result.ok ? 200 : 503,
-        headers: { 'Cache-Control': 'no-store' },
-      });
-    }
+      if (req.method === 'GET' && new URL(req.url).searchParams.has('health')) {
+        const result = await startupCheck;
+        // No secrets in the payload — booleans and error strings only.
+        return Response.json(result, {
+          status: result.ok ? 200 : 503,
+          headers: { 'Cache-Control': 'no-store' },
+        });
+      }
 
-    // Protected one-off command registration: POST ?register=1 with the pipeline key.
-    if (req.method === 'POST' && new URL(req.url).searchParams.has('register')) {
-      const pipelineKey = Deno.env.get('OFFMETA_PIPELINE_KEY');
-      const provided = req.headers.get('x-offmeta-key') ?? '';
-      if (!pipelineKey || provided !== pipelineKey) {
+      // Protected one-off command registration: POST ?register=1 with the pipeline key.
+      if (req.method === 'POST' && new URL(req.url).searchParams.has('register')) {
+        const pipelineKey = Deno.env.get('OFFMETA_PIPELINE_KEY');
+        const provided = req.headers.get('x-offmeta-key') ?? '';
+        if (!pipelineKey || provided !== pipelineKey) {
+          return new Response('Not Found', { status: 404 });
+        }
+        return registerSlashCommand();
+      }
+
+      if (req.method !== 'POST') {
         return new Response('Not Found', { status: 404 });
       }
-      return registerSlashCommand();
-    }
-
-    if (req.method !== 'POST') {
-      return new Response('Not Found', { status: 404 });
-    }
 
 
-    const rawBody = await req.text();
-    const valid = await verifyDiscordSignature(
-      rawBody,
-      req.headers.get('x-signature-ed25519'),
-      req.headers.get('x-signature-timestamp'),
-      Deno.env.get('DISCORD_PUBLIC_KEY'),
-    );
-    if (!valid) {
-      return new Response('invalid request signature', { status: 401 });
-    }
-
-    let interaction: DiscordInteraction;
-    try {
-      interaction = JSON.parse(rawBody) as DiscordInteraction;
-    } catch {
-      return new Response('Bad Request', { status: 400 });
-    }
-
-    if (interaction.type === InteractionType.PING) {
-      return Response.json({ type: InteractionResponseType.PONG });
-    }
-
-    if (interaction.type !== InteractionType.APPLICATION_COMMAND) {
-      return Response.json({ type: InteractionResponseType.PONG });
-    }
-
-    if (interaction.data?.name !== 'offmeta') {
-      return Response.json({ type: InteractionResponseType.PONG });
-    }
-
-    const userId = extractUserId(interaction);
-    const guildId = interaction.guild_id;
-    const query = extractQuery(interaction);
-    if (userId) {
-      const { allowed, retryAfterSeconds } = checkRateLimit(userId);
-      if (!allowed) {
-        // Immediate ephemeral reply — no search work is started.
-        hashActor(userId)
-          .then((actorHash) =>
-            recordAnalytics({
-              query,
-              scryfallQuery: '',
-              outcome: 'search_unavailable',
-              cardCount: 0,
-              totalCards: 0,
-              actorHash,
-              guildId,
-              durationMs: 0,
-              rateLimited: true,
-            }),
-          )
-          .catch(() => undefined);
-        return Response.json({
-          type: InteractionResponseType.CHANNEL_MESSAGE,
-          data: {
-            flags: EPHEMERAL,
-            content: `You're searching a bit fast — up to ${RATE_LIMIT_MAX} searches per minute. Try again in ${retryAfterSeconds}s.`,
-          },
-        });
-      }
-    }
-
-    const applicationId = interaction.application_id ?? '';
-    const token = interaction.token ?? '';
-
-    // Discord requires a response within 3s; search takes longer, so defer.
-    const deferred = Response.json({
-      type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE,
-    });
-
-    if (!applicationId || !token) return deferred;
-
-    if (!query) {
-      sendFollowup(applicationId, token, {
-        content:
-          'Give me something to search — e.g. `/offmeta query: creatures that make treasure`.',
-      }).catch(() => undefined);
-      return deferred;
-    }
-
-    // Fire-and-forget: the follow-up edits the deferred message.
-    (async () => {
-      const startedAt = Date.now();
-      const actorHash = await hashActor(userId);
-      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
-      const resultsUrl = await buildTrackedResultsUrl(
-        query,
-        actorHash,
-        guildId ?? '',
-        undefined,
-        serviceRoleKey,
+      const rawBody = await req.text();
+      const valid = await verifyDiscordSignature(
+        rawBody,
+        req.headers.get('x-signature-ed25519'),
+        req.headers.get('x-signature-timestamp'),
+        Deno.env.get('DISCORD_PUBLIC_KEY'),
       );
-
-      try {
-        const { outcome, scryfallQuery, cards, totalCards } =
-          await runSearch(query);
-        await sendFollowup(applicationId, token, {
-          embeds: [
-            buildEmbed(
-              query,
-              scryfallQuery,
-              cards,
-              totalCards,
-              outcome,
-              resultsUrl,
-            ),
-          ],
-        });
-        await recordAnalytics({
-          query,
-          scryfallQuery,
-          outcome,
-          cardCount: cards.length,
-          totalCards,
-          actorHash,
-          guildId,
-          durationMs: Date.now() - startedAt,
-        });
-      } catch (error) {
-        log.error('command_failed', {
-          message: error instanceof Error ? error.message : 'unknown',
-        });
-        await sendFollowup(applicationId, token, {
-          content: outcomeMessage('search_unavailable', query),
-        }).catch(() => undefined);
-        await recordAnalytics({
-          query,
-          scryfallQuery: '',
-          outcome: 'search_unavailable',
-          cardCount: 0,
-          totalCards: 0,
-          actorHash: await hashActor(userId),
-          guildId,
-          durationMs: Date.now() - startedAt,
-        }).catch(() => undefined);
+      if (!valid) {
+        return new Response('invalid request signature', { status: 401 });
       }
-    })();
+
+      let interaction: DiscordInteraction;
+      try {
+        interaction = JSON.parse(rawBody) as DiscordInteraction;
+      } catch {
+        return new Response('Bad Request', { status: 400 });
+      }
+
+      if (interaction.type === InteractionType.PING) {
+        return Response.json({ type: InteractionResponseType.PONG });
+      }
+
+      if (interaction.type !== InteractionType.APPLICATION_COMMAND) {
+        return Response.json({ type: InteractionResponseType.PONG });
+      }
+
+      if (interaction.data?.name !== 'offmeta') {
+        return Response.json({ type: InteractionResponseType.PONG });
+      }
+
+      const userId = extractUserId(interaction);
+      const guildId = interaction.guild_id;
+      const query = extractQuery(interaction);
+      if (userId) {
+        const { allowed, retryAfterSeconds } = checkRateLimit(userId);
+        if (!allowed) {
+          // Immediate ephemeral reply — no search work is started.
+          hashActor(userId)
+            .then((actorHash) =>
+              recordAnalytics({
+                query,
+                scryfallQuery: '',
+                outcome: 'search_unavailable',
+                cardCount: 0,
+                totalCards: 0,
+                actorHash,
+                guildId,
+                durationMs: 0,
+                rateLimited: true,
+              }),
+            )
+            .catch(() => undefined);
+          return Response.json({
+            type: InteractionResponseType.CHANNEL_MESSAGE,
+            data: {
+              flags: EPHEMERAL,
+              content: `You're searching a bit fast — up to ${RATE_LIMIT_MAX} searches per minute. Try again in ${retryAfterSeconds}s.`,
+            },
+          });
+        }
+      }
+
+      const applicationId = interaction.application_id ?? '';
+      const token = interaction.token ?? '';
+
+      // Discord requires a response within 3s; search takes longer, so defer.
+      const deferred = Response.json({
+        type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE,
+      });
+
+      if (!applicationId || !token) return deferred;
+
+      if (!query) {
+        sendFollowup(applicationId, token, {
+          content:
+            'Give me something to search — e.g. `/offmeta query: creatures that make treasure`.',
+        }).catch(() => undefined);
+        return deferred;
+      }
+
+      // Fire-and-forget: the follow-up edits the deferred message.
+      (async () => {
+        const startedAt = Date.now();
+        const actorHash = await hashActor(userId);
+        const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+        const resultsUrl = await buildTrackedResultsUrl(
+          query,
+          actorHash,
+          guildId ?? '',
+          undefined,
+          serviceRoleKey,
+        );
+
+        try {
+          const { outcome, scryfallQuery, cards, totalCards } =
+            await runSearch(query);
+          await sendFollowup(applicationId, token, {
+            embeds: [
+              buildEmbed(
+                query,
+                scryfallQuery,
+                cards,
+                totalCards,
+                outcome,
+                resultsUrl,
+              ),
+            ],
+          });
+          await recordAnalytics({
+            query,
+            scryfallQuery,
+            outcome,
+            cardCount: cards.length,
+            totalCards,
+            actorHash,
+            guildId,
+            durationMs: Date.now() - startedAt,
+          });
+        } catch (error) {
+          log.error('command_failed', {
+            message: error instanceof Error ? error.message : 'unknown',
+          });
+          await sendFollowup(applicationId, token, {
+            content: outcomeMessage('search_unavailable', query),
+          }).catch(() => undefined);
+          await recordAnalytics({
+            query,
+            scryfallQuery: '',
+            outcome: 'search_unavailable',
+            cardCount: 0,
+            totalCards: 0,
+            actorHash: await hashActor(userId),
+            guildId,
+            durationMs: Date.now() - startedAt,
+          }).catch(() => undefined);
+        }
+      })();
 
 
-    return deferred;
-  }),
-);
+      return deferred;
+    }),
+  );
+}
+
