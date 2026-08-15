@@ -90,6 +90,27 @@ function installNetworkStub(): { recorder: Recorder; restore: () => void } {
   return { recorder, restore: () => { globalThis.fetch = original; } };
 }
 
+/** Set the env the handler needs, returning a restore fn (env is process-wide). */
+function setEnv(): () => void {
+  const previous = {
+    url: Deno.env.get('SUPABASE_URL'),
+    key: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+    publicKey: Deno.env.get('DISCORD_PUBLIC_KEY'),
+  };
+  Deno.env.set('SUPABASE_URL', SUPABASE_URL);
+  Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', SERVICE_ROLE_KEY);
+  return () => {
+    for (const [name, value] of [
+      ['SUPABASE_URL', previous.url],
+      ['SUPABASE_SERVICE_ROLE_KEY', previous.key],
+      ['DISCORD_PUBLIC_KEY', previous.publicKey],
+    ] as const) {
+      if (value === undefined) Deno.env.delete(name);
+      else Deno.env.set(name, value);
+    }
+  };
+}
+
 function bytesToHex(bytes: Uint8Array): string {
   return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
@@ -141,8 +162,7 @@ Deno.test({
   sanitizeOps: false,
   sanitizeResources: false,
   fn: async () => {
-    Deno.env.set('SUPABASE_URL', SUPABASE_URL);
-    Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', SERVICE_ROLE_KEY);
+    const restoreEnv = setEnv();
     const { recorder, restore } = installNetworkStub();
     const sign = await makeSigner();
     // Unique per run so the per-user rate limiter never leaks across tests.
@@ -258,6 +278,7 @@ Deno.test({
       assertEquals(clicks[0].session_id, searches[0].session_id);
     } finally {
       restore();
+      restoreEnv();
     }
   },
 });
@@ -267,8 +288,7 @@ Deno.test({
   sanitizeOps: false,
   sanitizeResources: false,
   fn: async () => {
-    Deno.env.set('SUPABASE_URL', SUPABASE_URL);
-    Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', SERVICE_ROLE_KEY);
+    const restoreEnv = setEnv();
     const { recorder, restore } = installNetworkStub();
     const sign = await makeSigner();
 
@@ -313,6 +333,7 @@ Deno.test({
       );
     } finally {
       restore();
+      restoreEnv();
     }
   },
 });
