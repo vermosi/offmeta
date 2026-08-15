@@ -1446,7 +1446,7 @@ export async function handleDiscordRequest(req: Request): Promise<Response> {
       }
 
       // Fire-and-forget: the follow-up edits the deferred message.
-      (async () => {
+      trackPending((async () => {
         const startedAt = Date.now();
         const actorHash = await hashActor(userId);
         const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -1506,11 +1506,15 @@ export async function handleDiscordRequest(req: Request): Promise<Response> {
             durationMs: Date.now() - startedAt,
           }).catch(() => undefined);
         }
-      })();
+      })());
 
 
       return deferred;
-    }),
-  );
+}
+
+if (import.meta.main) {
+  serve(withLogging('discord-bot', handleDiscordRequest));
+}
+
 }
 
