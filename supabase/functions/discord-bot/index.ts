@@ -645,7 +645,7 @@ export function buildPrivacyEmbed() {
       '**Never:** sold, used for ads or profiling, or used to train models.',
       '',
       `[Privacy Policy](${SITE_URL}/privacy) · [Terms of Service](${SITE_URL}/terms)`,
-      'To have your data deleted, ask in the OffMeta Discord server or open a GitHub issue.',
+      'To have your data deleted, email admin@offmeta.app or ask in the OffMeta Discord server.',
     ].join('\n'),
     footer: { text: 'offmeta.app/privacy' },
   };
