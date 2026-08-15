@@ -79,6 +79,17 @@ export const CardItem = memo(function CardItem({
   // also mirror it explicitly so tests and assistive tech see consistent behavior.
 
   const manaCost = getManaCost(card);
+  const whyLabel = whyReport
+    ? [
+        whyReport.concept,
+        whyReport.directness === 'direct'
+          ? t('whyItMatches.direct', 'Direct')
+          : t('whyItMatches.structural', 'Structural'),
+      ]
+        .filter(Boolean)
+        .join(' / ')
+    : null;
+
   const price = formatPrice(card);
 
   const handleBuyClick = useCallback(
