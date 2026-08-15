@@ -27,6 +27,7 @@ const FindMyCombos = lazy(() => import('./pages/FindMyCombos'));
 const DeckCheck = lazy(() => import('./pages/DeckCheck'));
 const BrowseSearches = lazy(() => import('./pages/BrowseSearches'));
 const About = lazy(() => import('./pages/About'));
+const LegalPage = lazy(() => import('./pages/LegalPage'));
 const MarketTrends = lazy(() => import('./pages/MarketTrends'));
 const CardPage = lazy(() => import('./pages/CardPage'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
@@ -108,6 +109,14 @@ export default function AppRoutes() {
               element={withFullApp(<BrowseSearches />)}
             />
             <Route path="/about" element={withFullApp(<About />)} />
+            <Route
+              path="/privacy"
+              element={withFullApp(<LegalPage document="privacy" />)}
+            />
+            <Route
+              path="/terms"
+              element={withFullApp(<LegalPage document="terms" />)}
+            />
             <Route path="/market" element={withFullApp(<MarketTrends />)} />
             <Route path="/cards/:slug" element={withFullApp(<CardPage />)} />
             <Route

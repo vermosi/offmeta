@@ -24,6 +24,8 @@ const EXPLORE_LINKS = [
   { to: '/guides', labelKey: 'header.guides', fallback: 'Guides' },
   { to: '/docs/syntax', labelKey: 'footer.syntaxCheatSheet', fallback: 'Syntax Cheat Sheet' },
   { to: '/about', labelKey: 'footer.about', fallback: 'About' },
+  { to: '/privacy', labelKey: 'footer.privacy', fallback: 'Privacy' },
+  { to: '/terms', labelKey: 'footer.terms', fallback: 'Terms' },
 ] as const;
 
 const DATA_SOURCES = [
