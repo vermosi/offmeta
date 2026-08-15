@@ -355,10 +355,13 @@ async function insertAnalyticsRow(row: unknown): Promise<void> {
       },
       body: JSON.stringify(row),
     });
+    // Consume the body so Deno doesn't report a leaked response stream.
+    await response.body?.cancel();
     if (!response.ok) {
       log.error('analytics_write_failed', { status: response.status });
     }
   } catch (error) {
+
     log.error('analytics_write_error', {
       message: error instanceof Error ? error.message : 'unknown',
     });
