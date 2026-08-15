@@ -423,6 +423,7 @@
   "combos.deckSummary": "Deck Summary",
   "combos.emptyPaste": "Paste a decklist and click \"Parse\" to get started.",
   "combos.emptyUrl": "Import a Moxfield deck to get started.",
+  "combos.eyebrow": "OffMeta / Combos",
   "combos.findButton": "Find My Combos",
   "combos.findError": "Failed to find combos",
   "combos.importButton": "Import from Moxfield",

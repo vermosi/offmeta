@@ -423,6 +423,7 @@
   "combos.deckSummary": "デッキ概要",
   "combos.emptyPaste": "リストを貼り付けて「解析」をクリックして開始してください。",
   "combos.emptyUrl": "Moxfieldデッキをインポートして開始してください。",
+  "combos.eyebrow": "OffMeta / コンボ",
   "combos.findButton": "コンボを検索",
   "combos.findError": "コンボの検索に失敗しました",
   "combos.importButton": "Moxfieldからインポート",
