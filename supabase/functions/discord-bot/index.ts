@@ -471,10 +471,27 @@ serve(
     }
 
     const userId = extractUserId(interaction);
+    const guildId = interaction.guild_id;
+    const query = extractQuery(interaction);
     if (userId) {
       const { allowed, retryAfterSeconds } = checkRateLimit(userId);
       if (!allowed) {
         // Immediate ephemeral reply — no search work is started.
+        hashActor(userId)
+          .then((actorHash) =>
+            recordAnalytics({
+              query,
+              scryfallQuery: '',
+              outcome: 'search_unavailable',
+              cardCount: 0,
+              totalCards: 0,
+              actorHash,
+              guildId,
+              durationMs: 0,
+              rateLimited: true,
+            }),
+          )
+          .catch(() => undefined);
         return Response.json({
           type: InteractionResponseType.CHANNEL_MESSAGE,
           data: {
@@ -485,7 +502,6 @@ serve(
       }
     }
 
-    const query = extractQuery(interaction);
     const applicationId = interaction.application_id ?? '';
     const token = interaction.token ?? '';
 
@@ -506,6 +522,7 @@ serve(
 
     // Fire-and-forget: the follow-up edits the deferred message.
     (async () => {
+      const startedAt = Date.now();
       try {
         const { outcome, scryfallQuery, cards, totalCards } =
           await runSearch(query);
@@ -514,12 +531,32 @@ serve(
             buildEmbed(query, scryfallQuery, cards, totalCards, outcome),
           ],
         });
+        await recordAnalytics({
+          query,
+          scryfallQuery,
+          outcome,
+          cardCount: cards.length,
+          totalCards,
+          actorHash: await hashActor(userId),
+          guildId,
+          durationMs: Date.now() - startedAt,
+        });
       } catch (error) {
         log.error('command_failed', {
           message: error instanceof Error ? error.message : 'unknown',
         });
         await sendFollowup(applicationId, token, {
           content: outcomeMessage('search_unavailable', query),
+        }).catch(() => undefined);
+        await recordAnalytics({
+          query,
+          scryfallQuery: '',
+          outcome: 'search_unavailable',
+          cardCount: 0,
+          totalCards: 0,
+          actorHash: await hashActor(userId),
+          guildId,
+          durationMs: Date.now() - startedAt,
         }).catch(() => undefined);
       }
     })();
