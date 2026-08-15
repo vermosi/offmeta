@@ -476,6 +476,69 @@ function metaLine(card: CardSummary): string {
   return parts.join(' · ');
 }
 
+/** How many cards one Discord page shows. */
+export const PAGE_SIZE = MAX_CARDS;
+
+/** Total number of browsable pages for a result count. */
+export function pageCount(totalCards: number): number {
+  return Math.max(1, Math.ceil(Math.min(totalCards, MAX_BROWSABLE_CARDS) / PAGE_SIZE));
+}
+
+/** Hard ceiling on how deep the buttons will page (keeps Scryfall calls sane). */
+const MAX_BROWSABLE_CARDS = 500;
+
+/** custom_id prefix for the pagination buttons. */
+export const PAGE_BUTTON_PREFIX = 'offmeta_page';
+
+/** Parse a pagination button custom_id back into a zero-based page index. */
+export function parsePageCustomId(customId: string | undefined): number | null {
+  if (!customId) return null;
+  const match = /^offmeta_page:(\d+)$/.exec(customId);
+  if (!match) return null;
+  const page = Number(match[1]);
+  return Number.isFinite(page) && page >= 0 ? page : null;
+}
+
+/**
+ * Prev/Next action row. Buttons are disabled at the edges so a click can never
+ * ask for a page that does not exist. The middle button is a static label.
+ */
+export function buildPaginationComponents(
+  page: number,
+  totalCards: number,
+): Array<Record<string, unknown>> {
+  const pages = pageCount(totalCards);
+  if (pages <= 1) return [];
+  return [
+    {
+      type: 1,
+      components: [
+        {
+          type: 2,
+          style: 2,
+          label: '◀ Prev',
+          custom_id: `${PAGE_BUTTON_PREFIX}:${Math.max(0, page - 1)}`,
+          disabled: page <= 0,
+        },
+        {
+          type: 2,
+          style: 2,
+          label: `Page ${page + 1} / ${pages}`,
+          custom_id: `${PAGE_BUTTON_PREFIX}:${page}`,
+          disabled: true,
+        },
+        {
+          type: 2,
+          style: 2,
+          label: 'Next ▶',
+          custom_id: `${PAGE_BUTTON_PREFIX}:${Math.min(pages - 1, page + 1)}`,
+          disabled: page >= pages - 1,
+        },
+      ],
+    },
+  ];
+}
+
 /** Format the Discord embed payload for a completed search. */
 export function buildEmbed(
   query: string,
@@ -485,6 +548,8 @@ export function buildEmbed(
   outcome: SearchOutcome = cards.length > 0 ? 'ok' : 'no_results',
   /** Click-tracked link; defaults to the plain results URL. */
   resultsUrl: string = buildResultsUrl(query),
+  /** Zero-based page currently displayed. */
+  page = 0,
 ): Record<string, unknown> {
   const lines = cards.map((card) => {
     const meta = metaLine(card);
@@ -513,6 +578,12 @@ export function buildEmbed(
   const body =
     lines.length > 0 ? lines.join('\n\n') : outcomeMessage(outcome, query);
 
+  const pages = pageCount(totalCards);
+  const showing =
+    !failed && cards.length > 0 && pages > 1
+      ? ` · ${page * PAGE_SIZE + 1}–${page * PAGE_SIZE + cards.length} of ${totalCards.toLocaleString('en-US')}`
+      : '';
+
   return {
     title: query.slice(0, 250),
     ...(failed ? {} : { url: resultsUrl }),
@@ -528,11 +599,12 @@ export function buildEmbed(
           ],
         }
       : {}),
-    footer: { text: 'offmeta.app' },
+    footer: { text: `offmeta.app${showing}` },
 
     ...(cards[0]?.imageUrl ? { thumbnail: { url: cards[0].imageUrl } } : {}),
   };
 }
+
 
 
 function summarize(card: Record<string, unknown>): CardSummary {
