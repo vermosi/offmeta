@@ -651,12 +651,29 @@ serve(
     // Fire-and-forget: the follow-up edits the deferred message.
     (async () => {
       const startedAt = Date.now();
+      const actorHash = await hashActor(userId);
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      const resultsUrl = await buildTrackedResultsUrl(
+        query,
+        actorHash,
+        guildId ?? '',
+        supabaseUrl ? `${supabaseUrl}/functions/v1/discord-bot` : undefined,
+        serviceRoleKey,
+      );
       try {
         const { outcome, scryfallQuery, cards, totalCards } =
           await runSearch(query);
         await sendFollowup(applicationId, token, {
           embeds: [
-            buildEmbed(query, scryfallQuery, cards, totalCards, outcome),
+            buildEmbed(
+              query,
+              scryfallQuery,
+              cards,
+              totalCards,
+              outcome,
+              resultsUrl,
+            ),
           ],
         });
         await recordAnalytics({
@@ -665,7 +682,7 @@ serve(
           outcome,
           cardCount: cards.length,
           totalCards,
-          actorHash: await hashActor(userId),
+          actorHash,
           guildId,
           durationMs: Date.now() - startedAt,
         });
