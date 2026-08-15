@@ -21,6 +21,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
 import { ComboItem } from '@/components/find-my-combos/ComboItem';
 import { SharePageButton } from '@/components/SharePageButton';
+import { StateMessage } from '@/components/StateMessage';
 import type { Combo, ComboResults } from '@/components/find-my-combos/types';
 import {
   Loader2,
@@ -28,6 +29,7 @@ import {
   Link2,
   Sparkles,
   AlertTriangle,
+  SearchX,
   X,
   ArrowUpDown,
 } from 'lucide-react';
@@ -391,11 +393,37 @@ export default function FindMyCombos() {
         )}
 
         {/* Error */}
-        {error && (
-          <div className="mt-8 flex items-center gap-2 text-sm text-destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <span>{error}</span>
-          </div>
+        {error && !loading && !fetchingDeck && (
+          <StateMessage
+            className="mt-8"
+            tone="error"
+            icon={AlertTriangle}
+            title={
+              cardNames.length === 0
+                ? t('combos.importError', 'Could not import that deck')
+                : t('combos.findError', 'Failed to find combos')
+            }
+            description={t(
+              'combos.errorDescription',
+              'The combo service did not return results. This is usually a temporary outage, a rate limit, or a deck list that could not be read.',
+            )}
+            detail={error}
+            hints={[
+              t('combos.errorHintOne', 'Check the Moxfield deck is public and the URL is complete.'),
+              t('combos.errorHintTwo', 'Wait a few seconds before retrying — the service rate limits bursts.'),
+            ]}
+            actions={[
+              {
+                label: t('common.retry', 'Try again'),
+                variant: 'default',
+                onClick: () =>
+                  cardNames.length === 0
+                    ? void handleFetchMoxfield()
+                    : void handleFindCombos(),
+              },
+              { label: t('combos.goSearch', 'Search cards instead'), href: '/' },
+            ]}
+          />
         )}
 
 
@@ -533,11 +561,44 @@ export default function FindMyCombos() {
                   </div>
 
                   {filteredIncluded.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      {hasActiveFilters
-                        ? t('combos.noMatchFilters', 'No combos match the current filters.')
-                        : t('combos.noCombos')}
-                    </p>
+                    hasActiveFilters ? (
+                      <StateMessage
+                        icon={SearchX}
+                        title={t('combos.noMatchFilters', 'No combos match the current filters.')}
+                        description={t(
+                          'combos.noMatchFiltersDescription',
+                          'This deck has {count} combo{plural} in total, but none pass the colors, card-count, or budget filters you set.',
+                          {
+                            count: results.included.length,
+                            plural: results.included.length === 1 ? '' : 's',
+                          },
+                        )}
+                        actions={[
+                          {
+                            label: t('combos.clearFiltersAction', 'Clear all filters'),
+                            variant: 'default',
+                            onClick: clearFilters,
+                          },
+                        ]}
+                      />
+                    ) : (
+                      <StateMessage
+                        icon={SearchX}
+                        title={t('combos.noCombos')}
+                        description={t(
+                          'combos.noCombosDescription',
+                          'Commander Spellbook found no known two-or-more card combos among these {count} cards.',
+                          { count: cardNames.length },
+                        )}
+                        hints={[
+                          t('combos.noCombosHintOne', 'Combos below often need one more piece — check the near-miss list.'),
+                          t('combos.noCombosHintTwo', 'Search OffMeta for a missing piece, then re-run this check.'),
+                        ]}
+                        actions={[
+                          { label: t('combos.goSearch', 'Search cards instead'), href: '/', variant: 'default' },
+                        ]}
+                      />
+                    )
                   ) : (
                     <div className="space-y-2">
                       {filteredIncluded.map((combo) => (
