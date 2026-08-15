@@ -1377,9 +1377,10 @@ export async function handleDiscordRequest(req: Request): Promise<Response> {
             serviceRoleKey,
           );
           try {
-            const { outcome, cards, totalCards } = await withTimeout(runPagedSearch(
-              context.scryfallQuery,
-              page * PAGE_SIZE,
+            const { outcome, cards, totalCards } = await withTimeout(
+              runPagedSearch(context.scryfallQuery, page * PAGE_SIZE),
+              SEARCH_BUDGET_MS,
+              'paged_search',
             );
             await sendFollowup(componentAppId, componentToken, {
               embeds: [
