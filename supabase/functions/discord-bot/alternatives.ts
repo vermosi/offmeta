@@ -104,6 +104,10 @@ interface ScryfallNamedCard {
   prices?: Record<string, string | null>;
 }
 
+/** Upstream budgets: the Discord follow-up must never wait indefinitely. */
+const NAMED_LOOKUP_TIMEOUT_MS = 6000;
+const SIMILARITY_TIMEOUT_MS = 9000;
+
 export interface ResolvedAlternatives {
   scryfallQuery: string;
   cardName: string;
@@ -133,6 +137,8 @@ export async function resolveAlternativesQuery(
           'User-Agent': 'OffMetaDiscordBot/1.0',
           Accept: 'application/json',
         },
+        // Never let a stalled upstream hold the deferred Discord reply open.
+        signal: AbortSignal.timeout(NAMED_LOOKUP_TIMEOUT_MS),
       },
     );
     if (!res.ok) return null;
@@ -151,6 +157,7 @@ export async function resolveAlternativesQuery(
           Authorization: `Bearer ${deps.serviceRoleKey}`,
           'Content-Type': 'application/json',
         },
+        signal: AbortSignal.timeout(SIMILARITY_TIMEOUT_MS),
         body: JSON.stringify({
           cardName: card.name,
           typeLine: card.type_line,
