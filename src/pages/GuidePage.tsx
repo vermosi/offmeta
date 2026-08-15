@@ -5,7 +5,7 @@
 import { useEffect } from 'react';
 import { applySeoMeta, buildBreadcrumbJsonLd, buildGuideArticleJsonLd } from '@/lib/seo';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getGuideBySlug, GUIDES } from '@/data/guides';
+import { getGuideBySlug, getGuideRelatedSearches, GUIDES } from '@/data/guides';
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 import { PageSearchBar } from '@/components/PageSearchBar';
@@ -110,6 +110,7 @@ export default function GuidePage() {
     );
   }
 
+  const relatedSearches = getGuideRelatedSearches(guide.slug);
   const relatedGuides = guide.relatedGuides
     .map((s) => GUIDES.find((g) => g.slug === s))
     .filter(Boolean);
@@ -361,6 +362,26 @@ export default function GuidePage() {
               ))}
             </dl>
           </section>
+
+          {relatedSearches.length > 0 && (
+            <section id="try-searches" className="border-t border-border/50 py-8">
+              <h2 className="font-display text-lg font-extrabold uppercase tracking-tight text-foreground">
+                {t('guide.trySearches', 'Try these searches')}
+              </h2>
+              <ul className="mt-4 flex flex-wrap gap-2">
+                {relatedSearches.map((q) => (
+                  <li key={q}>
+                    <Link
+                      to={`/search/${queryToSlug(q)}`}
+                      className="inline-flex min-h-9 items-center rounded-lg border border-border/60 bg-background/50 px-3 py-1.5 text-sm text-foreground transition-colors hover:border-accent/40 hover:bg-accent/5 hover:text-accent"
+                    >
+                      {q}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {relatedGuides.length > 0 && (
             <section id="related" className="border-t border-border/50 py-8">
