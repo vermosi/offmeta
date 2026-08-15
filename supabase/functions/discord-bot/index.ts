@@ -1516,5 +1516,3 @@ if (import.meta.main) {
   serve(withLogging('discord-bot', handleDiscordRequest));
 }
 
-}
-
