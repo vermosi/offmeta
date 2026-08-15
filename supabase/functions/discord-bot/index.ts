@@ -270,22 +270,33 @@ export function buildAnalyticsRow(event: DiscordAnalyticsEvent) {
   };
 }
 
+/** Outcome of a click-redirect request. */
+export type DiscordClickOutcome = 'success' | 'invalid_signature';
+
 export interface DiscordClickEvent {
   query: string;
   actorHash: string;
   guildId: string;
+  outcome?: DiscordClickOutcome;
+  durationMs?: number;
 }
 
 /** Build the analytics_events row for an outbound results-link click. */
 export function buildClickRow(event: DiscordClickEvent) {
+  const outcome = event.outcome ?? 'success';
   return {
     event_type: 'discord_click',
     session_id: event.actorHash ? `discord:${event.actorHash}` : null,
     event_data: {
       source: 'discord_bot',
       query: event.query.slice(0, MAX_QUERY_LENGTH),
-      destination: buildResultsUrl(event.query),
+      // Only a verified click resolves to a real destination.
+      destination: outcome === 'success' ? buildResultsUrl(event.query) : null,
       guild_id: event.guildId || null,
+      outcome,
+      duration_ms: typeof event.durationMs === 'number'
+        ? Math.max(0, Math.round(event.durationMs))
+        : null,
     },
   };
 }
