@@ -1334,7 +1334,8 @@ export async function handleDiscordRequest(req: Request): Promise<Response> {
           if (!allowed) return ack;
         }
 
-        (async () => {
+        trackPending((async () => {
+
           const startedAt = Date.now();
           const actorHash = await hashActor(clickUserId);
           const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
