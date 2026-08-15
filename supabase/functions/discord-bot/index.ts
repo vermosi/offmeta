@@ -1118,8 +1118,8 @@ serve(
     (async () => {
       const startedAt = Date.now();
       const actorHash = await hashActor(userId);
-      const supabaseUrl = Deno.env.get('SUPABASE_URL');
       const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
       const resultsUrl = await buildTrackedResultsUrl(
         query,
         actorHash,
