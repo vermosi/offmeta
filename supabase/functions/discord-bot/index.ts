@@ -270,22 +270,33 @@ export function buildAnalyticsRow(event: DiscordAnalyticsEvent) {
   };
 }
 
+/** Outcome of a click-redirect request. */
+export type DiscordClickOutcome = 'success' | 'invalid_signature';
+
 export interface DiscordClickEvent {
   query: string;
   actorHash: string;
   guildId: string;
+  outcome?: DiscordClickOutcome;
+  durationMs?: number;
 }
 
 /** Build the analytics_events row for an outbound results-link click. */
 export function buildClickRow(event: DiscordClickEvent) {
+  const outcome = event.outcome ?? 'success';
   return {
     event_type: 'discord_click',
     session_id: event.actorHash ? `discord:${event.actorHash}` : null,
     event_data: {
       source: 'discord_bot',
       query: event.query.slice(0, MAX_QUERY_LENGTH),
-      destination: buildResultsUrl(event.query),
+      // Only a verified click resolves to a real destination.
+      destination: outcome === 'success' ? buildResultsUrl(event.query) : null,
       guild_id: event.guildId || null,
+      outcome,
+      duration_ms: typeof event.durationMs === 'number'
+        ? Math.max(0, Math.round(event.durationMs))
+        : null,
     },
   };
 }
@@ -335,7 +346,8 @@ const clickDedupe = new Map<string, number>();
 
 /** Stable dedupe key for one actor clicking one results URL. */
 export function clickDedupeKey(event: DiscordClickEvent): string {
-  return `${event.actorHash || 'anon'}|${buildResultsUrl(event.query)}`;
+  const outcome = event.outcome ?? 'success';
+  return `${outcome}|${event.actorHash || 'anon'}|${buildResultsUrl(event.query)}`;
 }
 
 /**
@@ -569,12 +581,27 @@ async function sendFollowup(
  * redirects to `buildResultsUrl`, so it can't be used as an open redirect.
  */
 async function handleClickRedirect(req: Request): Promise<Response> {
+  const startedAt = Date.now();
   const url = new URL(req.url);
   const query = (url.searchParams.get('q') ?? '').slice(0, MAX_QUERY_LENGTH);
   const actorHash = url.searchParams.get('a') ?? '';
   const guildId = url.searchParams.get('g') ?? '';
   const signature = url.searchParams.get('s') ?? '';
   const secret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  /** Record once per dedupe window, with the handler duration so far. */
+  const track = async (outcome: DiscordClickOutcome) => {
+    const event: DiscordClickEvent = {
+      query,
+      actorHash,
+      guildId,
+      outcome,
+      durationMs: Date.now() - startedAt,
+    };
+    if (shouldRecordClick(event)) {
+      await recordClick(event).catch(() => undefined);
+    }
+  };
 
   if (!query || !signature || !secret) {
     return new Response('Not Found', { status: 404 });
@@ -585,13 +612,11 @@ async function handleClickRedirect(req: Request): Promise<Response> {
     secret,
   );
   if (expected !== signature) {
+    await track('invalid_signature');
     return new Response('Not Found', { status: 404 });
   }
 
-  const clickEvent = { query, actorHash, guildId };
-  if (shouldRecordClick(clickEvent)) {
-    await recordClick(clickEvent).catch(() => undefined);
-  }
+  await track('success');
 
   return new Response(null, {
     status: 302,
