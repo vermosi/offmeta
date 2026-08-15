@@ -480,11 +480,24 @@ export function buildEmbed(
   const failed =
     outcome === 'search_unavailable' || outcome === 'card_data_unavailable';
 
+  // Discord footers cannot render links, so the "see everything" call to action
+  // lives at the end of the description as a real markdown link pointing at the
+  // same click-tracked offmeta.app URL used by the embed title.
+  const moreLink = failed
+    ? ''
+    : totalCards > cards.length
+      ? `[View all ${totalCards.toLocaleString('en-US')} results on offmeta.app](${resultsUrl})`
+      : cards.length > 0
+        ? `[Open this search on offmeta.app](${resultsUrl})`
+        : '';
+
+  const body =
+    lines.length > 0 ? lines.join('\n\n') : outcomeMessage(outcome, query);
+
   return {
     title: query.slice(0, 250),
     ...(failed ? {} : { url: resultsUrl }),
-    description:
-      lines.length > 0 ? lines.join('\n\n') : outcomeMessage(outcome, query),
+    description: [body, moreLink].filter(Boolean).join('\n\n'),
     color: failed ? 0x8b2f3a : 0x1c1b22,
     ...(scryfallQuery
       ? {
@@ -496,12 +509,8 @@ export function buildEmbed(
           ],
         }
       : {}),
-    footer: {
-      text:
-        totalCards > cards.length
-          ? `${totalCards} results — full list on offmeta.app`
-          : 'offmeta.app',
-    },
+    footer: { text: 'offmeta.app' },
+
     ...(cards[0]?.imageUrl ? { thumbnail: { url: cards[0].imageUrl } } : {}),
   };
 }
