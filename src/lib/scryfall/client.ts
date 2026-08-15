@@ -64,11 +64,17 @@ function setSearchCache(key: string, data: SearchResult): void {
   searchResultCache.set(key, { data, ts: Date.now() });
 }
 
+// In-flight request dedupe: concurrent callers asking for the same page share
+// one network request instead of each queuing their own (rate-limit friendly).
+const inFlightSearches = new Map<string, Promise<SearchResult>>();
+
 /** Clear the search result cache (useful for forced refresh / tests). */
 export function clearSearchCache(): void {
   searchResultCache.clear();
+  inFlightSearches.clear();
 }
 // ──────────────────────────────────────────────────────────────────────────────
+
 
 
 /**
