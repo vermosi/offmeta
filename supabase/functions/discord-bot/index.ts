@@ -266,6 +266,26 @@ export function buildAnalyticsRow(event: DiscordAnalyticsEvent) {
   };
 }
 
+export interface DiscordClickEvent {
+  query: string;
+  actorHash: string;
+  guildId: string;
+}
+
+/** Build the analytics_events row for an outbound results-link click. */
+export function buildClickRow(event: DiscordClickEvent) {
+  return {
+    event_type: 'discord_click',
+    session_id: event.actorHash ? `discord:${event.actorHash}` : null,
+    event_data: {
+      source: 'discord_bot',
+      query: event.query.slice(0, MAX_QUERY_LENGTH),
+      destination: buildResultsUrl(event.query),
+      guild_id: event.guildId || null,
+    },
+  };
+}
+
 /** Best-effort analytics write. Never blocks or fails the interaction. */
 async function recordAnalytics(event: DiscordAnalyticsEvent): Promise<void> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
