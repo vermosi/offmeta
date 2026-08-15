@@ -49,6 +49,7 @@ interface DiscordInteraction {
   type: number;
   token?: string;
   application_id?: string;
+  guild_id?: string;
   user?: { id?: string };
   member?: { user?: { id?: string } };
   data?: { name?: string; options?: DiscordOption[] };
