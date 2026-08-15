@@ -19,7 +19,6 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
-import { PageSearchBar } from '@/components/PageSearchBar';
 import { ComboItem } from '@/components/find-my-combos/ComboItem';
 import { SharePageButton } from '@/components/SharePageButton';
 import type { Combo, ComboResults } from '@/components/find-my-combos/types';
