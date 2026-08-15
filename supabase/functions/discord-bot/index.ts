@@ -154,42 +154,106 @@ function summarize(card: Record<string, unknown>): CardSummary {
   };
 }
 
-/** Translate + execute the search using OffMeta's internal pipeline. */
-async function runSearch(query: string): Promise<{
+/**
+ * Outcome of a search attempt. Only user-facing states — never leaks which
+ * internal service failed or any endpoint/URL.
+ */
+export type SearchOutcome =
+  | 'ok'
+  | 'no_results'
+  | 'not_understood'
+  | 'search_unavailable'
+  | 'card_data_unavailable';
+
+export interface SearchResultPayload {
+  outcome: SearchOutcome;
   scryfallQuery: string;
   cards: CardSummary[];
   totalCards: number;
-}> {
+}
+
+/** Human-readable message for every non-success outcome. */
+export function outcomeMessage(outcome: SearchOutcome, query: string): string {
+  switch (outcome) {
+    case 'no_results':
+      return `No paper cards matched **${query.slice(0, 120)}**. Try fewer constraints or different wording — e.g. drop a colour or a price limit.`;
+    case 'not_understood':
+      return `OffMeta could not turn **${query.slice(0, 120)}** into a card search. Try describing what the card *does*, like "creatures that make treasure".`;
+    case 'search_unavailable':
+      return 'OffMeta search is temporarily unavailable. Please try again in a minute.';
+    case 'card_data_unavailable':
+      return 'Card data is temporarily unavailable. Please try again in a minute.';
+    default:
+      return '';
+  }
+}
+
+/** Translate + execute the search using OffMeta's internal pipeline. */
+async function runSearch(query: string): Promise<SearchResultPayload> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!supabaseUrl || !serviceRoleKey) throw new Error('Not configured');
+  const empty = { scryfallQuery: '', cards: [], totalCards: 0 };
+  if (!supabaseUrl || !serviceRoleKey) {
+    log.error('not_configured', {});
+    return { outcome: 'search_unavailable', ...empty };
+  }
 
-  const translateResponse = await fetch(
-    `${supabaseUrl}/functions/v1/semantic-search`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${serviceRoleKey}`,
-        'Content-Type': 'application/json',
+  let translated: { scryfallQuery?: string } = {};
+  try {
+    const translateResponse = await fetch(
+      `${supabaseUrl}/functions/v1/semantic-search`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${serviceRoleKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query, useCache: true }),
       },
-      body: JSON.stringify({ query, useCache: true }),
-    },
-  );
-  const translated = (await translateResponse.json()) as {
-    scryfallQuery?: string;
-  };
-  const scryfallQuery = translated.scryfallQuery?.trim() ?? '';
-  if (!scryfallQuery) return { scryfallQuery: '', cards: [], totalCards: 0 };
+    );
+    if (!translateResponse.ok) {
+      log.error('translate_failed', { status: translateResponse.status });
+      return { outcome: 'search_unavailable', ...empty };
+    }
+    translated = (await translateResponse.json()) as { scryfallQuery?: string };
+  } catch (error) {
+    log.error('translate_error', {
+      message: error instanceof Error ? error.message : 'unknown',
+    });
+    return { outcome: 'search_unavailable', ...empty };
+  }
 
-  const scryfallResponse = await fetch(
-    `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
-      `${scryfallQuery} game:paper`,
-    )}&unique=cards`,
-    { headers: { 'User-Agent': 'OffMetaDiscordBot/1.0', Accept: 'application/json' } },
-  );
+  const scryfallQuery = translated.scryfallQuery?.trim() ?? '';
+  if (!scryfallQuery) return { outcome: 'not_understood', ...empty };
+
+  let scryfallResponse: Response;
+  try {
+    scryfallResponse = await fetch(
+      `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
+        `${scryfallQuery} game:paper`,
+      )}&unique=cards`,
+      {
+        headers: {
+          'User-Agent': 'OffMetaDiscordBot/1.0',
+          Accept: 'application/json',
+        },
+      },
+    );
+  } catch (error) {
+    log.error('scryfall_error', {
+      message: error instanceof Error ? error.message : 'unknown',
+    });
+    return { outcome: 'card_data_unavailable', scryfallQuery, cards: [], totalCards: 0 };
+  }
 
   if (!scryfallResponse.ok) {
-    return { scryfallQuery, cards: [], totalCards: 0 };
+    // 404 from Scryfall means "valid query, zero matches".
+    const outcome: SearchOutcome =
+      scryfallResponse.status === 404 ? 'no_results' : 'card_data_unavailable';
+    if (outcome !== 'no_results') {
+      log.error('scryfall_status', { status: scryfallResponse.status });
+    }
+    return { outcome, scryfallQuery, cards: [], totalCards: 0 };
   }
 
   const payload = (await scryfallResponse.json()) as {
@@ -198,11 +262,13 @@ async function runSearch(query: string): Promise<{
   };
   const data = payload.data ?? [];
   return {
+    outcome: data.length > 0 ? 'ok' : 'no_results',
     scryfallQuery,
     cards: data.slice(0, MAX_CARDS).map(summarize),
     totalCards: payload.total_cards ?? data.length,
   };
 }
+
 
 /** Edit the deferred interaction response once the search resolves. */
 async function sendFollowup(
