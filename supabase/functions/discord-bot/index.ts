@@ -86,7 +86,10 @@ export function extractQuery(interaction: DiscordInteraction): string {
     (opt) => opt.name === 'query' || opt.name === 'search',
   );
   const raw = typeof option?.value === 'string' ? option.value : '';
-  return raw.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, MAX_QUERY_LENGTH);
+  const stripped = Array.from(raw)
+    .map((char) => (char.charCodeAt(0) < 0x20 ? ' ' : char))
+    .join('');
+  return stripped.trim().slice(0, MAX_QUERY_LENGTH);
 }
 
 export function buildResultsUrl(query: string): string {
