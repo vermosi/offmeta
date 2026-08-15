@@ -637,6 +637,12 @@ async function sendFollowup(
  * Signed click redirect: records the outbound click against the same
  * pseudonymous actor, then forwards to the public results page. Only ever
  * redirects to `buildResultsUrl`, so it can't be used as an open redirect.
+ *
+ * Supports two response modes:
+ *   1. Browser direct (GET with no JSON accept): returns a 302 Location header.
+ *   2. Client-side bridge (GET with Accept: application/json or ?format=json):
+ *      returns a JSON object with `redirectUrl` so the `/go` page can redirect
+ *      without exposing the edge-function URL in the Discord message.
  */
 /** User-facing copy for each non-redirecting click outcome. */
 const CLICK_ERROR_COPY: Record<
@@ -660,6 +666,61 @@ const CLICK_ERROR_COPY: Record<
     detail: 'Search links stay valid for 7 days. Run /offmeta again in Discord.',
   },
 };
+
+/** CORS headers so the offmeta.app `/go` page can call this endpoint directly. */
+function corsHeaders(origin?: string): HeadersInit {
+  return {
+    'Access-Control-Allow-Origin': origin ?? '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Accept, Content-Type, x-request-id',
+    Vary: 'Origin',
+  };
+}
+
+function wantsJson(req: Request, url: URL): boolean {
+  const accept = req.headers.get('Accept') ?? '';
+  return accept.includes('application/json') || url.searchParams.get('format') === 'json';
+}
+
+function jsonRedirectResponse(redirectUrl: string, headers: HeadersInit = {}): Response {
+  return Response.json(
+    { ok: true, redirectUrl },
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+        ...corsHeaders(),
+        ...headers,
+      },
+    },
+  );
+}
+
+function jsonErrorResponse(
+  outcome: Exclude<DiscordClickOutcome, 'success'>,
+  headers: HeadersInit = {},
+): Response {
+  const copy = CLICK_ERROR_COPY[outcome];
+  return Response.json(
+    {
+      ok: false,
+      outcome,
+      title: copy.title,
+      detail: copy.detail,
+    },
+    {
+      status: copy.status,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+        'X-Click-Outcome': outcome,
+        ...corsHeaders(),
+        ...headers,
+      },
+    },
+  );
+}
 
 /** Plain-text error response — no internal details, no redirect. */
 function clickErrorResponse(
@@ -685,6 +746,8 @@ async function handleClickRedirect(req: Request): Promise<Response> {
   const signature = url.searchParams.get('s') ?? '';
   const expiresRaw = url.searchParams.get('x') ?? '';
   const secret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const useJson = wantsJson(req, url);
+  const origin = req.headers.get('Origin') ?? undefined;
 
   /** Record once per dedupe window, with the handler duration so far. */
   const track = async (outcome: DiscordClickOutcome) => {
@@ -703,12 +766,19 @@ async function handleClickRedirect(req: Request): Promise<Response> {
   /** Track the failure, then answer with the matching explanation. */
   const fail = async (outcome: Exclude<DiscordClickOutcome, 'success'>) => {
     await track(outcome);
-    return clickErrorResponse(outcome);
+    return useJson ? jsonErrorResponse(outcome, corsHeaders(origin)) : clickErrorResponse(outcome);
   };
 
   if (!secret) {
     // Misconfiguration, not a user error — stay quiet and don't log noise.
     return new Response('Not Found', { status: 404 });
+  }
+
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders(origin),
+    });
   }
 
   if (!query || !signature) {
@@ -735,6 +805,10 @@ async function handleClickRedirect(req: Request): Promise<Response> {
 
   await track('success');
 
+  if (useJson) {
+    return jsonRedirectResponse(buildResultsUrl(query), corsHeaders(origin));
+  }
+
   return new Response(null, {
     status: 302,
     headers: {
@@ -743,6 +817,7 @@ async function handleClickRedirect(req: Request): Promise<Response> {
     },
   });
 }
+
 
 export interface StartupCheckResult {
   ok: boolean;
