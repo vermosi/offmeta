@@ -10,6 +10,7 @@ import { CardItem } from '@/components/CardItem';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
+import type { WhyItMatches } from '@/lib/search/whyItMatches';
 
 /** Track which card index has keyboard focus within the grid */
 function useGridKeyboardNav(
@@ -80,6 +81,8 @@ interface VirtualizedCardGridProps {
   isFetchingNextPage?: boolean;
   isError?: boolean;
   onRetry?: () => void;
+  /** Optional per-card match explanation used for the tile caption. */
+  getWhyReport?: (card: ScryfallCard) => WhyItMatches | null;
 }
 
 
@@ -118,6 +121,7 @@ export function VirtualizedCardGrid({
   isFetchingNextPage,
   isError,
   onRetry,
+  getWhyReport,
 }: VirtualizedCardGridProps) {
   const parentRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ columns: 4, cardWidth: 200, gap: 16 });
@@ -339,6 +343,7 @@ export function VirtualizedCardGrid({
                     <CardItem
                       card={card}
                       onClick={() => onCardClick(card, cardIndex)}
+                      whyReport={getWhyReport?.(card) ?? null}
                     />
                   </div>
                 );

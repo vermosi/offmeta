@@ -211,6 +211,9 @@ export function SearchResultsArea({
                     isFetchingNextPage={isFetchingNextPage}
                     isError={isError || isFetchNextPageError}
                     onRetry={retryNextPage}
+                    getWhyReport={(card) =>
+                      buildWhyItMatches(card, effectiveIntent)
+                    }
                   />
                 ) : viewMode === 'list' ? (
                   <div
@@ -276,6 +279,7 @@ export function SearchResultsArea({
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
+                            whyReport={buildWhyItMatches(card, effectiveIntent)}
                           />
                         </div>
                       );
