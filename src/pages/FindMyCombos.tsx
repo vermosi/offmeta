@@ -19,7 +19,6 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
-import { PageSearchBar } from '@/components/PageSearchBar';
 import { ComboItem } from '@/components/find-my-combos/ComboItem';
 import { SharePageButton } from '@/components/SharePageButton';
 import type { Combo, ComboResults } from '@/components/find-my-combos/types';
@@ -278,14 +277,6 @@ export default function FindMyCombos() {
           </a>
         </p>
 
-        <div className="mt-8">
-          <PageSearchBar
-            placeholder={t(
-              'combos.searchPlaceholder',
-              'Search Magic cards in plain English…',
-            )}
-          />
-        </div>
 
         {/* Input */}
         <section className="mt-10 border-t border-border pt-8 grid gap-8 md:grid-cols-2">
