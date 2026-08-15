@@ -4,6 +4,7 @@
  */
 
 import { ConsoleHeading, ConsolePanel, Metric } from '../components/console-ui';
+import { SearchOutcomePanel } from '../components/SearchOutcomePanel';
 import { RELEASES } from '@/lib/admin/releases';
 import type { ProductMetrics } from '@/hooks/useAdminOpsData';
 import type { AnalyticsData } from '@/pages/admin-analytics/types';
@@ -56,6 +57,8 @@ export function QualityBenchmark({ metrics, analytics, days }: Props) {
           hint="Internal diagnostic"
         />
       </div>
+
+      <SearchOutcomePanel days={days} />
 
       <ConsolePanel title="Release markers" note="Compare movements against what shipped">
         <div className="divide-y divide-border font-mono text-[11px]">
