@@ -71,3 +71,35 @@ Deno.test('handleClickRedirect returns JSON for client-side bridge', async () =>
   assertStringIncludes(data.redirectUrl, 'utm_source=discord');
 });
 
+
+Deno.test('buildEmbed includes rules text, stats and price per card', () => {
+  const embed = buildEmbed(
+    'cards like rhystic study',
+    't:enchantment id<=U',
+    [
+      {
+        name: 'Bident of Thassa',
+        typeLine: 'Legendary Enchantment Artifact',
+        manaCost: '{2}{U}{U}',
+        scryfallUri: 'https://offmeta.app/cards/bident-of-thassa',
+        oracleSnippet: 'Whenever a creature you control deals combat damage to a player, draw a card.',
+        price: '$3.21',
+        edhrecRank: 1234,
+      },
+    ],
+    111,
+  );
+  const description = String(embed.description);
+  assertStringIncludes(description, 'draw a card');
+  assertStringIncludes(description, '$3.21');
+  assertStringIncludes(description, 'EDHREC #1,234');
+});
+
+Deno.test('condenseOracle strips reminder text and clips long rules text', () => {
+  assertEquals(
+    condenseOracle('Flying (This creature can only be blocked by creatures with flying.)'),
+    'Flying',
+  );
+  const long = condenseOracle('A'.repeat(400));
+  assertEquals(long.length <= 181, true);
+});
