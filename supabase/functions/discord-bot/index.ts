@@ -282,7 +282,11 @@ export function buildAnalyticsRow(event: DiscordAnalyticsEvent) {
 }
 
 /** Outcome of a click-redirect request. */
-export type DiscordClickOutcome = 'success' | 'invalid_signature';
+export type DiscordClickOutcome =
+  | 'success'
+  | 'invalid_signature'
+  | 'expired'
+  | 'malformed';
 
 export interface DiscordClickEvent {
   query: string;
