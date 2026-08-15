@@ -49,6 +49,7 @@ interface DiscordInteraction {
   type: number;
   token?: string;
   application_id?: string;
+  guild_id?: string;
   user?: { id?: string };
   member?: { user?: { id?: string } };
   data?: { name?: string; options?: DiscordOption[] };
@@ -151,9 +152,91 @@ export function extractQuery(interaction: DiscordInteraction): string {
   return stripped.trim().slice(0, MAX_QUERY_LENGTH);
 }
 
+/**
+ * Public results link. Carries UTM params so click-throughs from Discord are
+ * attributed by the site's existing UTM/conversion tracking.
+ */
 export function buildResultsUrl(query: string): string {
-  return `${SITE_URL}/?q=${encodeURIComponent(query)}`;
+  const params = new URLSearchParams({
+    q: query,
+    utm_source: 'discord',
+    utm_medium: 'bot',
+    utm_campaign: 'offmeta_slash_command',
+  });
+  return `${SITE_URL}/?${params.toString()}`;
 }
+
+/** Pseudonymous, stable id for a Discord user — never store the raw id. */
+export async function hashActor(userId: string): Promise<string> {
+  if (!userId) return '';
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(`discord:${userId}`),
+  );
+  return Array.from(new Uint8Array(digest).slice(0, 12))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+export interface DiscordAnalyticsEvent {
+  query: string;
+  scryfallQuery: string;
+  outcome: SearchOutcome;
+  cardCount: number;
+  totalCards: number;
+  actorHash: string;
+  guildId?: string;
+  durationMs: number;
+  rateLimited?: boolean;
+}
+
+/** Build the analytics_events row for a bot request. */
+export function buildAnalyticsRow(event: DiscordAnalyticsEvent) {
+  return {
+    event_type: 'discord_search',
+    session_id: event.actorHash ? `discord:${event.actorHash}` : null,
+    event_data: {
+      source: 'discord_bot',
+      query: event.query.slice(0, MAX_QUERY_LENGTH),
+      scryfall_query: event.scryfallQuery.slice(0, 500),
+      outcome: event.outcome,
+      card_count: event.cardCount,
+      total_cards: event.totalCards,
+      results_url: buildResultsUrl(event.query),
+      guild_id: event.guildId ?? null,
+      duration_ms: event.durationMs,
+      rate_limited: event.rateLimited ?? false,
+    },
+  };
+}
+
+/** Best-effort analytics write. Never blocks or fails the interaction. */
+async function recordAnalytics(event: DiscordAnalyticsEvent): Promise<void> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!supabaseUrl || !serviceRoleKey) return;
+
+  try {
+    const response = await fetch(`${supabaseUrl}/rest/v1/analytics_events`, {
+      method: 'POST',
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify(buildAnalyticsRow(event)),
+    });
+    if (!response.ok) {
+      log.error('analytics_write_failed', { status: response.status });
+    }
+  } catch (error) {
+    log.error('analytics_write_error', {
+      message: error instanceof Error ? error.message : 'unknown',
+    });
+  }
+}
+
 
 interface CardSummary {
   name: string;
@@ -388,10 +471,27 @@ serve(
     }
 
     const userId = extractUserId(interaction);
+    const guildId = interaction.guild_id;
+    const query = extractQuery(interaction);
     if (userId) {
       const { allowed, retryAfterSeconds } = checkRateLimit(userId);
       if (!allowed) {
         // Immediate ephemeral reply — no search work is started.
+        hashActor(userId)
+          .then((actorHash) =>
+            recordAnalytics({
+              query,
+              scryfallQuery: '',
+              outcome: 'search_unavailable',
+              cardCount: 0,
+              totalCards: 0,
+              actorHash,
+              guildId,
+              durationMs: 0,
+              rateLimited: true,
+            }),
+          )
+          .catch(() => undefined);
         return Response.json({
           type: InteractionResponseType.CHANNEL_MESSAGE,
           data: {
@@ -402,7 +502,6 @@ serve(
       }
     }
 
-    const query = extractQuery(interaction);
     const applicationId = interaction.application_id ?? '';
     const token = interaction.token ?? '';
 
@@ -423,6 +522,7 @@ serve(
 
     // Fire-and-forget: the follow-up edits the deferred message.
     (async () => {
+      const startedAt = Date.now();
       try {
         const { outcome, scryfallQuery, cards, totalCards } =
           await runSearch(query);
@@ -431,12 +531,32 @@ serve(
             buildEmbed(query, scryfallQuery, cards, totalCards, outcome),
           ],
         });
+        await recordAnalytics({
+          query,
+          scryfallQuery,
+          outcome,
+          cardCount: cards.length,
+          totalCards,
+          actorHash: await hashActor(userId),
+          guildId,
+          durationMs: Date.now() - startedAt,
+        });
       } catch (error) {
         log.error('command_failed', {
           message: error instanceof Error ? error.message : 'unknown',
         });
         await sendFollowup(applicationId, token, {
           content: outcomeMessage('search_unavailable', query),
+        }).catch(() => undefined);
+        await recordAnalytics({
+          query,
+          scryfallQuery: '',
+          outcome: 'search_unavailable',
+          cardCount: 0,
+          totalCards: 0,
+          actorHash: await hashActor(userId),
+          guildId,
+          durationMs: Date.now() - startedAt,
         }).catch(() => undefined);
       }
     })();
