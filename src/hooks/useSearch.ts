@@ -29,6 +29,7 @@ import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 import { buildFilterQuery, validateScryfallQuery } from '@/lib/scryfall/query';
 import { useAnalytics, toLatencyBucket } from '@/hooks/useAnalytics';
+import { reportSearchOutcome } from '@/lib/analytics/searchOutcome';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { useTranslation } from '@/lib/i18n';
 import { LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n/constants';
@@ -333,6 +334,10 @@ export function useSearch() {
       const startedAt = searchStartMsRef.current;
       const latencyMs = startedAt != null ? Math.max(0, Date.now() - startedAt) : 0;
       const source = lastSearchResult.source || 'ai';
+      reportSearchOutcome('results', {
+        requestId: currentRequestId,
+        resultsCount: totalCards,
+      });
       trackEvent('search_results', {
         query: originalQuery,
         translated_query: lastSearchResult.scryfallQuery,
@@ -409,6 +414,10 @@ export function useSearch() {
           alternatives_card: recoveryAttempt.alternativesCard,
           fallback_path: recoveryAttempt.path,
         });
+        reportSearchOutcome('zero_results', {
+          requestId: currentRequestId,
+          resultsCount: 0,
+        });
         trackEvent('search_no_result_shown', {
           query: originalQuery,
           failure_reason: failureReason,
@@ -457,6 +466,13 @@ export function useSearch() {
     }
     paginationPageRef.current = currentPageCount || 1;
   }, [currentPageCount, originalQuery, trackPagination]);
+
+  // --- Terminal outcome: first-page fetch failed (Scryfall/network error) ---
+  useEffect(() => {
+    if (isError && currentPageCount === 0) {
+      reportSearchOutcome('scryfall_error', { requestId: currentRequestId });
+    }
+  }, [isError, currentPageCount, currentRequestId]);
 
   // --- Track pagination error (once per failure) ---
   const paginationErrorShownRef = useRef(false);

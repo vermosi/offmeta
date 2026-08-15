@@ -1624,6 +1624,10 @@ export type Database = {
           sources: string
         }[]
       }
+      get_search_outcome_breakdown: {
+        Args: { days_back?: number }
+        Returns: Json
+      }
       get_self_heal_diagnostics: {
         Args: { days_back?: number; max_items?: number }
         Returns: Json
