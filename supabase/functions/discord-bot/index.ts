@@ -1124,9 +1124,10 @@ serve(
         query,
         actorHash,
         guildId ?? '',
-        supabaseUrl ? `${supabaseUrl}/functions/v1/discord-bot` : undefined,
+        undefined,
         serviceRoleKey,
       );
+
       try {
         const { outcome, scryfallQuery, cards, totalCards } =
           await runSearch(query);
