@@ -737,7 +737,7 @@ function clickErrorResponse(
   });
 }
 
-async function handleClickRedirect(req: Request): Promise<Response> {
+export async function handleClickRedirect(req: Request): Promise<Response> {
   const startedAt = Date.now();
   const url = new URL(req.url);
   const query = (url.searchParams.get('q') ?? '').slice(0, MAX_QUERY_LENGTH);
