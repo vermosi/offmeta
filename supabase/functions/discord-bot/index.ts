@@ -200,9 +200,14 @@ export function clickPayload(
   query: string,
   actorHash: string,
   guildId: string,
+  expiresAt?: number,
 ): string {
-  return `${query}|${actorHash}|${guildId}`;
+  const base = `${query}|${actorHash}|${guildId}`;
+  return expiresAt ? `${base}|${expiresAt}` : base;
 }
+
+/** Signed click links stay valid for this long after the search. */
+const CLICK_LINK_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * Click-tracked wrapper around the results link. Points at this function's
@@ -215,13 +220,19 @@ export async function buildTrackedResultsUrl(
   guildId: string,
   functionUrl?: string,
   secret?: string,
+  now = Date.now(),
 ): Promise<string> {
   if (!functionUrl || !secret) return buildResultsUrl(query);
+  const expiresAt = now + CLICK_LINK_TTL_MS;
   const params = new URLSearchParams({
     q: query,
     a: actorHash,
     g: guildId,
-    s: await signClick(clickPayload(query, actorHash, guildId), secret),
+    x: String(expiresAt),
+    s: await signClick(
+      clickPayload(query, actorHash, guildId, expiresAt),
+      secret,
+    ),
   });
   return `${functionUrl}?${params.toString()}`;
 }
