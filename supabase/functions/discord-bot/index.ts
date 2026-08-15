@@ -1380,7 +1380,8 @@ export async function handleDiscordRequest(req: Request): Promise<Response> {
               message: error instanceof Error ? error.message : 'unknown',
             });
           }
-        })();
+        })());
+
 
         return ack;
       }
