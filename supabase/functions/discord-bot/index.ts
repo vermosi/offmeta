@@ -834,7 +834,59 @@ const startupCheck = runStartupCheck()
     } satisfies StartupCheckResult;
   });
 
+/**
+ * Registers (upserts) the global `/offmeta` slash command with Discord.
+ * Requires DISCORD_APPLICATION_ID and DISCORD_BOT_TOKEN secrets.
+ */
+async function registerSlashCommand(): Promise<Response> {
+  const appId = Deno.env.get('DISCORD_APPLICATION_ID');
+  const botToken = Deno.env.get('DISCORD_BOT_TOKEN');
+  if (!appId || !botToken) {
+    log.error('register_missing_secrets', {
+      appIdPresent: Boolean(appId),
+      botTokenPresent: Boolean(botToken),
+    });
+    return Response.json(
+      { ok: false, error: 'DISCORD_APPLICATION_ID or DISCORD_BOT_TOKEN is not configured' },
+      { status: 500 },
+    );
+  }
+
+  const res = await fetch(`https://discord.com/api/v10/applications/${appId}/commands`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bot ${botToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: 'offmeta',
+      description: 'Search Magic cards in plain English',
+      type: 1,
+      options: [
+        {
+          name: 'query',
+          description: 'What kind of card are you after?',
+          type: 3,
+          required: true,
+        },
+      ],
+    }),
+  });
+
+  const bodyText = await res.text();
+  if (!res.ok) {
+    log.error('register_failed', { status: res.status, body: bodyText.slice(0, 500) });
+    return Response.json({ ok: false, status: res.status, error: bodyText.slice(0, 500) }, {
+      status: 502,
+    });
+  }
+
+  log.info('register_succeeded', { status: res.status });
+  return Response.json({ ok: true, command: 'offmeta' });
+}
+
 serve(
+
   withLogging('discord-bot', async (req: Request): Promise<Response> => {
     if (req.method === 'GET' && new URL(req.url).searchParams.has('s')) {
       return handleClickRedirect(req);
