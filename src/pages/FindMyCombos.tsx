@@ -390,23 +390,23 @@ export default function FindMyCombos() {
           </div>
         </section>
 
-
         {/* Loading */}
         {loading && (
-          <div className="space-y-3">
+          <div className="mt-10 space-y-3">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-lg" />
+              <Skeleton key={i} className="h-20 w-full rounded-none" />
             ))}
           </div>
         )}
 
         {/* Error */}
         {error && (
-          <div className="flex items-center gap-2 text-sm text-destructive py-3">
+          <div className="mt-8 flex items-center gap-2 text-sm text-destructive">
             <AlertTriangle className="h-4 w-4" />
             <span>{error}</span>
           </div>
         )}
+
 
         {/* Results */}
         {results &&
