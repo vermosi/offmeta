@@ -16,7 +16,6 @@ Start here if you want the shortest path through the docs.
 
 | Doc | Use it for |
 | --- | --- |
-| [API](./api.md) | Edge-function contracts and request/response examples |
 | [Configuration](./configuration.md) | Environment variables, runtime ownership, and scheduled jobs |
 | [Deployment](./deployment.md) | Production rollout and release process |
 | [Internationalization](./i18n.md) | Locale system and translation flow |
