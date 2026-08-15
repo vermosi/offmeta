@@ -840,6 +840,15 @@ serve(
       return handleClickRedirect(req);
     }
 
+    if (req.method === 'GET' && new URL(req.url).searchParams.has('health')) {
+      const result = await startupCheck;
+      // No secrets in the payload — booleans and error strings only.
+      return Response.json(result, {
+        status: result.ok ? 200 : 503,
+        headers: { 'Cache-Control': 'no-store' },
+      });
+    }
+
     if (req.method !== 'POST') {
       return new Response('Not Found', { status: 404 });
     }
