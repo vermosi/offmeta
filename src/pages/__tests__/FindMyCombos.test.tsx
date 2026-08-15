@@ -91,6 +91,21 @@ describe('FindMyCombos', () => {
     expect(btn).toBeDisabled();
   });
 
+  it('renders the editorial eyebrow above the heading', async () => {
+    await renderPage();
+    expect(screen.getByText('OffMeta / Combos')).toBeInTheDocument();
+  });
+
+  it('does not render a card search input', async () => {
+    await renderPage();
+    expect(
+      screen.queryByPlaceholderText(/search|describe/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('searchbox'),
+    ).not.toBeInTheDocument();
+  });
+
   it('shows the deck summary empty state when no deck is imported', async () => {
     await renderPage();
     expect(screen.getByText('Deck Summary')).toBeInTheDocument();
