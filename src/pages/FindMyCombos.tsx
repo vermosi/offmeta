@@ -253,80 +253,91 @@ export default function FindMyCombos() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background">
       <SkipLinks />
       <Header />
-      <main id="main-content" className="container-main flex-1 py-8 space-y-8">
-        <PageSearchBar placeholder={t('combos.searchPlaceholder', 'Search Magic cards in plain English…')} />
-        <div>
-          <div className="flex items-center gap-2">
-            <Zap className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">{t('combos.title')}</h1>
-          </div>
-          <p className="text-muted-foreground text-sm mt-1">
-            {t('combos.subtitle')}
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {t('combos.poweredBy')}{' '}
-            <a
-              href="https://commanderspellbook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-foreground"
-            >
-              Commander Spellbook
-            </a>
-          </p>
+      <main id="main-content" className="mx-auto max-w-4xl px-4 pb-24">
+        <p className="pt-10 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+          {t('combos.eyebrow', 'OffMeta / Combos')}
+        </p>
+        <h1 className="mt-4 font-display text-4xl uppercase leading-[0.95] tracking-tight md:text-5xl">
+          {t('combos.title')}
+        </h1>
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          {t('combos.subtitle')}
+        </p>
+        <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+          {t('combos.poweredBy')}{' '}
+          <a
+            href="https://commanderspellbook.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-foreground"
+          >
+            Commander Spellbook
+          </a>
+        </p>
+
+        <div className="mt-8">
+          <PageSearchBar
+            placeholder={t(
+              'combos.searchPlaceholder',
+              'Search Magic cards in plain English…',
+            )}
+          />
         </div>
 
         {/* Input */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-3">
-            <div className="space-y-3">
-              <label className="text-sm font-medium" htmlFor="moxfield-url">
-                {t('combos.moxfieldLabel')}
-              </label>
-              <Input
-                id="moxfield-url"
-                type="url"
-                inputMode="url"
-                value={moxfieldUrl}
-                onChange={(e) => setMoxfieldUrl(e.target.value)}
-                placeholder="https://www.moxfield.com/decks/..."
-                className="font-mono text-xs"
-              />
-              <Button
-                onClick={handleFetchMoxfield}
-                disabled={fetchingDeck || !moxfieldUrl.trim()}
-                variant="secondary"
-                className="w-full gap-2"
-              >
-                {fetchingDeck ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Link2 className="h-4 w-4" />
-                )}
-                {fetchingDeck
-                  ? t('combos.importing')
-                  : t('combos.importButton')}
-              </Button>
-              {moxfieldDeckName && (
-                <p className="text-xs text-muted-foreground">
-                  ✓ {t('combos.imported')}:{' '}
-                  <span className="font-medium text-foreground">
-                    {moxfieldDeckName}
-                  </span>
-                </p>
+        <section className="mt-10 border-t border-border pt-8 grid gap-8 md:grid-cols-2">
+          <div>
+            <label
+              className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground"
+              htmlFor="moxfield-url"
+            >
+              {t('combos.moxfieldLabel')}
+            </label>
+            <Input
+              id="moxfield-url"
+              type="url"
+              inputMode="url"
+              value={moxfieldUrl}
+              onChange={(e) => setMoxfieldUrl(e.target.value)}
+              placeholder="https://www.moxfield.com/decks/..."
+              className="mt-3 rounded-none font-mono text-xs"
+            />
+            <Button
+              onClick={handleFetchMoxfield}
+              disabled={fetchingDeck || !moxfieldUrl.trim()}
+              variant="secondary"
+              className="mt-3 w-full gap-2 rounded-none"
+            >
+              {fetchingDeck ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Link2 className="h-4 w-4" />
               )}
-            </div>
+              {fetchingDeck
+                ? t('combos.importing')
+                : t('combos.importButton')}
+            </Button>
+            {moxfieldDeckName && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                ✓ {t('combos.imported')}:{' '}
+                <span className="font-medium text-foreground">
+                  {moxfieldDeckName}
+                </span>
+              </p>
+            )}
           </div>
 
           {/* Summary + find button */}
-          <div className="rounded-xl border border-border p-4 space-y-3">
-            <h2 className="text-sm font-semibold">{t('combos.deckSummary')}</h2>
+          <div className="border border-border p-5">
+            <h2 className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              {t('combos.deckSummary')}
+            </h2>
             {cardNames.length > 0 ? (
               <>
-                <div className="text-sm space-y-1">
+                <div className="mt-4 space-y-1 text-sm">
                   <p>
                     <span className="text-muted-foreground">
                       {t('combos.commander')}:
@@ -361,7 +372,7 @@ export default function FindMyCombos() {
                 <Button
                   onClick={handleFindCombos}
                   disabled={loading || cardNames.length === 0}
-                  className="w-full gap-2"
+                  className="mt-4 w-full gap-2 rounded-none"
                 >
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -372,12 +383,13 @@ export default function FindMyCombos() {
                 </Button>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="mt-4 text-sm text-muted-foreground">
                 {t('combos.emptyUrl')}
               </p>
             )}
           </div>
-        </div>
+        </section>
+
 
         {/* Loading */}
         {loading && (
