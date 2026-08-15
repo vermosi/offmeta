@@ -467,6 +467,13 @@ export function useSearch() {
     paginationPageRef.current = currentPageCount || 1;
   }, [currentPageCount, originalQuery, trackPagination]);
 
+  // --- Terminal outcome: first-page fetch failed (Scryfall/network error) ---
+  useEffect(() => {
+    if (isError && currentPageCount === 0) {
+      reportSearchOutcome('scryfall_error', { requestId: currentRequestId });
+    }
+  }, [isError, currentPageCount, currentRequestId]);
+
   // --- Track pagination error (once per failure) ---
   const paginationErrorShownRef = useRef(false);
   useEffect(() => {
