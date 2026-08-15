@@ -64,11 +64,17 @@ function setSearchCache(key: string, data: SearchResult): void {
   searchResultCache.set(key, { data, ts: Date.now() });
 }
 
+// In-flight request dedupe: concurrent callers asking for the same page share
+// one network request instead of each queuing their own (rate-limit friendly).
+const inFlightSearches = new Map<string, Promise<SearchResult>>();
+
 /** Clear the search result cache (useful for forced refresh / tests). */
 export function clearSearchCache(): void {
   searchResultCache.clear();
+  inFlightSearches.clear();
 }
 // ──────────────────────────────────────────────────────────────────────────────
+
 
 
 /**
@@ -103,40 +109,55 @@ export async function searchCards(
   }
   // ──────────────────────────────────────────────────────────────────────────
 
-  const fetchStart = typeof performance !== 'undefined' ? performance.now() : 0;
-  const encodedQuery = encodeURIComponent(finalQuery);
-  const response = await rateLimitedFetch(
-    `${BASE_URL}/cards/search?q=${encodedQuery}&page=${page}`,
-  );
+  // Share an already-running request for the same page instead of issuing a
+  // second one (e.g. infinite scroll re-triggering while a page is in flight).
+  const existing = inFlightSearches.get(cacheKey);
+  if (existing) return existing;
 
-  if (!response.ok) {
-    if (response.status === 404) {
-      return { object: 'list', total_cards: 0, has_more: false, data: [] };
-    }
-    throw new Error(`Search failed: ${response.statusText}`);
-  }
+  const request = (async (): Promise<SearchResult> => {
+    const fetchStart = typeof performance !== 'undefined' ? performance.now() : 0;
+    const encodedQuery = encodeURIComponent(finalQuery);
+    const response = await rateLimitedFetch(
+      `${BASE_URL}/cards/search?q=${encodedQuery}&page=${page}`,
+    );
 
-  const result: SearchResult = await response.json();
-  setSearchCache(cacheKey, result);
-
-  if (typeof performance !== 'undefined' && fetchStart) {
-    try {
-      const durationMs = performance.now() - fetchStart;
-      performance.mark?.(`offmeta.scryfall:fetch-end:${page}`);
-      // Surface slow fetches so the search profiler picks them up.
-      if (durationMs > 800) {
-        logger.debug('[SearchDiag] Slow Scryfall fetch', {
-          page,
-          durationMs: Math.round(durationMs),
-          totalCards: result.total_cards,
-          query: finalQuery.substring(0, 120),
-        });
+    if (!response.ok) {
+      if (response.status === 404) {
+        return { object: 'list', total_cards: 0, has_more: false, data: [] };
       }
-    } catch { /* ignore */ }
-  }
+      throw new Error(`Search failed: ${response.statusText}`);
+    }
 
-  return result;
+    const result: SearchResult = await response.json();
+    setSearchCache(cacheKey, result);
+
+    if (typeof performance !== 'undefined' && fetchStart) {
+      try {
+        const durationMs = performance.now() - fetchStart;
+        performance.mark?.(`offmeta.scryfall:fetch-end:${page}`);
+        // Surface slow fetches so the search profiler picks them up.
+        if (durationMs > 800) {
+          logger.debug('[SearchDiag] Slow Scryfall fetch', {
+            page,
+            durationMs: Math.round(durationMs),
+            totalCards: result.total_cards,
+            query: finalQuery.substring(0, 120),
+          });
+        }
+      } catch { /* ignore */ }
+    }
+
+    return result;
+  })();
+
+  inFlightSearches.set(cacheKey, request);
+  try {
+    return await request;
+  } finally {
+    inFlightSearches.delete(cacheKey);
+  }
 }
+
 
 interface ScryfallCollectionResponse {
   object: 'list';
