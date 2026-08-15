@@ -690,8 +690,78 @@ export function outcomeMessage(outcome: SearchOutcome, query: string): string {
   }
 }
 
+/** Scryfall returns fixed 175-card pages; map an absolute offset onto one. */
+export function scryfallPageFor(offset: number): {
+  page: number;
+  indexInPage: number;
+} {
+  const SCRYFALL_PAGE_SIZE = 175;
+  return {
+    page: Math.floor(offset / SCRYFALL_PAGE_SIZE) + 1,
+    indexInPage: offset % SCRYFALL_PAGE_SIZE,
+  };
+}
+
+interface ScryfallSlice {
+  outcome: SearchOutcome;
+  cards: CardSummary[];
+  totalCards: number;
+}
+
+/** Fetch one PAGE_SIZE window of results for an already-translated query. */
+async function fetchScryfallSlice(
+  scryfallQuery: string,
+  offset: number,
+): Promise<ScryfallSlice> {
+  const { page, indexInPage } = scryfallPageFor(offset);
+  let scryfallResponse: Response;
+  try {
+    scryfallResponse = await fetch(
+      `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
+        `${scryfallQuery} game:paper`,
+      )}&unique=cards&page=${page}`,
+      {
+        headers: {
+          'User-Agent': 'OffMetaDiscordBot/1.0',
+          Accept: 'application/json',
+        },
+      },
+    );
+  } catch (error) {
+    log.error('scryfall_error', {
+      message: error instanceof Error ? error.message : 'unknown',
+    });
+    return { outcome: 'card_data_unavailable', cards: [], totalCards: 0 };
+  }
+
+  if (!scryfallResponse.ok) {
+    // 404 from Scryfall means "valid query, zero matches".
+    const outcome: SearchOutcome =
+      scryfallResponse.status === 404 ? 'no_results' : 'card_data_unavailable';
+    if (outcome !== 'no_results') {
+      log.error('scryfall_status', { status: scryfallResponse.status });
+    }
+    return { outcome, cards: [], totalCards: 0 };
+  }
+
+  const payload = (await scryfallResponse.json()) as {
+    data?: Array<Record<string, unknown>>;
+    total_cards?: number;
+  };
+  const data = payload.data ?? [];
+  const window = data.slice(indexInPage, indexInPage + PAGE_SIZE);
+  return {
+    outcome: window.length > 0 ? 'ok' : 'no_results',
+    cards: window.map(summarize),
+    totalCards: payload.total_cards ?? data.length,
+  };
+}
+
 /** Translate + execute the search using OffMeta's internal pipeline. */
-async function runSearch(query: string): Promise<SearchResultPayload> {
+async function runSearch(
+  query: string,
+  offset = 0,
+): Promise<SearchResultPayload> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const empty = { scryfallQuery: '', cards: [], totalCards: 0 };
@@ -747,49 +817,22 @@ async function runSearch(query: string): Promise<SearchResultPayload> {
 
   if (!scryfallQuery) return { outcome: 'not_understood', ...empty };
 
-
-  let scryfallResponse: Response;
-  try {
-    scryfallResponse = await fetch(
-      `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
-        `${scryfallQuery} game:paper`,
-      )}&unique=cards`,
-      {
-        headers: {
-          'User-Agent': 'OffMetaDiscordBot/1.0',
-          Accept: 'application/json',
-        },
-      },
-    );
-  } catch (error) {
-    log.error('scryfall_error', {
-      message: error instanceof Error ? error.message : 'unknown',
-    });
-    return { outcome: 'card_data_unavailable', scryfallQuery, cards: [], totalCards: 0 };
-  }
-
-  if (!scryfallResponse.ok) {
-    // 404 from Scryfall means "valid query, zero matches".
-    const outcome: SearchOutcome =
-      scryfallResponse.status === 404 ? 'no_results' : 'card_data_unavailable';
-    if (outcome !== 'no_results') {
-      log.error('scryfall_status', { status: scryfallResponse.status });
-    }
-    return { outcome, scryfallQuery, cards: [], totalCards: 0 };
-  }
-
-  const payload = (await scryfallResponse.json()) as {
-    data?: Array<Record<string, unknown>>;
-    total_cards?: number;
-  };
-  const data = payload.data ?? [];
-  return {
-    outcome: data.length > 0 ? 'ok' : 'no_results',
-    scryfallQuery,
-    cards: data.slice(0, MAX_CARDS).map(summarize),
-    totalCards: payload.total_cards ?? data.length,
-  };
+  const slice = await fetchScryfallSlice(scryfallQuery, offset);
+  return { ...slice, scryfallQuery };
 }
+
+/**
+ * Re-run an already-translated query for a different page. Used by the
+ * Prev/Next buttons so paging never pays the translation cost again.
+ */
+async function runPagedSearch(
+  scryfallQuery: string,
+  offset: number,
+): Promise<SearchResultPayload> {
+  const slice = await fetchScryfallSlice(scryfallQuery, offset);
+  return { ...slice, scryfallQuery };
+}
+
 
 
 /** Edit the deferred interaction response once the search resolves. */
