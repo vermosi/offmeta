@@ -15,7 +15,11 @@ type LogFn = (event: string, payload: Record<string, unknown>) => void;
 
 interface SearchPayload {
   scryfallQuery?: unknown;
-  explanation?: { readable?: string; assumptions?: unknown; confidence?: number };
+  explanation?: {
+    readable?: string;
+    assumptions?: unknown;
+    confidence?: number;
+  };
   warnings?: unknown;
   success?: boolean;
   [key: string]: unknown;

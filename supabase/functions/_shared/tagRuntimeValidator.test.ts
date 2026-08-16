@@ -55,15 +55,18 @@ Deno.test('substitutes a supported suggestion when one exists', async () => {
   assertEquals(result.replacedTags, [{ from: 'otag:rampp', to: 'otag:ramp' }]);
 });
 
-Deno.test('drops a negated unsupported tag instead of substituting', async () => {
-  const { probe } = fakeProbe({});
-  const result = await validateGeneratedTags('t:creature -otag:notarealtag', {
-    probe,
-  });
-  assertEquals(result.query, 't:creature');
-  assertEquals(result.replacedTags.length, 0);
-  assertEquals(result.removedTags, ['otag:notarealtag']);
-});
+Deno.test(
+  'drops a negated unsupported tag instead of substituting',
+  async () => {
+    const { probe } = fakeProbe({});
+    const result = await validateGeneratedTags('t:creature -otag:notarealtag', {
+      probe,
+    });
+    assertEquals(result.query, 't:creature');
+    assertEquals(result.replacedTags.length, 0);
+    assertEquals(result.removedTags, ['otag:notarealtag']);
+  },
+);
 
 Deno.test('validates art tags too', async () => {
   const { probe } = fakeProbe({});
@@ -74,13 +77,16 @@ Deno.test('validates art tags too', async () => {
   assertEquals(result.removedTags, ['atag:definitelynotanarttag']);
 });
 
-Deno.test('keeps the original query when every tag is unsupported', async () => {
-  const { probe } = fakeProbe({});
-  const original = 'otag:notarealtag';
-  const result = await validateGeneratedTags(original, { probe });
-  assertEquals(result.query, original);
-  assertEquals(result.warnings.length, 2);
-});
+Deno.test(
+  'keeps the original query when every tag is unsupported',
+  async () => {
+    const { probe } = fakeProbe({});
+    const original = 'otag:notarealtag';
+    const result = await validateGeneratedTags(original, { probe });
+    assertEquals(result.query, original);
+    assertEquals(result.warnings.length, 2);
+  },
+);
 
 Deno.test('fails open when the probe throws', async () => {
   const result = await validateGeneratedTags('otag:notarealtag t:creature', {
@@ -96,25 +102,28 @@ Deno.test('cleanupOrphanedOperators removes dangling booleans', () => {
   assertEquals(cleanupOrphanedOperators('t:creature or'), 't:creature');
 });
 
-Deno.test('probeTagSupported caches verdicts and fails open offline', async () => {
-  resetTagVerdictCache();
-  const originalFetch = globalThis.fetch;
-  let calls = 0;
-  globalThis.fetch = () => {
-    calls++;
-    return Promise.resolve(
-      new Response(JSON.stringify({ total_cards: 0 }), { status: 404 }),
-    );
-  };
-  try {
-    assertEquals(await probeTagSupported('oracle', 'fake-tag-xyz'), false);
-    assertEquals(await probeTagSupported('oracle', 'fake-tag-xyz'), false);
-    assertEquals(calls, 1);
-
-    globalThis.fetch = () => Promise.reject(new Error('offline'));
-    assertEquals(await probeTagSupported('oracle', 'another-fake-tag'), true);
-  } finally {
-    globalThis.fetch = originalFetch;
+Deno.test(
+  'probeTagSupported caches verdicts and fails open offline',
+  async () => {
     resetTagVerdictCache();
-  }
-});
+    const originalFetch = globalThis.fetch;
+    let calls = 0;
+    globalThis.fetch = () => {
+      calls++;
+      return Promise.resolve(
+        new Response(JSON.stringify({ total_cards: 0 }), { status: 404 }),
+      );
+    };
+    try {
+      assertEquals(await probeTagSupported('oracle', 'fake-tag-xyz'), false);
+      assertEquals(await probeTagSupported('oracle', 'fake-tag-xyz'), false);
+      assertEquals(calls, 1);
+
+      globalThis.fetch = () => Promise.reject(new Error('offline'));
+      assertEquals(await probeTagSupported('oracle', 'another-fake-tag'), true);
+    } finally {
+      globalThis.fetch = originalFetch;
+      resetTagVerdictCache();
+    }
+  },
+);
