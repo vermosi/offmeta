@@ -281,3 +281,21 @@ describe('Deterministic MTG query translation', () => {
     expect(query).toContain('kw:flying');
   });
 });
+
+describe('legality status queries', () => {
+  it('maps "banned in X" to banned:X instead of format legality', () => {
+    expect(buildDeterministicIntent('cards that are banned in commander').deterministicQuery)
+      .toBe('banned:commander');
+    expect(buildDeterministicIntent('cards banned in edh').deterministicQuery)
+      .toBe('banned:commander');
+    expect(buildDeterministicIntent('commander ban list').deterministicQuery)
+      .toBe('banned:commander');
+    expect(buildDeterministicIntent('restricted in vintage').deterministicQuery)
+      .toBe('restricted:vintage');
+  });
+
+  it('still treats plain commander mentions as format legality', () => {
+    expect(buildDeterministicIntent('commander staples').deterministicQuery)
+      .toBe('f:commander');
+  });
+});
