@@ -24,7 +24,9 @@ describe('buildClientFallbackQuery — Spanish strategy hate', () => {
     'cartas que paran el cementerio',
   ])('graveyard hate (es): %s', (input) => {
     const q = buildClientFallbackQuery(input);
-    expect(q).toMatch(/otag:graveyard-hate|exile.*graveyard/);
+    expect(q).toMatch(
+      /otag:graveyard-hate|o:"exile" o:"graveyard" -o:"your graveyard" -o:"from your graveyard"/,
+    );
   });
 
   it.each([
@@ -33,7 +35,9 @@ describe('buildClientFallbackQuery — Spanish strategy hate', () => {
     'cartas que detienen combo',
   ])('storm/spell hate (es): %s', (input) => {
     const q = buildClientFallbackQuery(input);
-    expect(q).toMatch(/can't cast more than|opponent.*casts|hatebear|spells cost/);
+    expect(q).toMatch(
+      /can't cast more than|opponent.*casts|hatebear|spells cost/,
+    );
   });
 
   it.each([

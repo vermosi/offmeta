@@ -153,7 +153,8 @@ const SLANG_MAP: Record<string, string> = {
   'sacrifice outlet': 'o:"sacrifice" -o:"opponent"',
   'sac outlets': 'o:"sacrifice" -o:"opponent"',
   'sac outlet': 'o:"sacrifice" -o:"opponent"',
-  'graveyard hate': 'o:"exile" o:"graveyard"',
+  'graveyard hate':
+    '(otag:graveyard-hate or (o:"exile" o:"graveyard" -o:"your graveyard" -o:"from your graveyard") or o:"cards in graveyards" or o:"can\'t be cast from")',
   'extra turns': 'o:"extra turn"',
   'extra turn': 'o:"extra turn"',
   // Archetype slang
@@ -193,11 +194,11 @@ const STRATEGY_HATE_PATTERNS: Array<{ regex: RegExp; syntax: string }> = [
   },
   {
     regex: new RegExp(
-      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:graveyard|reanimator|reanimation|dredge|mill|self[- ]?mill)${HATE_SUFFIX}\b`,
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:graveyard|reanimator|reanimation|dredge|self[- ]?mill)${HATE_SUFFIX}\b`,
       'i',
     ),
     syntax:
-      '(otag:graveyard-hate or (o:"exile" o:"graveyard") or o:"can\'t be cast from")',
+      '(otag:graveyard-hate or (o:"exile" o:"graveyard" -o:"your graveyard" -o:"from your graveyard") or o:"cards in graveyards" or o:"can\'t be cast from")',
   },
   {
     regex: new RegExp(
@@ -233,18 +234,26 @@ const STRATEGY_HATE_PATTERNS: Array<{ regex: RegExp; syntax: string }> = [
   },
   {
     regex: new RegExp(
-      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?tutors?${HATE_SUFFIX}\b`,
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:tutors?|search(?:ing)?(?:\s+for)?(?:\s+cards?)?|find(?:ing)?|fetch(?:ing)?)${HATE_SUFFIX}\b`,
       'i',
     ),
     syntax: '(o:"can\'t search" or otag:hatebear)',
   },
   {
     regex: new RegExp(
-      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:draw|card[- ]?draw|wheel|blue)${HATE_SUFFIX}\b`,
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:draw|card[- ]?draw|wheel)${HATE_SUFFIX}\b`,
       'i',
     ),
     syntax:
       '((o:"whenever" o:"opponent" o:"draws") or (o:"skip" o:"draw") or o:"can\'t draw more than" or otag:hatebear)',
+  },
+  {
+    regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:mono[- ]?blue|blue(?:[- ]?based)?|blues?)${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax:
+      '(o:"can\'t cast blue spells" or o:"blue spells cost" or (o:"whenever" o:"opponent" o:"casts" o:"blue") or otag:hatebear)',
   },
   {
     regex: new RegExp(
@@ -302,7 +311,7 @@ const STRATEGY_HATE_PATTERNS: Array<{ regex: RegExp; syntax: string }> = [
       'i',
     ),
     syntax:
-      '(otag:boardwipe or o:"destroy all creatures" or o:"protection from")',
+      '(o:"choose a creature type" or o:"chosen creature type" or otag:boardwipe or o:"destroy all creatures" or o:"protection from")',
   },
   // Big mana / Eldrazi / ramp payoff hate
   {

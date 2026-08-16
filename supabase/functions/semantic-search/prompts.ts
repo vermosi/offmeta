@@ -189,10 +189,18 @@ Examples:
   -> otag:graveyard-hate
 - artifact/treasure hate
   -> (otag:artifact-removal or o:"activated abilities of artifacts")
+- ramp/land hate
+  -> (o:"can't search" or o:"can't play additional lands" or (o:"skip" o:"land") or otag:hatebear)
+- storm/combo hate
+  -> (o:"can't cast more than" or (o:"whenever" o:"opponent" o:"casts") or otag:hatebear or (o:"spells cost" o:"more"))
 - lifegain hate
-  -> o:"can't gain life"
+  -> (o:"can't gain life" or o:"lose life instead" or (o:"whenever" o:"gains life"))
 - tutor/search hate
   -> o:"can't search"
+- token hate
+  -> (o:"tokens can't" or o:"exile all tokens" or o:"destroy all tokens")
+- draw / wheel hate
+  -> ((o:"whenever" o:"opponent" o:"draws") or (o:"skip" o:"draw") or o:"can't draw more than" or otag:hatebear)
 - creature/go-wide hate
   -> (otag:pillowfort or otag:removal)
 - enchantment-deck hate

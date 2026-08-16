@@ -16,7 +16,9 @@ describe('buildClientFallbackQuery — multi-intent hate composition', () => {
     // Single top-level OR group containing all three hate syntaxes.
     expect(q.startsWith('(')).toBe(true);
     expect((q.match(/ or /g) ?? []).length).toBeGreaterThanOrEqual(2);
-    expect(q).toMatch(/graveyard|exile/);
+    expect(q).toMatch(
+      /otag:graveyard-hate|o:"exile" o:"graveyard" -o:"your graveyard" -o:"from your graveyard"/,
+    );
     expect(q).toMatch(/token/);
     expect(q).toMatch(/cast more than|spells cost/);
   });
@@ -24,7 +26,7 @@ describe('buildClientFallbackQuery — multi-intent hate composition', () => {
   it('supports "plus" as an intent connector', () => {
     const q = buildClientFallbackQuery('hate lifegain plus stop tokens');
     expect(q).toMatch(/^\(.+ or .+\)$/);
-    expect(q).toContain("gain life");
+    expect(q).toContain('gain life');
     expect(q).toContain('token');
   });
 

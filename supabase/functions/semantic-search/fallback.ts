@@ -6,15 +6,91 @@ import { validateQuery } from './validation.ts';
  * as an implicit card-name match and produce nonsense results.
  */
 const BARE_WORD_STOPWORDS = new Set([
-  'a', 'about', 'all', 'an', 'and', 'any', 'are', 'art', 'as', 'at', 'be',
-  'best', 'but', 'by', 'can', 'card', 'cards', 'depicted', 'do', 'does', 'each',
-  'example', 'find', 'for', 'from', 'give', 'gives', 'good', 'has', 'have',
-  'how', 'i', 'if', 'in', 'is', 'it', 'its', 'kind', 'like', 'looking', 'make',
-  'makes', 'me', 'more', 'most', 'my', 'need', 'of', 'on', 'or', 'otag', 'our',
-  'out', 'show', 'some', 'something', 'sort', 'tag', 'that', 'the',
-  'their', 'them', 'then', 'there', 'these', 'they', 'thing', 'things', 'this',
-  'those', 'to', 'up', 'use', 'used', 'want', 'was', 'what', 'when', 'which',
-  'who', 'will', 'with', 'would', 'you', 'your',
+  'a',
+  'about',
+  'all',
+  'an',
+  'and',
+  'any',
+  'are',
+  'art',
+  'as',
+  'at',
+  'be',
+  'best',
+  'but',
+  'by',
+  'can',
+  'card',
+  'cards',
+  'depicted',
+  'do',
+  'does',
+  'each',
+  'example',
+  'find',
+  'for',
+  'from',
+  'give',
+  'gives',
+  'good',
+  'has',
+  'have',
+  'how',
+  'i',
+  'if',
+  'in',
+  'is',
+  'it',
+  'its',
+  'kind',
+  'like',
+  'looking',
+  'make',
+  'makes',
+  'me',
+  'more',
+  'most',
+  'my',
+  'need',
+  'of',
+  'on',
+  'or',
+  'otag',
+  'our',
+  'out',
+  'show',
+  'some',
+  'something',
+  'sort',
+  'tag',
+  'that',
+  'the',
+  'their',
+  'them',
+  'then',
+  'there',
+  'these',
+  'they',
+  'thing',
+  'things',
+  'this',
+  'those',
+  'to',
+  'up',
+  'use',
+  'used',
+  'want',
+  'was',
+  'what',
+  'when',
+  'which',
+  'who',
+  'will',
+  'with',
+  'would',
+  'you',
+  'your',
 ]);
 
 /** Maximum number of leftover words promoted to oracle-text constraints. */
@@ -65,7 +141,6 @@ export function wrapBareWords(segment: string): string {
 
   return cleaned.join(' ').trim();
 }
-
 
 /**
  * Builds a fallback Scryfall query using deterministic rules and basic
@@ -139,6 +214,44 @@ export function buildFallbackQuery(
     [/\bmodal spells?\b/gi, 'is:modal'],
     [/\bpathway lands?\b/gi, 'is:pathway'],
 
+    // Strategy hate / hosers
+    [
+      /\b(?:cards? that )?(?:punish(?:es|ing)?|hate|hates|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:ramp|land[- ]?ramp|lands|mana)\b/gi,
+      '(o:"can\'t search" or o:"can\'t play additional lands" or (o:"skip" o:"land") or otag:hatebear)',
+    ],
+    [
+      /\b(?:cards? that )?(?:punish(?:es|ing)?|hate|hates|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:storm|spellslinger|spells?|instants?\s+and\s+sorceries?|combo)\b/gi,
+      '(o:"can\'t cast more than" or (o:"whenever" o:"opponent" o:"casts") or otag:hatebear or (o:"spells cost" o:"more"))',
+    ],
+    [
+      /\b(?:cards? that )?(?:punish(?:es|ing)?|hate|hates|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?tokens?\b/gi,
+      '(o:"tokens can\'t" or o:"exile all tokens" or o:"destroy all tokens")',
+    ],
+    [
+      /\b(?:cards? that )?(?:punish(?:es|ing)?|hate|hates|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:life\s?gain|life)\b/gi,
+      '(o:"can\'t gain life" or o:"lose life instead" or (o:"whenever" o:"gains life"))',
+    ],
+    [
+      /\b(?:cards? that )?(?:punish(?:es|ing)?|hate|hates|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:tutors?|search)\b/gi,
+      '(o:"can\'t search" or otag:hatebear)',
+    ],
+    [
+      /\b(?:cards? that )?(?:punish(?:es|ing)?|hate|hates|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:draw|card[- ]?draw|wheel|blue)\b/gi,
+      '((o:"whenever" o:"opponent" o:"draws") or (o:"skip" o:"draw") or o:"can\'t draw more than" or otag:hatebear)',
+    ],
+    [
+      /\b(?:cards? that )?(?:punish(?:es|ing)?|hate|hates|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:aggro|creature|go[- ]?wide|weenie|swarm)\b/gi,
+      '(otag:boardwipe or o:"deals damage to each creature")',
+    ],
+    [
+      /\b(?:cards? that )?(?:punish(?:es|ing)?|hate|hates|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?enchantments?\b/gi,
+      '(o:"destroy" o:"enchantment" or o:"exile" o:"enchantment")',
+    ],
+    [
+      /\b(?:cards? that )?(?:punish(?:es|ing)?|hate|hates|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:control|counterspell|counter\s?magic|permission)\b/gi,
+      '(o:"can\'t be countered" or (o:"whenever" o:"opponent" o:"counters") or otag:hatebear)',
+    ],
+
     // Ramp and mana
     [/\bramp\b/gi, 'otag:ramp'],
     [/\bmana ?rocks?\b/gi, 'otag:mana-rock'],
@@ -190,7 +303,10 @@ export function buildFallbackQuery(
     [/\bcounter ?magic\b/gi, 'otag:counter'],
     [/\bremoval\b/gi, 'otag:removal'],
     [/\bcreature removal\b/gi, 'otag:creature-removal'],
-    [/\bgraveyard hate\b/gi, 'otag:graveyard-hate'],
+    [
+      /\bgraveyard hate\b/gi,
+      '(otag:graveyard-hate or (o:"exile" o:"graveyard" -o:"your graveyard" -o:"from your graveyard") or o:"cards in graveyards" or o:"can\'t be cast from")',
+    ],
 
     // Token generation - NOTE: otag:treasure-generator is NOT a real Scryfall tag
     [/\btreasure tokens?\b/gi, 'o:"create" o:"Treasure"'],
@@ -502,7 +618,6 @@ export function buildFallbackQuery(
     .filter(Boolean)
     .join(' ')
     .trim();
-
 
   // Apply filters
   if (filters?.format) {

@@ -24,21 +24,27 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   // Must be FIRST to consume "equipped/enchanted creature" before it becomes t:creature
   {
     // Full pattern: "equipment or auras that buff equipped or enchanted creature"
-    pattern: /\b(?:equipment|auras?)\s+(?:or\s+(?:equipment|auras?)\s+)?that\s+buff\s+(?:(?:the\s+)?(?:equipped|enchanted)\s+creature|creatures?|equipped|enchanted)\b/gi,
-    syntax: '(t:equipment or t:aura) (o:"equipped" or o:"enchanted") (o:"gets" or o:"gains" or o:"have" or o:"+" )',
-    description: 'Equipment or auras that grant bonuses to equipped/enchanted creatures',
+    pattern:
+      /\b(?:equipment|auras?)\s+(?:or\s+(?:equipment|auras?)\s+)?that\s+buff\s+(?:(?:the\s+)?(?:equipped|enchanted)\s+creature|creatures?|equipped|enchanted)\b/gi,
+    syntax:
+      '(t:equipment or t:aura) (o:"equipped" or o:"enchanted") (o:"gets" or o:"gains" or o:"have" or o:"+" )',
+    description:
+      'Equipment or auras that grant bonuses to equipped/enchanted creatures',
   },
   {
     // Shorter: "equipment or auras that buff" without specifying creature
-    pattern: /\b(?:equipment|auras?)\s+(?:or\s+(?:equipment|auras?)\s+)?that\s+buff\b/gi,
-    syntax: '(t:equipment or t:aura) (o:"equipped" or o:"enchanted") (o:"gets" or o:"gains" or o:"have" or o:"+" )',
+    pattern:
+      /\b(?:equipment|auras?)\s+(?:or\s+(?:equipment|auras?)\s+)?that\s+buff\b/gi,
+    syntax:
+      '(t:equipment or t:aura) (o:"equipped" or o:"enchanted") (o:"gets" or o:"gains" or o:"have" or o:"+" )',
     description: 'Equipment or auras that buff',
   },
   {
     // "equipped or enchanted creature" descriptor — consume so it doesn't become t:creature
     pattern: /\b(?:equipped|enchanted)\s+creatures?\b/gi,
     syntax: '',
-    description: 'Consume "equipped creature" / "enchanted creature" descriptors (not a type filter)',
+    description:
+      'Consume "equipped creature" / "enchanted creature" descriptors (not a type filter)',
   },
   {
     pattern: /\b(?:equipment\s+or\s+auras?|auras?\s+or\s+equipment)\b/gi,
@@ -49,9 +55,11 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   // "lands are mountains" type effects (Blood Moon, Magus of the Moon, etc.)
   // Must intercept before t:land is extracted from "lands"
   {
-    pattern: /\b(?:cards?\s+that\s+)?(?:turn|make|turns?|makes?|change[sd]?)\s+all\s+lands?\s+into\s+mountains?\b/gi,
+    pattern:
+      /\b(?:cards?\s+that\s+)?(?:turn|make|turns?|makes?|change[sd]?)\s+all\s+lands?\s+into\s+mountains?\b/gi,
     syntax: 'o:"lands are mountains"',
-    description: 'Cards that turn all lands into mountains (Blood Moon effects)',
+    description:
+      'Cards that turn all lands into mountains (Blood Moon effects)',
   },
   {
     pattern: /\b(?:turns?|makes?)\s+(?:all\s+)?lands?\s+into\s+mountains?\b/gi,
@@ -75,7 +83,8 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   // =====================================================================
   {
     // treasure / artifact-token strategies → artifact hate + prevent activated abilities
-    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:treasure|artifact(?:\s+token)?|affinity|mud|urza)\s+(?:decks?|strateg(?:y|ies)|players?|based|token)?\b/gi,
+    pattern:
+      /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:treasure|artifact(?:\s+token)?|affinity|mud|urza)\s+(?:decks?|strateg(?:y|ies)|players?|based|token)?\b/gi,
     syntax:
       '(otag:artifact-removal or o:"activated abilities of artifacts" or o:"artifacts your opponents control" or o:"noncreature artifacts" or o:"can\'t cast artifact")',
     description:
@@ -83,74 +92,82 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   },
   {
     // graveyard / reanimator / dredge strategies → graveyard hate
-    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:graveyard|reanimator|reanimation|dredge|mill|self[- ]?mill)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    pattern:
+      /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:graveyard|reanimator|reanimation|dredge|self[- ]?mill)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
     syntax:
-      '(otag:graveyard-hate or o:"exile" o:"graveyard" or o:"cards in graveyards" or o:"can\'t be cast from")',
+      '(otag:graveyard-hate or (o:"exile" o:"graveyard" -o:"your graveyard" -o:"from your graveyard") or o:"cards in graveyards" or o:"can\'t be cast from")',
     description: 'Anti-graveyard / anti-reanimator hate',
   },
   {
     // storm / spellslinger strategies → limit spell casting
-    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:storm|spellslinger|spells?|instants?\s+and\s+sorceries?|combo)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    pattern:
+      /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:storm|spellslinger|spells?|instants?\s+and\s+sorceries?|combo)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
     syntax:
       '(o:"can\'t cast more than" or o:"whenever" o:"opponent" o:"casts" or otag:hatebear or o:"spells cost" o:"more")',
     description: 'Anti-storm / anti-spellslinger / anti-combo hate',
   },
   {
     // token strategies → destroy tokens / prevent token creation
-    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?tokens?\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    pattern:
+      /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?tokens?\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
     syntax:
-      '(o:"destroy all tokens" or o:"exile all tokens" or o:"can\'t create" or o:"tokens can\'t")',
+      '(o:"destroy all tokens" or o:"exile all tokens" or o:"tokens can\'t")',
     description: 'Anti-token hate',
   },
   {
     // lifegain strategies → prevent life gain
-    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:life\s?gain|life)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    pattern:
+      /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:life\s?gain|life)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
     syntax: '(o:"can\'t gain life" or o:"lose life" o:"instead of gaining")',
     description: 'Anti-lifegain hate',
   },
   {
     // ramp / land strategies → prevent extra lands & tutoring
-    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:ramp|land[- ]?ramp|lands|mana)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    pattern:
+      /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:ramp|land[- ]?ramp|lands|mana)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
     syntax:
       '(o:"can\'t search" or o:"can\'t play additional lands" or o:"skip" o:"land" or otag:hatebear)',
     description: 'Anti-ramp / anti-land hate',
   },
   {
     // tutor strategies → tax or prevent library searches
-    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?tutors?\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    pattern:
+      /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:tutors?|search)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
     syntax:
       '(o:"can\'t search" or o:"search your library" o:"pay" or o:"whenever" o:"search")',
     description: 'Anti-tutor hate',
   },
   {
     // draw / wheel strategies → punish opponent draw
-    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:draw|card[- ]?draw|wheel|blue)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    pattern:
+      /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:draw|card[- ]?draw|wheel|blue)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
     syntax:
       '(o:"whenever" o:"opponent" o:"draws" or o:"skip" o:"draw" or o:"can\'t draw more than" or otag:hatebear)',
     description: 'Anti-draw / anti-wheel hate',
   },
   {
     // creature / aggro strategies → sweepers & pillow fort
-    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:aggro|creature|go[- ]?wide|weenie|swarm)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    pattern:
+      /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:aggro|creature|go[- ]?wide|weenie|swarm)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
     syntax: '(otag:boardwipe or otag:pillowfort or o:"can\'t attack")',
     description: 'Anti-aggro / anti-creature hate',
   },
   {
     // enchantment strategies
-    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?enchantments?\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    pattern:
+      /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?enchantments?\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
     syntax:
       '(otag:enchantment-removal or o:"destroy all enchantments" or o:"can\'t cast enchantment")',
     description: 'Anti-enchantment hate',
   },
   {
     // counterspell / control strategies → uncounterable & pressure
-    pattern: /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:control|counterspell|counter\s?magic|permission)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
+    pattern:
+      /\b(?:cards?\s+(?:that\s+)?)?(?:punish(?:es|ing)?|hate|hates|hose[sd]?|hosers?|stop|stops|shut(?:s|ting)?\s+down|beat[s]?|counter[s]?|anti[- ]?)\s+(?:the\s+)?(?:control|counterspell|counter\s?magic|permission)\s+(?:decks?|strateg(?:y|ies)|players?)?\b/gi,
     syntax:
       '(o:"can\'t be countered" or o:"whenever" o:"opponent" o:"counters" or otag:hatebear)',
     description: 'Anti-control / anti-counterspell hate',
   },
-
-
 
   // EDHREC rank ordering — high rank = most popular = desc
   {
@@ -423,7 +440,8 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   // Strategy archetypes
   {
     pattern: /\bvoltron\b/gi,
-    syntax: '(t:equipment or t:aura or o:"equipped creature" or o:"enchanted creature")',
+    syntax:
+      '(t:equipment or t:aura or o:"equipped creature" or o:"enchanted creature")',
     description: 'Equipment/aura strategy',
   },
   {
@@ -443,7 +461,8 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   },
   {
     pattern: /\bstax\s+(?:piece|card)?s?\b/gi,
-    syntax: '(o:"can\'t" o:"unless" or o:"additional" o:"cost" or o:"must" o:"attack")',
+    syntax:
+      '(o:"can\'t" o:"unless" or o:"additional" o:"cost" or o:"must" o:"attack")',
     description: 'Stax/tax prison effects',
   },
   {
@@ -487,7 +506,8 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   },
   {
     pattern: /\bcombo\s+(?:piece|enabler|card)?s?\b/gi,
-    syntax: '(o:"untap" o:"creature" or o:"infinite" or o:"mana" o:"add" or kw:storm)',
+    syntax:
+      '(o:"untap" o:"creature" or o:"infinite" or o:"mana" o:"add" or kw:storm)',
     description: 'Combo enabling cards',
   },
   {
@@ -535,17 +555,21 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   // These prevent the AI from generating the impossible t:artifact t:instant combination.
   // "white artifact instants that destroy" → white instants that destroy artifacts
   {
-    pattern: /\b(white|mono[\s-]white)\s+artifact\s+instants?\s+that\s+(destroy|remove|exile)\b/gi,
+    pattern:
+      /\b(white|mono[\s-]white)\s+artifact\s+instants?\s+that\s+(destroy|remove|exile)\b/gi,
     syntax: 'c:w t:instant otag:artifact-removal',
-    description: 'White instant spells that destroy artifacts (not t:artifact t:instant which is impossible)',
+    description:
+      'White instant spells that destroy artifacts (not t:artifact t:instant which is impossible)',
   },
   {
-    pattern: /\b(white|mono[\s-]white)\s+artifact\s+sorceries?\s+that\s+(destroy|remove|exile)\b/gi,
+    pattern:
+      /\b(white|mono[\s-]white)\s+artifact\s+sorceries?\s+that\s+(destroy|remove|exile)\b/gi,
     syntax: 'c:w t:sorcery otag:artifact-removal',
     description: 'White sorcery spells that destroy artifacts',
   },
   {
-    pattern: /\b(white|mono[\s-]white)\s+artifact\s+(instants?\s+or\s+sorceries?|sorceries?\s+or\s+instants?)\s+that\s+(destroy|remove|exile)\b/gi,
+    pattern:
+      /\b(white|mono[\s-]white)\s+artifact\s+(instants?\s+or\s+sorceries?|sorceries?\s+or\s+instants?)\s+that\s+(destroy|remove|exile)\b/gi,
     syntax: 'c:w (t:instant or t:sorcery) otag:artifact-removal',
     description: 'White instants or sorceries that destroy artifacts',
   },
@@ -553,7 +577,8 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   {
     pattern: /\benchantment\s+instants?\s+that\s+(destroy|remove|exile)\b/gi,
     syntax: 't:instant otag:enchantment-removal',
-    description: 'Instants that destroy enchantments (not t:enchantment t:instant which is impossible)',
+    description:
+      'Instants that destroy enchantments (not t:enchantment t:instant which is impossible)',
   },
   {
     pattern: /\bplaneswalker\s+hate\b/gi,
@@ -562,7 +587,8 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   },
   {
     pattern: /\bblood\s+artists?\b/gi,
-    syntax: 'o:"whenever" (o:"dies" or o:"creature" o:"dies") o:"loses" o:"life"',
+    syntax:
+      'o:"whenever" (o:"dies" or o:"creature" o:"dies") o:"loses" o:"life"',
     description: 'Drain on death effects (like Blood Artist)',
   },
   // aristocrats — handled by TAG_FIRST_MAP (with fallback)
@@ -646,12 +672,14 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   // "X cost [type]" — e.g. "X cost sorcery", "X mana sorcery"
   // Must come before type/numeric parsing intercepts "X" as a number
   {
-    pattern: /\bx[\s-](?:mana[\s-])?cost\s+(sorcery|instant|creature|spell)s?\b/gi,
+    pattern:
+      /\bx[\s-](?:mana[\s-])?cost\s+(sorcery|instant|creature|spell)s?\b/gi,
     syntax: 'mana:X',
     description: 'Spells with X in their mana cost (X cost sorcery, etc.)',
   },
   {
-    pattern: /\b(sorcery|instant|creature|spell)s?\s+with\s+x\s+(?:in\s+(?:their|its)\s+)?(?:mana\s+)?cost\b/gi,
+    pattern:
+      /\b(sorcery|instant|creature|spell)s?\s+with\s+x\s+(?:in\s+(?:their|its)\s+)?(?:mana\s+)?cost\b/gi,
     syntax: 'mana:X',
     description: 'Spells with X in their mana cost',
   },
@@ -676,14 +704,17 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   },
   {
     pattern: /\btoken\s+doublers?\b/gi,
-    syntax: 'o:"if" (o:"create" or o:"token") o:"twice" (t:enchantment or t:creature or t:artifact)',
+    syntax:
+      'o:"if" (o:"create" or o:"token") o:"twice" (t:enchantment or t:creature or t:artifact)',
     description: 'Cards that double token creation',
   },
   // card draw — handled by TAG_FIRST_MAP (otag:card-draw → otag:draw with fallback)
   // Enchantments that draw cards each turn / repeatedly
   {
-    pattern: /\benchantments?\s+that\s+draw\s+(?:cards?\s+)?(?:each\s+turn|every\s+turn|repeatedly|per\s+turn)\b/gi,
-    syntax: 't:enchantment (o:"draw" (o:"beginning of" or o:"upkeep" or o:"each turn" or o:"your draw step" or o:"whenever"))',
+    pattern:
+      /\benchantments?\s+that\s+draw\s+(?:cards?\s+)?(?:each\s+turn|every\s+turn|repeatedly|per\s+turn)\b/gi,
+    syntax:
+      't:enchantment (o:"draw" (o:"beginning of" or o:"upkeep" or o:"each turn" or o:"your draw step" or o:"whenever"))',
     description: 'Enchantments with repeatable card draw',
   },
   {
@@ -746,12 +777,14 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   // Tribal payoffs (Level 7 guide)
   {
     pattern: /\btribal\s+payoffs?\b/gi,
-    syntax: '(otag:lord or o:"you control" o:"+1/+1" or o:"creatures you control")',
+    syntax:
+      '(otag:lord or o:"you control" o:"+1/+1" or o:"creatures you control")',
     description: 'Tribal synergy payoff cards',
   },
   {
     pattern: /\btribal\s+synerg(?:y|ies)\b/gi,
-    syntax: '(otag:lord or o:"you control" o:"+1/+1" or o:"creatures you control")',
+    syntax:
+      '(otag:lord or o:"you control" o:"+1/+1" or o:"creatures you control")',
     description: 'Tribal synergy cards',
   },
 
@@ -799,7 +832,8 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   },
   {
     pattern: /\baristocrats?\s+payoffs?\b/gi,
-    syntax: 'o:"whenever" (o:"dies" or o:"sacrificed") (o:"life" or o:"damage" or o:"draw")',
+    syntax:
+      'o:"whenever" (o:"dies" or o:"sacrificed") (o:"life" or o:"damage" or o:"draw")',
     description: 'Aristocrats payoff cards',
   },
 
@@ -815,7 +849,8 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
 
   // Counter synergy
   {
-    pattern: /\b(?:\+1\/\+1|plus one)\s+counter\s+(?:synerg(?:y|ies)|payoffs?|cards?)\b/gi,
+    pattern:
+      /\b(?:\+1\/\+1|plus one)\s+counter\s+(?:synerg(?:y|ies)|payoffs?|cards?)\b/gi,
     syntax: 'o:"+1/+1 counter" (o:"whenever" or o:"each" or o:"additional")',
     description: '+1/+1 counter synergy',
   },
@@ -944,7 +979,8 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   // Catchup / catch-up ramp
   {
     pattern: /\bcatch[-\s]?up\s+ramp\b|\bcatchup\s+ramp\b/gi,
-    syntax: '(o:"fewer lands" or o:"controls more" or o:"each opponent who controls more")',
+    syntax:
+      '(o:"fewer lands" or o:"controls more" or o:"each opponent who controls more")',
     description: 'Ramp that triggers when behind on lands',
   },
 
@@ -984,7 +1020,8 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Universes Beyond cards',
   },
   {
-    pattern: /\b(?:board\s*wipes?|wraths?|sweepers?)\s+(?:that\s+)?(?:(?:also|and)\s+)?(?:create|make|generate|produce)s?\s+tokens?\b/gi,
+    pattern:
+      /\b(?:board\s*wipes?|wraths?|sweepers?)\s+(?:that\s+)?(?:(?:also|and)\s+)?(?:create|make|generate|produce)s?\s+tokens?\b/gi,
     syntax: 'otag:boardwipe o:"create" o:"token"',
     description: 'Board wipes that also create tokens',
   },
@@ -994,7 +1031,8 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Board wipes that create tokens',
   },
   {
-    pattern: /\b(?:board\s*wipes?|wraths?|sweepers?)\s+(?:with|and)\s+tokens?\b/gi,
+    pattern:
+      /\b(?:board\s*wipes?|wraths?|sweepers?)\s+(?:with|and)\s+tokens?\b/gi,
     syntax: 'otag:boardwipe o:"create" o:"token"',
     description: 'Board wipes with token creation',
   },
@@ -1016,57 +1054,73 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
   // GRANT the keyword to others, not cards that HAVE the keyword.
   // Prefer Scryfall's *-granter otags where they exist, with oracle-text fallback.
   {
-    pattern: /\b(?:permanents?|creatures?|things?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+indestructible\b/gi,
-    syntax: '(otag:indestructibility-granter or o:"gain indestructible" or o:"gains indestructible" or o:"have indestructible")',
+    pattern:
+      /\b(?:permanents?|creatures?|things?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+indestructible\b/gi,
+    syntax:
+      '(otag:indestructibility-granter or o:"gain indestructible" or o:"gains indestructible" or o:"have indestructible")',
     description: 'Cards that grant indestructible to permanents',
   },
   {
     pattern: /\b(?:grant(?:s|ing)?|give(?:s|n)?)\s+indestructible\b/gi,
-    syntax: '(otag:indestructibility-granter or o:"gain indestructible" or o:"gains indestructible")',
+    syntax:
+      '(otag:indestructibility-granter or o:"gain indestructible" or o:"gains indestructible")',
     description: 'Cards that grant indestructible',
   },
   {
-    pattern: /\b(?:permanents?|creatures?|things?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+hexproof\b/gi,
-    syntax: '(otag:hexproof-granter or o:"gain hexproof" or o:"gains hexproof" or o:"have hexproof")',
+    pattern:
+      /\b(?:permanents?|creatures?|things?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+hexproof\b/gi,
+    syntax:
+      '(otag:hexproof-granter or o:"gain hexproof" or o:"gains hexproof" or o:"have hexproof")',
     description: 'Cards that grant hexproof to permanents',
   },
   {
     pattern: /\b(?:grant(?:s|ing)?|give(?:s|n)?)\s+hexproof\b/gi,
-    syntax: '(otag:hexproof-granter or o:"gain hexproof" or o:"gains hexproof")',
+    syntax:
+      '(otag:hexproof-granter or o:"gain hexproof" or o:"gains hexproof")',
     description: 'Cards that grant hexproof',
   },
   {
-    pattern: /\b(?:permanents?|creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+shroud\b/gi,
+    pattern:
+      /\b(?:permanents?|creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+shroud\b/gi,
     syntax: '(o:"gain shroud" or o:"gains shroud" or o:"have shroud")',
     description: 'Cards that grant shroud',
   },
   {
-    pattern: /\b(?:permanents?|creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+ward\b/gi,
+    pattern:
+      /\b(?:permanents?|creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+ward\b/gi,
     syntax: '(o:"gain ward" or o:"gains ward" or o:"have ward")',
     description: 'Cards that grant ward',
   },
   {
-    pattern: /\b(?:creatures?|things?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+(?:flying|evasion)\b/gi,
-    syntax: '(otag:evasion-granter or otag:flying-granter or o:"gain flying" or o:"gains flying" or o:"have flying")',
+    pattern:
+      /\b(?:creatures?|things?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+(?:flying|evasion)\b/gi,
+    syntax:
+      '(otag:evasion-granter or otag:flying-granter or o:"gain flying" or o:"gains flying" or o:"have flying")',
     description: 'Cards that grant flying/evasion',
   },
   {
     pattern: /\b(?:grant(?:s|ing)?|give(?:s|n)?)\s+(?:flying|evasion)\b/gi,
-    syntax: '(otag:evasion-granter or otag:flying-granter or o:"gain flying" or o:"gains flying")',
+    syntax:
+      '(otag:evasion-granter or otag:flying-granter or o:"gain flying" or o:"gains flying")',
     description: 'Cards that grant flying/evasion',
   },
   {
-    pattern: /\b(?:creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+trample\b/gi,
-    syntax: '(otag:trample-granter or o:"gain trample" or o:"gains trample" or o:"have trample")',
+    pattern:
+      /\b(?:creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+trample\b/gi,
+    syntax:
+      '(otag:trample-granter or o:"gain trample" or o:"gains trample" or o:"have trample")',
     description: 'Cards that grant trample',
   },
   {
-    pattern: /\b(?:creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+haste\b/gi,
-    syntax: '(otag:haste-granter or o:"gain haste" or o:"gains haste" or o:"have haste")',
+    pattern:
+      /\b(?:creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+haste\b/gi,
+    syntax:
+      '(otag:haste-granter or o:"gain haste" or o:"gains haste" or o:"have haste")',
     description: 'Cards that grant haste',
   },
   {
-    pattern: /\b(?:creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+(?:menace|lifelink|vigilance|first strike|double strike|deathtouch|reach)\b/gi,
+    pattern:
+      /\b(?:creatures?)\s+(?:that\s+)?(?:gain|get|grant|have)\s+(?:menace|lifelink|vigilance|first strike|double strike|deathtouch|reach)\b/gi,
     syntax: '(o:"gain" or o:"gains" or o:"have")',
     description: 'Cards that grant a keyword ability',
   },
@@ -1104,4 +1158,3 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Leviathan creature type',
   },
 ];
-
