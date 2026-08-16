@@ -153,6 +153,12 @@ function hexToBytes(hex: string): Uint8Array {
   return bytes;
 }
 
+/** Deno DOM lib expects BufferSource; bridge the Uint8Array generic mismatch. */
+function asBufferSource(bytes: Uint8Array): BufferSource {
+  return bytes as unknown as BufferSource;
+}
+
+
 /** Verify Discord's Ed25519 request signature. Fails closed. */
 export async function verifyDiscordSignature(
   rawBody: string,
@@ -166,7 +172,7 @@ export async function verifyDiscordSignature(
   try {
     const key = await crypto.subtle.importKey(
       'raw',
-      hexToBytes(publicKeyHex),
+      asBufferSource(hexToBytes(publicKeyHex)),
       { name: 'Ed25519' },
       false,
       ['verify'],
@@ -174,7 +180,7 @@ export async function verifyDiscordSignature(
     return await crypto.subtle.verify(
       { name: 'Ed25519' },
       key,
-      hexToBytes(signature),
+      asBufferSource(hexToBytes(signature)),
       new TextEncoder().encode(timestamp + rawBody),
     );
   } catch {
@@ -726,6 +732,13 @@ export function buildUnknownCommandEmbed(attempted?: string) {
       '`/offmeta help` — list every command and what it does',
       '`/offmeta privacy` — what data OffMeta stores and how to delete it',
       '',
+      '**Try `/offmeta search` with:**',
+      '• `cards like Rhystic Study`',
+      '• `cheap red treasure cards`',
+      '• `commander legal tutors under $10`',
+      '• `mono black sacrifice outlets`',
+      '• `budget board wipes in green`',
+      '',
       'If an old command still shows up in your client, give Discord a few minutes to refresh.',
     ].join('\n'),
     footer: { text: 'offmeta.app · admin@offmeta.app' },
@@ -1233,7 +1246,7 @@ export async function runStartupCheck(
       // Import the configured key to prove WebCrypto accepts it verbatim.
       await crypto.subtle.importKey(
         'raw',
-        hexToBytes(trimmed),
+        asBufferSource(hexToBytes(trimmed)),
         { name: 'Ed25519' },
         false,
         ['verify'],

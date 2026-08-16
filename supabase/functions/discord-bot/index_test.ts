@@ -7,6 +7,7 @@ import {
   buildTrackedResultsUrl,
   cardNameToSlug,
   buildEmbed,
+  buildUnknownCommandEmbed,
   condenseOracle,
   handleClickRedirect,
   signClick,
@@ -21,12 +22,12 @@ import {
   SLASH_COMMANDS,
 } from './index.ts';
 
-Deno.test('SLASH_COMMANDS registers one command with search/privacy sub-commands', () => {
+Deno.test('SLASH_COMMANDS registers one command with search/help/privacy sub-commands', () => {
   assertEquals(SLASH_COMMANDS.length, 1);
   assertEquals(SLASH_COMMANDS[0].name, 'offmeta');
   assertEquals(
     (SLASH_COMMANDS[0].options ?? []).map((o) => o.name),
-    ['search', 'privacy'],
+    ['search', 'help', 'privacy'],
   );
 });
 
@@ -53,6 +54,15 @@ Deno.test('resolveSubcommand and extractQuery handle sub-command payloads', () =
   assertEquals(extractQuery(legacy), 'ramp');
 
   assertEquals(resolveSubcommand({ type: 2, data: { name: 'other' } }), null);
+});
+
+Deno.test('buildUnknownCommandEmbed lists commands and example searches', () => {
+  const embed = buildUnknownCommandEmbed('old-query');
+  assertStringIncludes(embed.description, '/offmeta search');
+  assertStringIncludes(embed.description, '/offmeta help');
+  assertStringIncludes(embed.description, '/offmeta privacy');
+  assertStringIncludes(embed.description, 'cards like Rhystic Study');
+  assertStringIncludes(embed.description, 'budget board wipes in green');
 });
 
 Deno.test('cardNameToSlug converts card names to canonical OffMeta slugs', () => {
@@ -92,6 +102,7 @@ Deno.test('handleClickRedirect returns JSON for client-side bridge', async () =>
   const actorHash = 'a5eb4b84ae9e402b04349579';
   const guildId = '1396995018337550346';
   const secret = 'test-secret';
+  Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', secret);
   const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
   const signature = await signClick(
     clickPayload(query, actorHash, guildId, expiresAt),
