@@ -187,6 +187,13 @@ export function SearchResultsArea({
     () => intent ?? intentFromScryfallQuery(searchQuery),
     [intent, searchQuery],
   );
+  const whyReportsByCardId = useMemo(() => {
+    const reports = new Map<string, ReturnType<typeof buildWhyItMatches>>();
+    for (const card of rankedCards) {
+      reports.set(card.id, buildWhyItMatches(card, effectiveIntent));
+    }
+    return reports;
+  }, [effectiveIntent, rankedCards]);
   const virtualizedGridKey = useMemo(
     () =>
       `${activeSort ?? 'relevance-desc'}:${rankedCards.length}:${rankedCards
@@ -234,7 +241,7 @@ export function SearchResultsArea({
                     isError={isError || isFetchNextPageError}
                     onRetry={retryNextPage}
                     getWhyReport={(card) =>
-                      buildWhyItMatches(card, effectiveIntent)
+                      whyReportsByCardId.get(card.id) ?? null
                     }
                   />
                 ) : viewMode === 'list' ? (
@@ -265,7 +272,7 @@ export function SearchResultsArea({
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
-                            whyReport={buildWhyItMatches(card, effectiveIntent)}
+                            whyReport={whyReportsByCardId.get(card.id) ?? null}
                           />
                         </div>
                       );
@@ -301,7 +308,7 @@ export function SearchResultsArea({
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
-                            whyReport={buildWhyItMatches(card, effectiveIntent)}
+                            whyReport={whyReportsByCardId.get(card.id) ?? null}
                           />
                         </div>
                       );
