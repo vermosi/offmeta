@@ -153,6 +153,12 @@ function hexToBytes(hex: string): Uint8Array {
   return bytes;
 }
 
+/** Deno DOM lib expects BufferSource; bridge the Uint8Array generic mismatch. */
+function asBufferSource(bytes: Uint8Array): BufferSource {
+  return bytes as unknown as BufferSource;
+}
+
+
 /** Verify Discord's Ed25519 request signature. Fails closed. */
 export async function verifyDiscordSignature(
   rawBody: string,
