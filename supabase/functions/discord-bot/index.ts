@@ -183,7 +183,7 @@ export async function verifyDiscordSignature(
 }
 
 /** Sub-command names under the single `/offmeta` command. */
-export type OffmetaSubcommand = 'search' | 'privacy' | null;
+export type OffmetaSubcommand = 'search' | 'privacy' | 'help' | null;
 
 /**
  * Resolve which action an interaction asks for. Everything lives under one
@@ -195,6 +195,7 @@ export function resolveSubcommand(interaction: DiscordInteraction): OffmetaSubco
   const sub = interaction.data?.options?.find((opt) => opt.type === 1);
   if (!sub) return 'search';
   if (sub.name === 'privacy') return 'privacy';
+  if (sub.name === 'help') return 'help';
   if (sub.name === 'search') return 'search';
   return null;
 }
@@ -672,6 +673,36 @@ export function buildPrivacyEmbed() {
       'To have your data deleted, email admin@offmeta.app or ask in the OffMeta Discord server.',
     ].join('\n'),
     footer: { text: 'offmeta.app/privacy' },
+  };
+}
+
+/**
+ * Ephemeral command reference for `/offmeta help`.
+ */
+export function buildHelpEmbed() {
+  return {
+    title: 'OffMeta — commands',
+    url: SITE_URL,
+    color: 0x1c1b22,
+    description: 'Search Magic cards by describing what you need, in plain English.',
+    fields: [
+      {
+        name: '/offmeta search <query>',
+        value: [
+          'Find cards from a plain-English description. Results are ordered by EDHREC popularity, with Next/Prev buttons to page through them.',
+          'Examples: `cheap red treasure cards`, `cards like Rhystic Study`, `mono black sacrifice outlets`.',
+        ].join('\n'),
+      },
+      {
+        name: '/offmeta help',
+        value: 'Show this list of commands.',
+      },
+      {
+        name: '/offmeta privacy',
+        value: 'What data OffMeta stores, how long it is kept, and how to have it deleted.',
+      },
+    ],
+    footer: { text: 'offmeta.app · admin@offmeta.app' },
   };
 }
 
@@ -1289,6 +1320,11 @@ export const SLASH_COMMANDS = [
         ],
       },
       {
+        name: 'help',
+        description: 'List every OffMeta command and what it does',
+        type: 1,
+      },
+      {
         name: 'privacy',
         description: 'What data OffMeta stores, and how to have it deleted',
         type: 1,
@@ -1501,6 +1537,13 @@ export async function handleDiscordRequest(req: Request): Promise<Response> {
         interaction.data?.name === 'offmeta-privacy'
           ? 'privacy'
           : resolveSubcommand(interaction);
+
+      if (subcommand === 'help') {
+        return Response.json({
+          type: InteractionResponseType.CHANNEL_MESSAGE,
+          data: { flags: EPHEMERAL, embeds: [buildHelpEmbed()] },
+        });
+      }
 
       if (subcommand === 'privacy') {
         return Response.json({
