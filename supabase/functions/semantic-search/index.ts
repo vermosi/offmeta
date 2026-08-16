@@ -1322,5 +1322,16 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         { status: 500, headers: jsonHeaders },
       );
     }
-  }),
-);
+});
+
+/**
+ * Single enforcement point for Tagger validity: whatever stage produced the
+ * query, unsupported otag/atag values are repaired before the client sees it.
+ */
+serve(async (req: Request) => {
+  const response = await searchHandler(req);
+  const { logWarn } = createLogger(
+    req.headers.get('x-request-id') ?? 'tag-guard',
+  );
+  return await enforceSupportedTags(response, logWarn);
+});
