@@ -942,7 +942,7 @@ async function runSearch(
   }
 
   if (!scryfallQuery) {
-    let translated: { scryfallQuery?: string } = {};
+    let translated: { scryfallQuery?: string };
     try {
       const translateResponse = await fetch(
         `${supabaseUrl}/functions/v1/semantic-search`,
