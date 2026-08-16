@@ -172,7 +172,7 @@ export async function verifyDiscordSignature(
   try {
     const key = await crypto.subtle.importKey(
       'raw',
-      hexToBytes(publicKeyHex),
+      asBufferSource(hexToBytes(publicKeyHex)),
       { name: 'Ed25519' },
       false,
       ['verify'],
@@ -180,7 +180,7 @@ export async function verifyDiscordSignature(
     return await crypto.subtle.verify(
       { name: 'Ed25519' },
       key,
-      hexToBytes(signature),
+      asBufferSource(hexToBytes(signature)),
       new TextEncoder().encode(timestamp + rawBody),
     );
   } catch {
