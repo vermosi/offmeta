@@ -12,11 +12,11 @@ Deno.test('rewrites oracle-text art terms into atag queries', () => {
 
 Deno.test('rewrites art: term into atag: when it is a known art tag', () => {
   const candidates = buildAiRepairCandidates(
-    'cards with tacos in them',
-    'art:taco',
+    'cards with pizza in them',
+    'art:pizza',
   );
   assertEquals(
-    candidates.some((c) => c.query === 'atag:taco'),
+    candidates.some((c) => c.query === 'atag:pizza'),
     true,
   );
 });
