@@ -250,9 +250,38 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       REQUEST_BUDGET_MS,
     );
 
+    /**
+     * Fallback answers never reached translation_logs, so `fallback_used` was
+     * always false in analytics and degraded traffic was invisible. Log them
+     * with the same shape as successful translations.
+     */
+    const logFallbackTranslation = (
+      source: string,
+      translatedQuery: string,
+      responseTimeMs: number,
+      confidence: number,
+      validationIssues: string[] = [],
+    ): void => {
+      logTranslation(
+        query,
+        translatedQuery,
+        confidence,
+        responseTimeMs,
+        validationIssues,
+        ['fallback'],
+        filters,
+        true,
+        source,
+        null,
+        undefined,
+        requestId,
+      );
+      flushLogQueue();
+    };
+
     const createBudgetExceededResponse = (): Response => {
       const fallback = buildFallbackQuery(query, filters);
-      return new Response(
+      const budgetResponse = new Response(
         JSON.stringify({
           originalQuery: query,
           scryfallQuery: fallback.sanitized,
@@ -267,6 +296,13 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         }),
         { headers: jsonHeaders },
       );
+      logFallbackTranslation(
+        'budget_fallback',
+        fallback.sanitized,
+        Date.now() - requestStartTime,
+        0.5,
+      );
+      return budgetResponse;
     };
 
     // Type-safe debug options
