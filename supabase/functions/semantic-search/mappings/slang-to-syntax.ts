@@ -277,15 +277,20 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Instant-speed combat modifiers',
   },
 
-  // Finishers/Win conditions (NOT otag:finisher)
+  // Finishers/Win conditions
   {
     pattern: /\bfinishers?\b/gi,
-    syntax: 'otag:win-condition',
+    syntax: '(otag:finisher or otag:win-condition)',
     description: 'Game-ending threats',
   },
   {
+    pattern: /\bwin\s*cons?(?:ditions?)?\b/gi,
+    syntax: '(otag:finisher or otag:win-condition)',
+    description: 'Win conditions',
+  },
+  {
     pattern: /\bgame\s+enders?\b/gi,
-    syntax: 'otag:win-condition',
+    syntax: '(otag:finisher or otag:win-condition)',
     description: 'Game-ending cards',
   },
   {
