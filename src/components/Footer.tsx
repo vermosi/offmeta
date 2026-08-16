@@ -35,6 +35,10 @@ const DATA_SOURCES = [
   { name: 'TopDeck.gg', href: 'https://topdeck.gg' },
 ] as const;
 
+const PARTNERS = [
+  { name: 'Lifelink MTG', href: 'https://lifelinkmtg.app' },
+] as const;
+
 const LINK_CLASS = NAV_LINK_CLASS;
 
 const SOCIAL_LINK_CLASS = NAV_LINK_WITH_ICON_CLASS;
