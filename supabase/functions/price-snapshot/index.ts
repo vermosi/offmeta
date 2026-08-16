@@ -109,7 +109,18 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
       );
     }
 
-    const snapshots: Snapshot[] = [];
+    let inserted = 0;
+
+    /** Persists a batch immediately so partial progress survives a timeout. */
+    const persist = async (rows: Snapshot[]): Promise<void> => {
+      if (rows.length === 0) return;
+      const { error: insertErr } = await supabase.from('price_snapshots').insert(rows);
+      if (insertErr) {
+        log.error('Failed to insert snapshot batch', insertErr);
+        return;
+      }
+      inserted += rows.length;
+    };
 
     /** Fetches prices for one batch of card names. */
     const collectPrices = async (
@@ -134,8 +145,9 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
           return 'rejected';
         }
         const data = await resp.json();
+        const rows: Snapshot[] = [];
         for (const card of data.data ?? []) {
-          snapshots.push({
+          rows.push({
             card_name: card.name,
             scryfall_id: card.id,
             source: 'scryfall',
@@ -143,6 +155,7 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
             price_usd_foil: card.prices?.usd_foil ? parseFloat(card.prices.usd_foil) : null,
           });
         }
+        await persist(rows);
         return 'ok';
       } catch (e) {
         log.warn('Scryfall batch failed', { batch: label, error: String(e) });
@@ -162,17 +175,6 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
       }
     }
 
-    // ── Insert snapshots ────────────────────────────────────────────
-    let inserted = 0;
-    for (let i = 0; i < snapshots.length; i += 500) {
-      const chunk = snapshots.slice(i, i + 500);
-      const { error: insertErr } = await supabase.from('price_snapshots').insert(chunk);
-      if (insertErr) {
-        log.error(`Failed to insert snapshot chunk ${i}`, insertErr);
-        throw insertErr;
-      }
-      inserted += chunk.length;
-    }
 
     // ── Cleanup old snapshots (>90 days), first chunk only ──────────
     if (offset === 0) {
