@@ -50,11 +50,17 @@ export function singularizeSubtype(word: string): string {
  */
 export function resolveSubtypeSlug(word: string): string | null {
   const lower = word.toLowerCase();
-  if (SUBTYPE_STOPWORDS.has(lower)) return null;
-  const singular = singularizeSubtype(lower);
-  if (SUBTYPE_STOPWORDS.has(singular)) return null;
-  if (SCRYFALL_SUBTYPE_SLUGS.has(lower)) return lower;
-  if (SCRYFALL_SUBTYPE_SLUGS.has(singular)) return singular;
+  // "heroes" singularizes to "heroe" under the naive rule, so also try the
+  // "-es" plural form before giving up.
+  const candidates = [lower, singularizeSubtype(lower)];
+  if (/es$/i.test(lower) && lower.length > 3) candidates.push(lower.slice(0, -2));
+
+  for (const candidate of candidates) {
+    if (SUBTYPE_STOPWORDS.has(candidate)) return null;
+  }
+  for (const candidate of candidates) {
+    if (SCRYFALL_SUBTYPE_SLUGS.has(candidate)) return candidate;
+  }
   return null;
 }
 
