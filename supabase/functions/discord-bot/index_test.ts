@@ -7,6 +7,7 @@ import {
   buildTrackedResultsUrl,
   cardNameToSlug,
   buildEmbed,
+  buildUnknownCommandEmbed,
   condenseOracle,
   handleClickRedirect,
   signClick,
