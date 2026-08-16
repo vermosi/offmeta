@@ -319,8 +319,8 @@ Subjective adjectives such as hidden, hidden gem, underrated, underplayed,
 overlooked, obscure, sleeper, off-meta, niche or spicy are NOT printed on cards.
 Drop them entirely. Never emit o:"hidden" or similar literal text searches for them.
 
-Finishers / win cons / game enders -> (otag:finisher or otag:win-condition)
-- "hidden finishers under 5" -> usd<5 (otag:finisher or otag:win-condition)
+Finishers / win cons / game enders -> otag:win-condition (otag:finisher does NOT exist)
+- "hidden finishers under 5" -> usd<5 otag:win-condition
 
 ==================================================
 14. DATE / YEAR
