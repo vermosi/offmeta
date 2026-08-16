@@ -191,7 +191,7 @@ export function SearchResultsArea({
     query: originalQuery,
     resultCount: rankedCards.length,
     containerRef: resultsRef,
-    enabled: activeTab === 'cards' && !isLoading,
+    enabled: activeTab === 'cards' && !isSearching,
   });
 
   return (
