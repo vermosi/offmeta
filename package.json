@@ -125,6 +125,6 @@
     }
   },
   "resolutions": {
-    "@uppy/core/nanoid": "^6.0.1"
+    "@uppy/core/nanoid": "6.0.1"
   }
 }
