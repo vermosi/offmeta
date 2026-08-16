@@ -14,7 +14,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { callAdminRpc } from '@/integrations/supabase/adminRpc';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CronJob {
   jobid: number;
@@ -107,9 +107,15 @@ export function SystemStatusPanel() {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: rpcError } = await callAdminRpc('get_system_status');
+      const { data: raw, error: rpcError } = await supabase.functions.invoke('admin-rpc', {
+        body: { fn: 'get_system_status' },
+      });
       if (rpcError) throw rpcError;
-      if (data) setStatus(data as SystemStatus);
+      const data =
+        raw && typeof raw === 'object' && 'data' in (raw as Record<string, unknown>)
+          ? (raw as { data: SystemStatus }).data
+          : (raw as SystemStatus | null);
+      if (data) setStatus(data);
       else throw new Error('No status payload returned');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load status');
