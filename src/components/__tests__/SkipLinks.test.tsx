@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { SkipLinks } from '../SkipLinks';
 
 vi.mock('@/lib/i18n/useTranslation', () => ({
@@ -32,5 +32,17 @@ describe('SkipLinks', () => {
     render(<SkipLinks showSearchLink />);
     const link = screen.getByText('a11y.skipToSearch');
     expect(link.getAttribute('href')).toBe('#search-input');
+  });
+
+  it('focuses search input when skip to search is activated', async () => {
+    render(
+      <>
+        <SkipLinks showSearchLink />
+        <input id="search-input" />
+      </>,
+    );
+
+    fireEvent.click(screen.getByText('a11y.skipToSearch'));
+    expect(screen.getByRole('textbox')).toHaveFocus();
   });
 });

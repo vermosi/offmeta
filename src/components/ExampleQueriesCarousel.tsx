@@ -9,11 +9,19 @@
  *  - Chips: standard Tab navigation; Enter/Space activates via native <button>.
  *    Chip scrolled into view on focus so keyboard users see the focus ring.
  */
-import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react';
 import { MessageSquare, Sparkles, LayoutGrid, ArrowRight } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { cn } from '@/lib/core/utils';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { usePrefersReducedMotion } from '@/hooks';
 
 interface ExampleQueriesCarouselProps {
   onTrySearch: (query: string) => void;
@@ -25,7 +33,9 @@ export function ExampleQueriesCarousel({
   onTrySearch,
 }: ExampleQueriesCarouselProps) {
   const { t } = useTranslation();
-  const { trackExampleQueryImpression, trackExampleQueryClick } = useAnalytics();
+  const { trackExampleQueryImpression, trackExampleQueryClick } =
+    useAnalytics();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [activeStep, setActiveStep] = useState<StepKey>('ask');
 
   const tabRefs = useRef<Record<StepKey, HTMLButtonElement | null>>({
@@ -53,7 +63,10 @@ export function ExampleQueriesCarousel({
       examples: [
         t('examples.ask1', 'budget board wipes under $5'),
         t('examples.ask2', 'budget alternatives to Rhystic Study'),
-        t('examples.ask3', 'creatures that reward opponents attacking each other'),
+        t(
+          'examples.ask3',
+          'creatures that reward opponents attacking each other',
+        ),
         t('examples.ask4', 'mono-white card draw for Commander'),
         t('examples.ask5', 'cards similar to Seedborn Muse'),
       ],
@@ -69,7 +82,10 @@ export function ExampleQueriesCarousel({
       examples: [
         t('examples.translate1', 'hidden finishers under five dollars'),
         t('examples.translate2', 'blue creatures that untap artifacts'),
-        t('examples.translate3', 'graveyard hate that does not exile my own cards'),
+        t(
+          'examples.translate3',
+          'graveyard hate that does not exile my own cards',
+        ),
         t('examples.translate4', 'cards that punish Treasure decks'),
         t('examples.translate5', 'mono-white card draw that is not a staple'),
       ],
@@ -114,7 +130,6 @@ export function ExampleQueriesCarousel({
       visible_count: active.examples.length,
     });
   }, [active.key, active.examples.length, trackExampleQueryImpression]);
-
 
   const focusTab = useCallback((key: StepKey) => {
     setActiveStep(key);
@@ -161,10 +176,7 @@ export function ExampleQueriesCarousel({
             {t('examples.eyebrow', 'Try it now')}
           </span>
           <h2 className="font-display text-xl font-extrabold uppercase tracking-tight text-foreground sm:text-2xl">
-            {t(
-              'examples.heading',
-              'One-click examples for each step',
-            )}
+            {t('examples.heading', 'One-click examples for each step')}
           </h2>
         </div>
 
@@ -208,7 +220,10 @@ export function ExampleQueriesCarousel({
           })}
         </div>
 
-        <p className="mb-3 text-xs text-muted-foreground" id={`${reactId}-hint`}>
+        <p
+          className="mb-3 text-xs text-muted-foreground"
+          id={`${reactId}-hint`}
+        >
           {active.hint}
         </p>
 
@@ -237,14 +252,14 @@ export function ExampleQueriesCarousel({
 
                 onFocus={(e) => {
                   e.currentTarget.scrollIntoView({
-                    behavior: 'smooth',
+                    behavior: prefersReducedMotion ? 'auto' : 'smooth',
                     block: 'nearest',
                     inline: 'nearest',
                   });
                 }}
                 aria-label={`${trySearchLabel} ${example}`}
                 className={cn(
-                  'group flex min-h-9 shrink-0 items-center gap-2 py-2 font-mono text-[11px] lowercase tracking-[0.06em] text-muted-foreground underline decoration-border underline-offset-[6px] transition-colors',
+                  'group flex min-h-11 shrink-0 items-center gap-2 px-2 py-2 font-mono text-[11px] lowercase tracking-[0.06em] text-muted-foreground underline decoration-border underline-offset-[6px] transition-colors',
                   'hover:text-foreground hover:decoration-foreground',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 )}

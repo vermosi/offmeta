@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowUp } from 'lucide-react';
+import { usePrefersReducedMotion } from '@/hooks';
 
 interface ScrollToTopProps {
   threshold?: number;
@@ -8,6 +9,7 @@ interface ScrollToTopProps {
 
 export function ScrollToTop({ threshold = 800 }: ScrollToTopProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -19,7 +21,10 @@ export function ScrollToTop({ threshold = 800 }: ScrollToTopProps) {
   }, [threshold]);
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({
+      top: 0,
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+    });
   };
 
   if (!isVisible) return null;

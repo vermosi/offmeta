@@ -1,4 +1,3 @@
-// supabase import kept for cache CRUD — analytics inserts removed
 import { supabase } from './client.ts';
 
 export interface CacheEntry {
@@ -14,23 +13,20 @@ export interface CacheEntry {
   timestamp: number;
 }
 
-// In-memory cache for fast access within same instance
 const queryCache = new Map<string, CacheEntry>();
-const CACHE_TTL = 30 * 60 * 1000; // 30 minutes for in-memory
+const CACHE_TTL = 30 * 60 * 1000;
 
 export function getCacheKey(
   query: string,
   filters?: Record<string, unknown> | null,
   cacheSalt?: string,
 ): string {
-  // Apply synonym normalization for better cache hit rate
   const normalized = query.toLowerCase().trim().replace(/\s+/g, ' ');
   return `${normalized}|${JSON.stringify(filters || {})}|${cacheSalt || ''}`;
 }
 
-// Fast non-cryptographic hash for hot-path in-memory cache logging.
 function hashMemoryCacheKey(key: string): string {
-  let hash = 2166136261; // FNV-1a 32-bit offset basis
+  let hash = 2166136261;
   for (let i = 0; i < key.length; i++) {
     hash ^= key.charCodeAt(i);
     hash = Math.imul(hash, 16777619);
@@ -39,7 +35,6 @@ function hashMemoryCacheKey(key: string): string {
   return (hash >>> 0).toString(16).padStart(8, '0');
 }
 
-// Cryptographic hash for persistent database cache key (query_hash column).
 async function hashPersistentCacheKey(key: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(key);
@@ -60,7 +55,6 @@ export async function getCachedResult(
   const hash = hashMemoryCacheKey(key);
   const cached = queryCache.get(key);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    // LRU touch: delete + re-insert moves entry to end of Map iteration order
     queryCache.delete(key);
     queryCache.set(key, cached);
     logCacheEvent('memory_cache_hit', query, hash, null);
@@ -69,29 +63,24 @@ export async function getCachedResult(
   return null;
 }
 
-/**
- * Cache event logging — intentionally a no-op.
- *
- * Previously inserted cache_hit / cache_miss / cache_set / memory_cache_hit
- * rows into analytics_events.  Those operational events were flooding the
- * table (hundreds/day) and polluting user-behaviour analytics.
- *
- * Cache performance can be monitored via the hit_count column on query_cache
- * and the existing translation_logs source breakdown instead.
- */
 export function logCacheEvent(
   _eventType: 'cache_hit' | 'cache_miss' | 'cache_set' | 'memory_cache_hit',
   _query: string,
   _hash: string,
   _hitCount: number | null,
 ): void {
-  // no-op — see JSDoc above
+  // no-op
 }
 
-/**
- * Check persistent database cache for a query.
- * Returns cached result if found and not expired.
- */
+async function incrementPersistentHitCount(hash: string): Promise<void> {
+  await supabase.rpc(
+    'increment_query_cache_hit_count' as never,
+    {
+      p_query_hash: hash,
+    } as never,
+  );
+}
+
 export async function getPersistentCache(
   query: string,
   filters?: Record<string, unknown> | null,
@@ -111,27 +100,12 @@ export async function getPersistentCache(
       .single();
 
     if (error || !data) {
-      // Log cache miss for analytics
       logCacheEvent('cache_miss', query, hash, null);
       return null;
     }
 
     const newHitCount = (data.hit_count || 0) + 1;
-
-    // Update hit count in background (fire and forget)
-    (async () => {
-      try {
-        await supabase
-          .from('query_cache')
-          .update({
-            hit_count: newHitCount,
-            last_hit_at: new Date().toISOString(),
-          })
-          .eq('query_hash', hash);
-      } catch {
-        // Ignore errors
-      }
-    })();
+    incrementPersistentHitCount(hash).catch(() => {});
 
     const result = {
       scryfallQuery: data.scryfall_query,
@@ -143,20 +117,15 @@ export async function getPersistentCache(
       showAffiliate: data.show_affiliate,
     };
 
-    // Populate in-memory cache too
     queryCache.set(key, { result, timestamp: Date.now() });
 
     logCacheEvent('cache_hit', query, hash, newHitCount);
     return result;
   } catch {
-    // Cache read errors should not affect the main flow
     return null;
   }
 }
 
-/**
- * Store result in persistent database cache.
- */
 export async function setPersistentCache(
   query: string,
   filters: Record<string, unknown> | null | undefined,
@@ -179,7 +148,7 @@ export async function setPersistentCache(
         confidence: result.explanation.confidence,
         show_affiliate: result.showAffiliate,
         hit_count: 1,
-        expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(), // 48 hours
+        expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
       },
       {
         onConflict: 'query_hash',
@@ -201,19 +170,14 @@ export function setCachedResult(
   const key = getCacheKey(query, filters, cacheSalt);
   queryCache.set(key, { result, timestamp: Date.now() });
 
-  // Limit cache size to prevent memory issues
   if (queryCache.size > 1000) {
     const oldestKey = queryCache.keys().next().value;
     if (oldestKey) queryCache.delete(oldestKey);
   }
 
-  // Store in persistent cache (fire and forget)
   setPersistentCache(query, filters, result, cacheSalt).catch(() => {});
 }
 
-/**
- * Cleanup expired entries on access (serverless-safe alternative to setInterval).
- */
 function cleanupExpiredCacheEntries(): void {
   const now = Date.now();
   for (const [key, entry] of queryCache.entries()) {
@@ -223,14 +187,9 @@ function cleanupExpiredCacheEntries(): void {
   }
 }
 
-// Cleanup counter - run cleanup every N accesses to avoid overhead on every call
 let cacheCleanupCounter = 0;
-const CACHE_CLEANUP_INTERVAL = 50; // Run cleanup every 50 accesses
+const CACHE_CLEANUP_INTERVAL = 50;
 
-/**
- * Trigger cleanup if enough accesses have occurred.
- * This is serverless-safe as it doesn't rely on setInterval.
- */
 export function maybeCacheCleanup(): void {
   cacheCleanupCounter++;
   if (cacheCleanupCounter >= CACHE_CLEANUP_INTERVAL) {

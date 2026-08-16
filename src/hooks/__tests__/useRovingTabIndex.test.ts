@@ -4,27 +4,23 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useRovingTabIndex } from '../useRovingTabIndex';
 
 describe('useRovingTabIndex', () => {
   it('initializes activeIndex to 0', () => {
-    const { result } = renderHook(() =>
-      useRovingTabIndex({ itemCount: 5 }),
-    );
+    const { result } = renderHook(() => useRovingTabIndex({ itemCount: 5 }));
     expect(result.current.activeIndex).toBe(0);
   });
 
   it('getTabIndex returns 0 for active, -1 for others', () => {
-    const { result } = renderHook(() =>
-      useRovingTabIndex({ itemCount: 3 }),
-    );
+    const { result } = renderHook(() => useRovingTabIndex({ itemCount: 3 }));
     expect(result.current.getTabIndex(0)).toBe(0);
     expect(result.current.getTabIndex(1)).toBe(-1);
     expect(result.current.getTabIndex(2)).toBe(-1);
   });
 
-  it('resets activeIndex when itemCount changes', () => {
+  it('resets activeIndex when itemCount changes', async () => {
     const { result, rerender } = renderHook(
       ({ count }) => useRovingTabIndex({ itemCount: count }),
       { initialProps: { count: 5 } },
@@ -32,31 +28,33 @@ describe('useRovingTabIndex', () => {
 
     // Simulate focus change via onFocus
     const props = result.current.getRovingProps(3);
-    act(() => { props.onFocus(); });
+    act(() => {
+      props.onFocus();
+    });
     expect(result.current.activeIndex).toBe(3);
 
     // Change item count
     rerender({ count: 10 });
-    expect(result.current.activeIndex).toBe(0);
+    await waitFor(() => expect(result.current.activeIndex).toBe(0));
   });
 
   it('resetIndex sets index to 0', () => {
-    const { result } = renderHook(() =>
-      useRovingTabIndex({ itemCount: 5 }),
-    );
+    const { result } = renderHook(() => useRovingTabIndex({ itemCount: 5 }));
 
     const props = result.current.getRovingProps(3);
-    act(() => { props.onFocus(); });
+    act(() => {
+      props.onFocus();
+    });
     expect(result.current.activeIndex).toBe(3);
 
-    act(() => { result.current.resetIndex(); });
+    act(() => {
+      result.current.resetIndex();
+    });
     expect(result.current.activeIndex).toBe(0);
   });
 
   it('getRovingProps returns correct shape', () => {
-    const { result } = renderHook(() =>
-      useRovingTabIndex({ itemCount: 3 }),
-    );
+    const { result } = renderHook(() => useRovingTabIndex({ itemCount: 3 }));
 
     const props = result.current.getRovingProps(1);
     expect(props.tabIndex).toBe(-1);
@@ -78,7 +76,9 @@ describe('useRovingTabIndex', () => {
       preventDefault: vi.fn(),
     } as unknown as React.KeyboardEvent;
 
-    act(() => { props.onKeyDown(event); });
+    act(() => {
+      props.onKeyDown(event);
+    });
     expect(onActivate).toHaveBeenCalledWith(1);
     expect(event.preventDefault).toHaveBeenCalled();
   });
@@ -95,14 +95,14 @@ describe('useRovingTabIndex', () => {
       preventDefault: vi.fn(),
     } as unknown as React.KeyboardEvent;
 
-    act(() => { props.onKeyDown(event); });
+    act(() => {
+      props.onKeyDown(event);
+    });
     expect(onActivate).toHaveBeenCalledWith(2);
   });
 
   it('navigates with arrow keys', () => {
-    const { result } = renderHook(() =>
-      useRovingTabIndex({ itemCount: 5 }),
-    );
+    const { result } = renderHook(() => useRovingTabIndex({ itemCount: 5 }));
 
     // ArrowRight moves forward
     const props0 = result.current.getRovingProps(0);
@@ -116,9 +116,7 @@ describe('useRovingTabIndex', () => {
   });
 
   it('does not navigate beyond bounds', () => {
-    const { result } = renderHook(() =>
-      useRovingTabIndex({ itemCount: 3 }),
-    );
+    const { result } = renderHook(() => useRovingTabIndex({ itemCount: 3 }));
 
     // Try ArrowLeft from index 0
     const props = result.current.getRovingProps(0);
@@ -132,12 +130,12 @@ describe('useRovingTabIndex', () => {
   });
 
   it('Home jumps to first, End jumps to last', () => {
-    const { result } = renderHook(() =>
-      useRovingTabIndex({ itemCount: 5 }),
-    );
+    const { result } = renderHook(() => useRovingTabIndex({ itemCount: 5 }));
 
     // Focus middle item first
-    act(() => { result.current.getRovingProps(2).onFocus(); });
+    act(() => {
+      result.current.getRovingProps(2).onFocus();
+    });
     expect(result.current.activeIndex).toBe(2);
 
     // End key

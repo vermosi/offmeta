@@ -4,7 +4,7 @@
  * Supports Arrow keys, Home, End. Works for grids (with column count) and linear lists.
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 interface UseRovingTabIndexOptions {
   /** Total number of items */
@@ -39,11 +39,16 @@ export function useRovingTabIndex({
 }: UseRovingTabIndexOptions): UseRovingTabIndexReturn {
   const [activeIndex, setActiveIndex] = useState(0);
   const [prevItemCount, setPrevItemCount] = useState(itemCount);
-  if (prevItemCount !== itemCount) {
-    setPrevItemCount(itemCount);
-    setActiveIndex(0);
-  }
   const itemRefs = useRef<Map<number, HTMLElement>>(new Map());
+
+  useEffect(() => {
+    if (prevItemCount === itemCount) return;
+    const timer = window.setTimeout(() => {
+      setPrevItemCount(itemCount);
+      setActiveIndex(0);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [itemCount, prevItemCount]);
 
   const focusItem = useCallback((index: number) => {
     const el = itemRefs.current.get(index);

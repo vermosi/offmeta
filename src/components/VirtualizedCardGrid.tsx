@@ -85,7 +85,6 @@ interface VirtualizedCardGridProps {
   getWhyReport?: (card: ScryfallCard) => WhyItMatches | null;
 }
 
-
 const CARD_ASPECT_RATIO = 2.5 / 3.5;
 // Max card width to prevent cards from growing too large when filtering
 const MAX_CARD_WIDTH = 280;
@@ -93,8 +92,8 @@ const MAX_CARD_WIDTH = 280;
 const BREAKPOINTS = [
   { minWidth: 1280, columns: 5, gap: 24 }, // xl+ (keeps cards edge-aligned on wide screens)
   { minWidth: 1024, columns: 4, gap: 24 }, // lg
-  { minWidth: 768, columns: 3, gap: 20 },  // md
-  { minWidth: 0, columns: 2, gap: 16 },    // mobile
+  { minWidth: 768, columns: 3, gap: 20 }, // md
+  { minWidth: 0, columns: 2, gap: 16 }, // mobile
 ];
 
 function buildVirtualizedRowKey(
@@ -124,7 +123,11 @@ export function VirtualizedCardGrid({
   getWhyReport,
 }: VirtualizedCardGridProps) {
   const parentRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ columns: 4, cardWidth: 200, gap: 16 });
+  const [dimensions, setDimensions] = useState({
+    columns: 4,
+    cardWidth: 200,
+    gap: 16,
+  });
   const [scrollMargin, setScrollMargin] = useState(0);
 
   const { focusIndex, setFocusIndex, handleKeyDown } = useGridKeyboardNav(
@@ -211,7 +214,14 @@ export function VirtualizedCardGrid({
     ) {
       onLoadMore();
     }
-  }, [rowVirtualizer, rowCount, hasNextPage, isFetchingNextPage, isError, onLoadMore]);
+  }, [
+    rowVirtualizer,
+    rowCount,
+    hasNextPage,
+    isFetchingNextPage,
+    isError,
+    onLoadMore,
+  ]);
 
   return (
     <div
@@ -250,13 +260,20 @@ export function VirtualizedCardGrid({
                 }}
                 className="flex items-center justify-center"
               >
-                <div className="w-full max-w-2xl" role="status" aria-live="polite">
+                <div
+                  className="w-full max-w-2xl"
+                  role="status"
+                  aria-live="polite"
+                >
                   {isError ? (
                     <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-6 py-4 text-center">
                       <div className="flex items-center gap-2 text-destructive">
                         <AlertCircle className="h-5 w-5" aria-hidden="true" />
                         <span className="font-medium">
-                          {t('results.loadMoreErrorTitle', "Couldn't load more cards")}
+                          {t(
+                            'results.loadMoreErrorTitle',
+                            "Couldn't load more cards",
+                          )}
                         </span>
                       </div>
                       <p className="text-sm text-muted-foreground">
@@ -280,8 +297,13 @@ export function VirtualizedCardGrid({
                     </div>
                   ) : isFetchingNextPage ? (
                     <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-                      <span>{t('results.loadingMore', 'Loading more cards...')}</span>
+                      <Loader2
+                        className="h-5 w-5 animate-spin"
+                        aria-hidden="true"
+                      />
+                      <span>
+                        {t('results.loadingMore', 'Loading more cards...')}
+                      </span>
                     </div>
                   ) : (
                     <div className="flex items-center justify-center gap-2 text-muted-foreground">
@@ -315,7 +337,8 @@ export function VirtualizedCardGrid({
                 gridTemplateColumns: `repeat(${columns}, minmax(0, ${cardWidth}px))`,
                 // When cards hit their max width, spread them edge-to-edge so the
                 // first/last columns line up with the toolbar's container padding.
-                justifyContent: cardWidth >= MAX_CARD_WIDTH ? 'space-between' : 'center',
+                justifyContent:
+                  cardWidth >= MAX_CARD_WIDTH ? 'space-between' : 'center',
                 gap: `${gap}px`,
               }}
             >
@@ -323,7 +346,14 @@ export function VirtualizedCardGrid({
                 const cardIndex = startIndex + colIndex;
                 const card = cards[cardIndex];
 
-                if (!card) return <div key={`empty-${colIndex}`} role="gridcell" aria-hidden="true" />;
+                if (!card)
+                  return (
+                    <div
+                      key={`empty-${colIndex}`}
+                      role="gridcell"
+                      aria-hidden="true"
+                    />
+                  );
 
                 const isFocused = focusIndex === cardIndex;
 
@@ -333,10 +363,6 @@ export function VirtualizedCardGrid({
                     role="gridcell"
                     data-card-index={cardIndex}
                     tabIndex={isFocused ? 0 : -1}
-                    onClick={() => {
-                      setFocusIndex(cardIndex);
-                      onCardClick(card, cardIndex);
-                    }}
                     onFocus={() => setFocusIndex(cardIndex)}
                     className="outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
                   >

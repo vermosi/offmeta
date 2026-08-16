@@ -9,7 +9,6 @@ import {
   getCachedResult,
   setCachedResult,
   getPersistentCache,
-  setPersistentCache,
   maybeCacheCleanup,
 } from './cache.ts';
 import { fetchWithRetry, fetchWithTimeout } from './utils.ts';
@@ -517,7 +516,6 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           showAffiliate: true,
         };
         setCachedResult(query, filters, cachePayload, cacheSalt);
-        setPersistentCache(query, filters, cachePayload, cacheSalt);
       }
 
       return createPipelineResponse(query, pipelineResult, jsonHeaders);
@@ -525,12 +523,12 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
 
     // 3. Start cache lookup in parallel, but do not block deterministic fast-paths on it.
     const cacheLookupPromise = markStage('cache', () =>
-      useCache
-        ? Promise.all([
-            getCachedResult(query, filters, cacheSalt),
-            getPersistentCache(query, filters, cacheSalt),
-          ]).then(([mem, persistent]) => mem || persistent)
-        : Promise.resolve(null),
+      (async () => {
+        if (!useCache) return null;
+        const cached = await getCachedResult(query, filters, cacheSalt);
+        if (cached) return cached;
+        return await getPersistentCache(query, filters, cacheSalt);
+      })(),
     ).catch(() => null);
 
     // 4. Deterministic build first (fast and CPU-only)
@@ -1337,7 +1335,6 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       // Cache AI results more aggressively (>= 0.65 instead of 0.8) to prevent duplicate AI calls
       if (useCache && finalResult.explanation.confidence >= 0.65) {
         setCachedResult(query, filters, finalResult, cacheSalt);
-        setPersistentCache(query, filters, finalResult, cacheSalt);
       }
 
       // Auto-seed high-confidence AI translations into translation_rules for future pattern matches

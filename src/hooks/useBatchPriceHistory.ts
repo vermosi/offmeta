@@ -10,11 +10,19 @@ import type { SparklinePoint } from '@/components/PriceSparkline';
 
 const BATCH_SIZE = 200;
 
+export function normalizeBatchPriceHistoryNames(cardNames: string[]): string[] {
+  return Array.from(
+    new Set(cardNames.map((name) => name.trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b));
+}
+
 export function useBatchPriceHistory(cardNames: string[]) {
+  const normalizedCardNames = normalizeBatchPriceHistoryNames(cardNames);
+
   return useQuery<Map<string, SparklinePoint[]>>({
-    queryKey: ['batch-price-history', ...cardNames],
+    queryKey: ['batch-price-history', ...normalizedCardNames],
     queryFn: async () => {
-      if (cardNames.length === 0) return new Map();
+      if (normalizedCardNames.length === 0) return new Map();
 
       const ninetyDaysAgo = new Date(
         Date.now() - 90 * 24 * 60 * 60 * 1000,
@@ -27,8 +35,8 @@ export function useBatchPriceHistory(cardNames: string[]) {
       }> = [];
 
       // Batch fetch to avoid query size limits
-      for (let i = 0; i < cardNames.length; i += BATCH_SIZE) {
-        const batch = cardNames.slice(i, i + BATCH_SIZE);
+      for (let i = 0; i < normalizedCardNames.length; i += BATCH_SIZE) {
+        const batch = normalizedCardNames.slice(i, i + BATCH_SIZE);
         const { data } = await supabase
           .from('price_snapshots')
           .select('card_name, recorded_at, price_usd')
@@ -53,7 +61,7 @@ export function useBatchPriceHistory(cardNames: string[]) {
 
       return result;
     },
-    enabled: cardNames.length > 0,
+    enabled: normalizedCardNames.length > 0,
     staleTime: 10 * 60 * 1000, // 10 min
   });
 }
