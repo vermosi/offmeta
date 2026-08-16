@@ -39,7 +39,11 @@ export function useResultsEngagement({
   const maxDepthRef = useRef(0);
   const startedAtRef = useRef(0);
   const resultCountRef = useRef(resultCount);
-  resultCountRef.current = resultCount;
+
+  useEffect(() => {
+    resultCountRef.current = resultCount;
+  }, [resultCount]);
+
 
   const measure = useCallback(() => {
     const el = containerRef.current;

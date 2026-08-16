@@ -179,8 +179,9 @@ function buildIR(query: string): SearchIR {
       // Bare "under 5" with no unit → price (players say "under 5" for budget;
       // mana constraints are written as "under 5 mana"/"5 mv or less")
       const bareBudgetMatch = remaining.match(
-        /\b(?:under|below|less\s+than)\s+(\d+(?:\.\d+)?)\b(?!\s*(?:mana|mv|cmc|power|toughness|counters?|lands?|cards?))/i,
+        /(?<!\b(?:power|toughness|pow|tou|mana\s+value|mv|cmc|price|cost)\s)\b(?:under|below|less\s+than)\s+(\d+(?:\.\d+)?)\b(?!\s*(?:mana|mv|cmc|power|toughness|counters?|lands?|cards?))/i,
       );
+
       if (bareBudgetMatch) {
         ir.numeric.push({ field: 'usd', op: '<', value: Number(bareBudgetMatch[1]) });
         remaining = remaining.replace(bareBudgetMatch[0], '').trim();
