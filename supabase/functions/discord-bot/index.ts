@@ -184,9 +184,28 @@ export async function verifyDiscordSignature(
 
 /** Pull the free-text query out of the slash-command options. */
 export function extractQuery(interaction: DiscordInteraction): string {
-  const option = interaction.data?.options?.find(
-    (opt) => opt.name === 'query' || opt.name === 'search',
-  );
+/** Sub-command names under the single `/offmeta` command. */
+export type OffmetaSubcommand = 'search' | 'privacy' | null;
+
+/**
+ * Resolve which action an interaction asks for. Everything lives under one
+ * `/offmeta` command, so `privacy` is a sub-command rather than a second app
+ * command. A bare `/offmeta <query>` (legacy registration) still means search.
+ */
+export function resolveSubcommand(interaction: DiscordInteraction): OffmetaSubcommand {
+  if (interaction.data?.name !== 'offmeta') return null;
+  const sub = interaction.data?.options?.find((opt) => opt.type === 1);
+  if (!sub) return 'search';
+  if (sub.name === 'privacy') return 'privacy';
+  if (sub.name === 'search') return 'search';
+  return null;
+}
+
+/** Pull the free-text query out of the slash-command (or sub-command) options. */
+export function extractQuery(interaction: DiscordInteraction): string {
+  const top = interaction.data?.options ?? [];
+  const flattened = top.flatMap((opt) => (opt.type === 1 ? (opt.options ?? []) : [opt]));
+  const option = flattened.find((opt) => opt.name === 'query' || opt.name === 'search');
   const raw = typeof option?.value === 'string' ? option.value : '';
   const stripped = Array.from(raw)
     .map((char) => (char.charCodeAt(0) < 0x20 ? ' ' : char))
