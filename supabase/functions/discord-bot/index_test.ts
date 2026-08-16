@@ -22,12 +22,12 @@ import {
   SLASH_COMMANDS,
 } from './index.ts';
 
-Deno.test('SLASH_COMMANDS registers one command with search/privacy sub-commands', () => {
+Deno.test('SLASH_COMMANDS registers one command with search/help/privacy sub-commands', () => {
   assertEquals(SLASH_COMMANDS.length, 1);
   assertEquals(SLASH_COMMANDS[0].name, 'offmeta');
   assertEquals(
     (SLASH_COMMANDS[0].options ?? []).map((o) => o.name),
-    ['search', 'privacy'],
+    ['search', 'help', 'privacy'],
   );
 });
 
