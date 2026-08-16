@@ -102,6 +102,7 @@ Deno.test('handleClickRedirect returns JSON for client-side bridge', async () =>
   const actorHash = 'a5eb4b84ae9e402b04349579';
   const guildId = '1396995018337550346';
   const secret = 'test-secret';
+  Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', secret);
   const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
   const signature = await signClick(
     clickPayload(query, actorHash, guildId, expiresAt),
