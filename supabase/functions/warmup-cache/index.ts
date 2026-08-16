@@ -471,6 +471,50 @@ serve(withLogging('warmup-cache', async (req) => {
     const BASE_BACKOFF_MS = 2000;
     const MAX_BACKOFF_MS = 15000;
 
+    // Circuit breaker: after repeated non-2xx responses, stop hammering
+    // semantic-search so the shared rate-limit bucket can recover.
+    const BREAKER_FAILURE_THRESHOLD = 4;
+    const BREAKER_COOLDOWN_MS = 20000;
+    const BREAKER_MAX_TRIPS = 2;
+    const breaker = {
+      consecutiveFailures: 0,
+      openUntil: 0,
+      trips: 0,
+    };
+
+    class BreakerOpenError extends Error {
+      constructor() {
+        super('circuit breaker open');
+        this.name = 'BreakerOpenError';
+      }
+    }
+
+    const breakerIsOpen = () => Date.now() < breaker.openUntil;
+
+    const recordBreakerOutcome = (ok: boolean, context: Record<string, unknown>) => {
+      if (ok) {
+        // Successful probe closes the breaker.
+        breaker.consecutiveFailures = 0;
+        breaker.openUntil = 0;
+        return;
+      }
+
+      breaker.consecutiveFailures++;
+      if (
+        breaker.consecutiveFailures >= BREAKER_FAILURE_THRESHOLD &&
+        !breakerIsOpen()
+      ) {
+        breaker.trips++;
+        breaker.openUntil = Date.now() + BREAKER_COOLDOWN_MS;
+        logger.warn('warmup_breaker_open', {
+          ...context,
+          consecutiveFailures: breaker.consecutiveFailures,
+          cooldownMs: BREAKER_COOLDOWN_MS,
+          trips: breaker.trips,
+        });
+      }
+    };
+
     const backoffDelayMs = (attempt: number, retryAfterMs: number | null) => {
       const exponential = Math.min(
         BASE_BACKOFF_MS * 2 ** (attempt - 1),
@@ -487,14 +531,19 @@ serve(withLogging('warmup-cache', async (req) => {
       let lastError: unknown = null;
 
       for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        if (breakerIsOpen()) throw new BreakerOpenError();
+
         try {
           last = await warmQuery(query);
           lastError = null;
+          const ok = last.status >= 200 && last.status < 300;
+          recordBreakerOutcome(ok, { query: query.substring(0, 50), status: last.status });
           if (!RETRYABLE_STATUSES.has(last.status)) return last;
         } catch (err) {
           // Network-level failures are transient too.
           lastError = err;
           last = null;
+          recordBreakerOutcome(false, { query: query.substring(0, 50), status: null });
         }
 
         if (attempt < MAX_ATTEMPTS) {
@@ -518,6 +567,30 @@ serve(withLogging('warmup-cache', async (req) => {
         results.skipped += queriesToWarm.length - i;
         break;
       }
+
+      if (breakerIsOpen()) {
+        if (breaker.trips >= BREAKER_MAX_TRIPS) {
+          // Repeated trips mean the downstream is genuinely unhealthy: stop.
+          const remaining = queriesToWarm.length - i;
+          results.skipped += remaining;
+          results.errors.push(
+            `circuit breaker open after ${breaker.trips} trips: skipped ${remaining} queries`,
+          );
+          logger.error('warmup_breaker_abort', {
+            remaining,
+            trips: breaker.trips,
+          });
+          break;
+        }
+
+        // Single cooldown wait, then let the next batch act as a half-open probe.
+        const waitMs = Math.max(0, breaker.openUntil - Date.now());
+        logger.warn('warmup_breaker_cooldown', { waitMs });
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+        breaker.consecutiveFailures = 0;
+        breaker.openUntil = 0;
+      }
+
       const batch = queriesToWarm.slice(i, i + BATCH_SIZE);
 
       const batchPromises = batch.map(async (query) => {
@@ -553,6 +626,13 @@ serve(withLogging('warmup-cache', async (req) => {
             results.errors.push(`${query}: ${data?.error ?? 'unknown error'}`);
           }
         } catch (err) {
+          if (err instanceof BreakerOpenError) {
+            results.skipped++;
+            logger.warn('warmup_query_skipped_breaker', {
+              query: query.substring(0, 50),
+            });
+            return;
+          }
           logger.error('warmup_query_exception', {
             query,
             error: err instanceof Error ? err.message : String(err),
@@ -571,6 +651,7 @@ serve(withLogging('warmup-cache', async (req) => {
         );
       }
     }
+
 
 
     const duration = Date.now() - startTime;
