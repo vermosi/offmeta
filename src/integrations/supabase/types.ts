@@ -1712,6 +1712,10 @@ export type Database = {
         Args: { p_decision: Json; p_key: string }
         Returns: undefined
       }
+      record_translation_result_count: {
+        Args: { p_request_id: string; p_result_count: number }
+        Returns: undefined
+      }
       refresh_price_mover_stats: { Args: never; Returns: undefined }
       refresh_search_intent_clusters: {
         Args: { days_back?: number }
