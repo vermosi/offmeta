@@ -107,8 +107,13 @@ export async function enforceSupportedTags(
     };
   }
 
-  return new Response(JSON.stringify(patched), {
-    status: response.status,
-    headers: response.headers,
-  });
+  return new Response(
+    JSON.stringify(
+      options.requestId ? { ...patched, requestId: options.requestId } : patched,
+    ),
+    {
+      status: response.status,
+      headers: response.headers,
+    },
+  );
 }
