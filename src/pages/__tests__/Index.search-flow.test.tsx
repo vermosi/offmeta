@@ -75,8 +75,13 @@ vi.mock('sonner', () => ({
 }));
 vi.mock('@/hooks/useAnalytics', () => ({
   trackEventDirect: vi.fn().mockResolvedValue(undefined),
+  toLatencyBucket: vi.fn((ms: number) => {
+    if (ms < 500) return '<500ms';
+    if (ms < 1000) return '500ms-1s';
+    if (ms < 2000) return '1-2s';
+    return '>2s';
+  }),
   useAnalytics: () => ({
-    toLatencyBucket: vi.fn(),
     trackSearch: vi.fn(),
     trackCardClick: vi.fn(),
     trackEvent: vi.fn(),
