@@ -132,6 +132,12 @@ export function reportSearchOutcome(
     results_count:
       typeof options?.resultsCount === 'number' ? options.resultsCount : null,
   });
+  if (
+    typeof options?.resultsCount === 'number' &&
+    (outcome === 'results' || outcome === 'zero_results')
+  ) {
+    reportResultCount(openSearch.requestId, options.resultsCount);
+  }
   openSearch = null;
 }
 
