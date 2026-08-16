@@ -135,26 +135,52 @@ export function parseCompanions(query: string, ir: SearchIR): string {
 export function parseSpecialPatterns(query: string, ir: SearchIR): string {
   let remaining = query;
 
+  // Legality status ("banned in commander", "restricted in vintage") must be
+  // parsed BEFORE the commander format patterns, otherwise "in commander" is
+  // consumed as f:commander and the ban filter is lost.
+  const FORMAT_ALTERNATION =
+    'standard|pioneer|modern|legacy|vintage|pauper|historic|timeless|oathbreaker|brawl|commander|edh|alchemy|gladiator|penny';
+
+  const bannedPattern = new RegExp(
+    `\\b(?:banned|illegal)\\s+(?:in|for|from)\\s+(?:the\\s+)?(${FORMAT_ALTERNATION})\\b|\\b(${FORMAT_ALTERNATION})\\s+(?:ban(?:ned)?)\\s*list\\b`,
+    'gi',
+  );
+  const bannedMatch = bannedPattern.exec(remaining);
+  if (bannedMatch) {
+    const format = (bannedMatch[1] ?? bannedMatch[2]).toLowerCase();
+    ir.specials.push(`banned:${format === 'edh' ? 'commander' : format}`);
+    remaining = remaining.replace(bannedMatch[0], '').trim();
+  }
+
+  const restrictedPattern = new RegExp(
+    `\\brestricted\\s+(?:in|for)\\s+(?:the\\s+)?(${FORMAT_ALTERNATION})\\b`,
+    'gi',
+  );
+  const restrictedMatch = restrictedPattern.exec(remaining);
+  if (restrictedMatch) {
+    const format = restrictedMatch[1].toLowerCase();
+    ir.specials.push(`restricted:${format === 'edh' ? 'commander' : format}`);
+    remaining = remaining.replace(restrictedMatch[0], '').trim();
+  }
+
+  const hasLegalityStatus = ir.specials.some((s) =>
+    s.startsWith('banned:') || s.startsWith('restricted:')
+  );
+
   const commanderFormatPattern =
     /\bcommander(?:-|\s)?(deck|format|legal)\b|\blegal in commander\b|\bfor\s+(?:\w+\s+)*commander\b|\bin\s+commander\b|\bcommander\s+(staples?|cards?|playable|options?|picks?|pieces?|essentials?|must[- ]haves?)\b/gi;
-  if (commanderFormatPattern.test(remaining)) {
+  if (!hasLegalityStatus && commanderFormatPattern.test(remaining)) {
     ir.specials.push('f:commander');
     commanderFormatPattern.lastIndex = 0;
     remaining = remaining.replace(commanderFormatPattern, '').trim();
   }
 
-  const bannedPattern = /\bbanned\s+in\s+(standard|pioneer|modern|legacy|vintage|pauper|historic|timeless|oathbreaker|brawl|commander|alchemy|gladiator|penny)\b/gi;
-  const bannedMatch = bannedPattern.exec(remaining);
-  if (bannedMatch) {
-    ir.specials.push(`banned:${bannedMatch[1].toLowerCase()}`);
-    remaining = remaining.replace(bannedMatch[0], '').trim();
-  }
 
   // "best/top commander [concept]" = format legality, not card property
   // e.g. "best commander board wipes", "commander card draw", "commander ramp"
   const commanderConceptPattern =
     /\b(?:best|top|good|great)?\s*commander\s+(?:board\s*wipes?|boardwipes?|card\s*draw|ramp|removal|counterspells?|tutors?|protection|sacrifice|sac\s*outlets?|stax|hate|graveyard|reanimation|mill|tokens?|wrath|wraths|sweepers?|finishers?|win\s*cons?|combos?|lands?|mana\s*(?:base|rocks?|dorks?|fixing)|recursion)\b/gi;
-  if (!ir.specials.includes('f:commander') && commanderConceptPattern.test(remaining)) {
+  if (!hasLegalityStatus && !ir.specials.includes('f:commander') && commanderConceptPattern.test(remaining)) {
     ir.specials.push('f:commander');
     commanderConceptPattern.lastIndex = 0;
     // Only strip "commander" from the match, keep the concept keyword
@@ -175,6 +201,7 @@ export function parseSpecialPatterns(query: string, ir: SearchIR): string {
     ir.oracle.length > 0;
 
   if (
+    !hasLegalityStatus &&
     /\bcommander\b|\bis:commander\b|\bas commander\b|\bcommanders\b/i.test(
       remaining,
     )
