@@ -102,7 +102,6 @@ import { SearchProgressIndicator } from '@/components/SearchProgressIndicator';
 import { SearchDeskHeader } from '@/components/SearchDeskHeader';
 
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { useAuth } from '@/hooks/useAuth';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useNoIndex } from '@/hooks/useNoIndex';
 import { useRovingTabIndex } from '@/hooks/useRovingTabIndex';
@@ -123,7 +122,6 @@ const Index = () => {
     trackFirstReturnVisit,
     trackEvent,
   } = useAnalytics();
-  useAuth();
   const lastTrackedRouteRef = useRef<string | null>(null);
 
   const {
@@ -245,8 +243,6 @@ const Index = () => {
       document.getElementById(scriptId)?.remove();
     };
   }, []);
-
-
 
   // Cards is the only results view — Similar / Deck Ideas / Explain removed.
   const activeTab: ResultsTab = 'cards';
@@ -582,7 +578,6 @@ const Index = () => {
     <ErrorBoundary>
       <SkipLinks showSearchLink />
       <div className="min-h-screen min-h-[100dvh] flex flex-col relative overflow-x-hidden">
-
         {/* Shared page background stack — gradient wash, ambient glow, noise.
             Kept fixed so the hero and every section below share the same
             atmosphere instead of the hero's glow ending at its bottom edge. */}
@@ -599,11 +594,9 @@ const Index = () => {
           aria-hidden="true"
         />
 
-
         <Header />
 
         {!showResultsMode && <HeroSection />}
-
 
         {/* Floating particles — hero area */}
         <Suspense fallback={null}>
@@ -670,8 +663,6 @@ const Index = () => {
               </Suspense>
             )}
 
-
-
             {isSearching && originalQuery && (
               <Suspense fallback={null}>
                 <UnderstoodSummary
@@ -691,13 +682,17 @@ const Index = () => {
             {showResultsMode && (
               <SearchDeskHeader
                 originalQuery={originalQuery || searchQuery}
-                scryfallQuery={(lastSearchResult?.scryfallQuery || searchQuery).trim()}
+                scryfallQuery={(
+                  lastSearchResult?.scryfallQuery || searchQuery
+                ).trim()}
                 intent={lastSearchResult?.intent || lastIntent}
                 totalCards={totalCards}
                 shownCards={displayCards.length}
                 sourceLabel={translationSourceLabel}
                 confidence={
-                  typeof translationConfidence === 'number' ? translationConfidence : null
+                  typeof translationConfidence === 'number'
+                    ? translationConfidence
+                    : null
                 }
                 warnings={
                   lastSearchResult?.validationIssues?.length
@@ -742,7 +737,6 @@ const Index = () => {
                 />
               </div>
             )}
-
           </div>
 
           {/* Tab content area */}
@@ -809,93 +803,97 @@ const Index = () => {
                 </Suspense>
               </div>
             )}
-        
 
-        {/* Below the fold: the argument for OffMeta, kept after the cards. */}
-        {!hasSearched && (
-          <section className="relative mt-10 border-t border-border/50 py-10 sm:py-14">
-            <div className="container-main">
-              <p className="font-mono text-[10px] uppercase tracking-[0.34em] text-muted-foreground sm:text-[11px]">
-                {t('home.whyEyebrow', 'Why OffMeta')}
-              </p>
-              <div className="mt-4 grid gap-8 lg:grid-cols-12 lg:items-start">
-                <div className="lg:col-span-5">
-                  <h2 className="font-display text-3xl font-extrabold uppercase leading-[0.9] tracking-tight text-foreground sm:text-4xl">
-                    {t('home.whyTitle', 'Search like a player,')}
-                    <br />
-                    <span className="font-editorial text-[0.92em] font-normal normal-case italic tracking-normal text-accent">
-                      {t('home.whyTitleAccent', 'not a query language.')}
-                    </span>
-                  </h2>
-                  <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-                    {t(
-                      'home.whyDescription',
-                      'OffMeta turns plain English into real Scryfall search, shows you exactly what it built, and keeps the query editable. Faster first results without losing control.',
-                    )}
-                  </p>
-                  <div className="mt-5 flex flex-wrap gap-4 font-mono text-[11px] uppercase tracking-[0.18em]">
-                    <Link
-                      to="/about"
-                      className="inline-flex items-center gap-2 border-b border-border/60 pb-1 text-foreground transition-colors hover:border-accent"
-                    >
-                      {t('home.learnDifference', 'Learn the difference')}
-                      <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                    </Link>
-                    <Link
-                      to="/guides"
-                      className="inline-flex items-center gap-2 border-b border-border/60 pb-1 text-foreground transition-colors hover:border-accent"
-                    >
-                      {t('home.browseGuides', 'Browse guides')}
-                      <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                    </Link>
+          {/* Below the fold: the argument for OffMeta, kept after the cards. */}
+          {!hasSearched && (
+            <section className="relative mt-10 border-t border-border/50 py-10 sm:py-14">
+              <div className="container-main">
+                <p className="font-mono text-[10px] uppercase tracking-[0.34em] text-muted-foreground sm:text-[11px]">
+                  {t('home.whyEyebrow', 'Why OffMeta')}
+                </p>
+                <div className="mt-4 grid gap-8 lg:grid-cols-12 lg:items-start">
+                  <div className="lg:col-span-5">
+                    <h2 className="font-display text-3xl font-extrabold uppercase leading-[0.9] tracking-tight text-foreground sm:text-4xl">
+                      {t('home.whyTitle', 'Search like a player,')}
+                      <br />
+                      <span className="font-editorial text-[0.92em] font-normal normal-case italic tracking-normal text-accent">
+                        {t('home.whyTitleAccent', 'not a query language.')}
+                      </span>
+                    </h2>
+                    <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+                      {t(
+                        'home.whyDescription',
+                        'OffMeta turns plain English into real Scryfall search, shows you exactly what it built, and keeps the query editable. Faster first results without losing control.',
+                      )}
+                    </p>
+                    <div className="mt-5 flex flex-wrap gap-4 font-mono text-[11px] uppercase tracking-[0.18em]">
+                      <Link
+                        to="/about"
+                        className="inline-flex items-center gap-2 border-b border-border/60 pb-1 text-foreground transition-colors hover:border-accent"
+                      >
+                        {t('home.learnDifference', 'Learn the difference')}
+                        <ArrowRight
+                          className="h-3.5 w-3.5"
+                          aria-hidden="true"
+                        />
+                      </Link>
+                      <Link
+                        to="/guides"
+                        className="inline-flex items-center gap-2 border-b border-border/60 pb-1 text-foreground transition-colors hover:border-accent"
+                      >
+                        {t('home.browseGuides', 'Browse guides')}
+                        <ArrowRight
+                          className="h-3.5 w-3.5"
+                          aria-hidden="true"
+                        />
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-px overflow-hidden border border-border/50 bg-border/50 sm:grid-cols-3 lg:col-span-7">
+                    {valuePoints.map(({ icon: Icon, accent, title, body }) => (
+                      <div key={title} className="bg-background/80 p-5">
+                        <span
+                          className={`block h-px w-8 ${accent}`}
+                          aria-hidden="true"
+                        />
+                        <Icon
+                          className="mt-4 h-4 w-4 text-muted-foreground"
+                          aria-hidden="true"
+                        />
+                        <h3 className="mt-3 font-display text-sm font-bold uppercase tracking-tight text-foreground">
+                          {title}
+                        </h3>
+                        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                          {body}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
-
-                <div className="grid gap-px overflow-hidden border border-border/50 bg-border/50 sm:grid-cols-3 lg:col-span-7">
-                  {valuePoints.map(({ icon: Icon, accent, title, body }) => (
-                    <div key={title} className="bg-background/80 p-5">
-                      <span
-                        className={`block h-px w-8 ${accent}`}
-                        aria-hidden="true"
-                      />
-                      <Icon
-                        className="mt-4 h-4 w-4 text-muted-foreground"
-                        aria-hidden="true"
-                      />
-                      <h3 className="mt-3 font-display text-sm font-bold uppercase tracking-tight text-foreground">
-                        {title}
-                      </h3>
-                      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                        {body}
-                      </p>
-                    </div>
-                  ))}
-                </div>
               </div>
+            </section>
+          )}
+
+          {!hasSearched && (
+            <div id="home-examples" className="container-main pb-2">
+              <Suspense fallback={null}>
+                <ExampleQueriesCarousel onTrySearch={handleTryExample} />
+              </Suspense>
             </div>
-          </section>
-        )}
+          )}
 
-        {!hasSearched && (
-          <div id="home-examples" className="container-main pb-2">
+          {!hasSearched && (
+            <div id="home-quick-paths">
+              <HomepageQuickPaths />
+            </div>
+          )}
+
+          {!hasSearched && (
             <Suspense fallback={null}>
-              <ExampleQueriesCarousel onTrySearch={handleTryExample} />
+              <ScryfallComparison onTrySearch={handleTryExample} />
             </Suspense>
-          </div>
-        )}
-
-        {!hasSearched && (
-          <div id="home-quick-paths">
-            <HomepageQuickPaths />
-          </div>
-        )}
-
-
-        {!hasSearched && (
-          <Suspense fallback={null}>
-            <ScryfallComparison onTrySearch={handleTryExample} />
-          </Suspense>
-        )}
+          )}
         </main>
 
         <Suspense fallback={null}>

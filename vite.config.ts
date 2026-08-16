@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import { mcpPlugin } from '@lovable.dev/mcp-js/stacks/supabase/vite';
 import path from 'path';
 
@@ -19,11 +19,11 @@ export default defineConfig(() => ({
         ? {
             'https://esm.sh/@supabase/supabase-js@2': path.resolve(
               __dirname,
-              './src/test/stubs/supabase-esm.ts'
+              './src/test/stubs/supabase-esm.ts',
             ),
             'https://esm.sh/@supabase/supabase-js@2.45.0': path.resolve(
               __dirname,
-              './src/test/stubs/supabase-esm.ts'
+              './src/test/stubs/supabase-esm.ts',
             ),
           }
         : {}),
@@ -62,13 +62,29 @@ export default defineConfig(() => ({
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
         manualChunks(id: string) {
-          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/') || id.includes('node_modules/react-router-dom')) return 'vendor-react';
+          if (
+            id.includes('node_modules/react-dom') ||
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-router-dom')
+          )
+            return 'vendor-react';
           if (id.includes('node_modules/@radix-ui')) return 'vendor-radix';
           if (id.includes('node_modules/@tanstack')) return 'vendor-query';
           if (id.includes('node_modules/@supabase')) return 'vendor-supabase';
           if (id.includes('node_modules/lucide-react')) return 'vendor-icons';
-          if (id.includes('node_modules/react-hook-form') || id.includes('node_modules/@hookform') || id.includes('node_modules/zod')) return 'vendor-forms';
-          if (id.includes('node_modules/sonner') || id.includes('node_modules/cmdk') || id.includes('node_modules/vaul') || id.includes('node_modules/next-themes')) return 'vendor-misc';
+          if (
+            id.includes('node_modules/react-hook-form') ||
+            id.includes('node_modules/@hookform') ||
+            id.includes('node_modules/zod')
+          )
+            return 'vendor-forms';
+          if (
+            id.includes('node_modules/sonner') ||
+            id.includes('node_modules/cmdk') ||
+            id.includes('node_modules/vaul') ||
+            id.includes('node_modules/next-themes')
+          )
+            return 'vendor-misc';
           // NOTE: previous `chunk-search` rule removed. It caused Rolldown
           // to hoist shared modules (react, react-router, i18n, search-slug)
           // into the chunk, which then leaked into the entry's preload list.

@@ -1,6 +1,6 @@
-import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { gzipSync } from 'node:zlib';
 
 /**
  * Budget check for the JS actually downloaded on first paint.
@@ -23,9 +23,7 @@ if (!existsSync(distAssetsDir) || !existsSync(indexHtmlPath)) {
 }
 
 const gzipSize = (file) =>
-  execFileSync('gzip', ['-c', join(distAssetsDir, file)], {
-    encoding: 'buffer',
-  }).length;
+  gzipSync(readFileSync(join(distAssetsDir, file))).length;
 
 const html = readFileSync(indexHtmlPath, 'utf8');
 const entries = [...html.matchAll(/<script[^>]+src="\/assets\/([^"]+\.js)"/g)].map(

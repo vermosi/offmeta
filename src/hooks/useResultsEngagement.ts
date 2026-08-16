@@ -44,7 +44,6 @@ export function useResultsEngagement({
     resultCountRef.current = resultCount;
   }, [resultCount]);
 
-
   const measure = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -61,6 +60,7 @@ export function useResultsEngagement({
     startedAtRef.current = Date.now();
 
     let frame = 0;
+    let flushed = false;
     const onScroll = () => {
       if (frame) return;
       frame = window.requestAnimationFrame(() => {
@@ -74,9 +74,11 @@ export function useResultsEngagement({
     window.addEventListener('resize', onScroll, { passive: true });
 
     const flush = () => {
+      if (flushed) return;
       const depth = maxDepthRef.current;
       const count = resultCountRef.current;
       if (count <= 0) return;
+      flushed = true;
       trackEvent('results_engagement', {
         query,
         result_count: count,

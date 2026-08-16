@@ -12,7 +12,7 @@ const BATCH_SIZE = 200;
 
 export function useBatchPriceHistory(cardNames: string[]) {
   return useQuery<Map<string, SparklinePoint[]>>({
-    queryKey: ['batch-price-history', ...cardNames.slice(0, 20)],
+    queryKey: ['batch-price-history', ...cardNames],
     queryFn: async () => {
       if (cardNames.length === 0) return new Map();
 
@@ -44,7 +44,10 @@ export function useBatchPriceHistory(cardNames: string[]) {
       for (const row of allRows) {
         if (row.price_usd == null || row.price_usd <= 0) continue;
         const existing = result.get(row.card_name) ?? [];
-        existing.push({ price: row.price_usd as number, date: row.recorded_at });
+        existing.push({
+          price: row.price_usd as number,
+          date: row.recorded_at,
+        });
         result.set(row.card_name, existing);
       }
 

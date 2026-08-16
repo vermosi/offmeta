@@ -76,10 +76,14 @@ export function useSavedCombos() {
       return [];
     }
   }, [raw]);
+  const savedIds = useMemo(
+    () => new Set(saved.map((entry) => entry.id)),
+    [saved],
+  );
 
   const isSaved = useCallback(
-    (comboId: string) => saved.some((entry) => entry.id === comboId),
-    [saved],
+    (comboId: string) => savedIds.has(comboId),
+    [savedIds],
   );
 
   const toggleSave = useCallback((combo: Combo) => {

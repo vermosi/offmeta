@@ -16,6 +16,7 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 
 import { applySeoMeta, injectJsonLd } from '@/lib/seo';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useSavedCombos } from '@/hooks/useSavedCombos';
 import { ManaSymbol } from '@/components/ManaSymbol';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { SkipLinks } from '@/components/SkipLinks';
@@ -45,11 +46,7 @@ const COLOR_NAMES: Record<string, string> = {
 };
 
 type SortMode =
-  | 'popularity'
-  | 'cards-asc'
-  | 'cards-desc'
-  | 'price-asc'
-  | 'price-desc';
+  'popularity' | 'cards-asc' | 'cards-desc' | 'price-asc' | 'price-desc';
 type PriceCeiling = 'any' | '10' | '25' | '50' | '100';
 
 /** Pure helper – extract numeric price from a combo's tcgplayer field. */
@@ -63,13 +60,17 @@ const getComboPrice = (combo: Combo): number | null => {
 export default function FindMyCombos() {
   const { t } = useTranslation();
   const { trackEvent } = useAnalytics();
+  const { isSaved, toggleSave } = useSavedCombos();
 
   useEffect(() => {
     // Per-route SEO: title, description, canonical, og:url + BreadcrumbList JSON-LD.
     // Previously only title/description were set — canonical/og:url were left pointing at the homepage,
     // so /combos shared on Reddit/Discord/Slack showed the homepage preview.
     const cleanupMeta = applySeoMeta({
-      title: t('combos.seoTitle', 'MTG Combo Finder for Commander Decks | OffMeta'),
+      title: t(
+        'combos.seoTitle',
+        'MTG Combo Finder for Commander Decks | OffMeta',
+      ),
       description: t(
         'combos.seoDescription',
         'Paste a decklist or Moxfield URL to find infinite combos, near-combos, prices, and color identity with Commander Spellbook data.',
@@ -81,8 +82,18 @@ export default function FindMyCombos() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
-        { '@type': 'ListItem', position: 2, name: 'Combos', item: 'https://offmeta.app/combos' },
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'OffMeta',
+          item: 'https://offmeta.app/',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Combos',
+          item: 'https://offmeta.app/combos',
+        },
       ],
     });
     return () => {
@@ -191,30 +202,35 @@ export default function FindMyCombos() {
             : fnError.message;
         let message = t('combos.importError', 'Could not import that deck');
         try {
-          message = (JSON.parse(details) as { error?: string }).error ?? message;
+          message =
+            (JSON.parse(details) as { error?: string }).error ?? message;
         } catch {
           /* non-JSON error body */
         }
         throw new Error(message);
       }
-      if (!data) throw new Error(t('combos.importError', 'Could not import that deck'));
+      if (!data)
+        throw new Error(t('combos.importError', 'Could not import that deck'));
 
       setMoxfieldDeckName(data.deckName);
       setCommander(data.commanders[0] ?? null);
       setCardNames(data.cards);
       setColorIdentity(data.colorIdentity ?? []);
       setResults(null);
-      toast.success(t('combos.importedToast', 'Imported {name}', { name: data.deckName }));
+      toast.success(
+        t('combos.importedToast', 'Imported {name}', { name: data.deckName }),
+      );
     } catch (e: unknown) {
       const message =
-        e instanceof Error ? e.message : t('combos.importError', 'Could not import that deck');
+        e instanceof Error
+          ? e.message
+          : t('combos.importError', 'Could not import that deck');
       setError(message);
       toast.error(message);
     } finally {
       setFetchingDeck(false);
     }
   };
-
 
   const handleFindCombos = async () => {
     if (cardNames.length === 0) return;
@@ -231,9 +247,13 @@ export default function FindMyCombos() {
         {
           onRetry: (delayMs) => {
             toast.info(
-              t('combos.retryToast', 'Too many requests — retrying in {seconds}s', {
-                seconds: Math.ceil(delayMs / 1000),
-              }),
+              t(
+                'combos.retryToast',
+                'Too many requests — retrying in {seconds}s',
+                {
+                  seconds: Math.ceil(delayMs / 1000),
+                },
+              ),
             );
           },
         },
@@ -247,7 +267,11 @@ export default function FindMyCombos() {
         almost_included: data?.almostIncluded?.length ?? 0,
       });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : t('combos.findError', 'Failed to find combos'));
+      setError(
+        e instanceof Error
+          ? e.message
+          : t('combos.findError', 'Failed to find combos'),
+      );
     } finally {
       setLoading(false);
     }
@@ -279,7 +303,6 @@ export default function FindMyCombos() {
           </a>
         </p>
 
-
         {/* Input */}
         <section className="mt-10 border-t border-border pt-8 grid gap-8 md:grid-cols-2">
           <div>
@@ -309,9 +332,7 @@ export default function FindMyCombos() {
               ) : (
                 <Link2 className="h-4 w-4" />
               )}
-              {fetchingDeck
-                ? t('combos.importing')
-                : t('combos.importButton')}
+              {fetchingDeck ? t('combos.importing') : t('combos.importButton')}
             </Button>
             {moxfieldDeckName && (
               <p className="mt-3 text-xs text-muted-foreground">
@@ -409,8 +430,14 @@ export default function FindMyCombos() {
             )}
             detail={error}
             hints={[
-              t('combos.errorHintOne', 'Check the Moxfield deck is public and the URL is complete.'),
-              t('combos.errorHintTwo', 'Wait a few seconds before retrying — the service rate limits bursts.'),
+              t(
+                'combos.errorHintOne',
+                'Check the Moxfield deck is public and the URL is complete.',
+              ),
+              t(
+                'combos.errorHintTwo',
+                'Wait a few seconds before retrying — the service rate limits bursts.',
+              ),
             ]}
             actions={[
               {
@@ -421,11 +448,13 @@ export default function FindMyCombos() {
                     ? void handleFetchMoxfield()
                     : void handleFindCombos(),
               },
-              { label: t('combos.goSearch', 'Search cards instead'), href: '/' },
+              {
+                label: t('combos.goSearch', 'Search cards instead'),
+                href: '/',
+              },
             ]}
           />
         )}
-
 
         {/* Results */}
         {results &&
@@ -443,7 +472,6 @@ export default function FindMyCombos() {
               <div className="mt-14 space-y-8 border-t border-border pt-8">
                 {/* Filter toolbar */}
                 <div className="flex flex-wrap items-center gap-3 border border-border/60 bg-muted/20 p-3">
-
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs text-muted-foreground mr-1">
                       {t('combos.colorsLabel', 'Colors:')}
@@ -516,11 +544,21 @@ export default function FindMyCombos() {
                       onChange={(e) => setSortBy(e.target.value as SortMode)}
                       className="text-xs bg-secondary/60 border-none rounded px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                     >
-                      <option value="popularity">{t('combos.sort.popularity', 'Popularity')}</option>
-                      <option value="price-asc">{t('combos.sort.priceAsc', 'Price: Low → High')}</option>
-                      <option value="price-desc">{t('combos.sort.priceDesc', 'Price: High → Low')}</option>
-                      <option value="cards-asc">{t('combos.sort.cardsAsc', 'Fewest cards')}</option>
-                      <option value="cards-desc">{t('combos.sort.cardsDesc', 'Most cards')}</option>
+                      <option value="popularity">
+                        {t('combos.sort.popularity', 'Popularity')}
+                      </option>
+                      <option value="price-asc">
+                        {t('combos.sort.priceAsc', 'Price: Low → High')}
+                      </option>
+                      <option value="price-desc">
+                        {t('combos.sort.priceDesc', 'Price: High → Low')}
+                      </option>
+                      <option value="cards-asc">
+                        {t('combos.sort.cardsAsc', 'Fewest cards')}
+                      </option>
+                      <option value="cards-desc">
+                        {t('combos.sort.cardsDesc', 'Most cards')}
+                      </option>
                     </select>
                   </div>
 
@@ -537,10 +575,14 @@ export default function FindMyCombos() {
 
                 {nullPriceCount > 0 && (
                   <p className="text-xs text-muted-foreground italic">
-                    {t('combos.unknownPriceNote', '{count} combo{plural} included with unknown price data.', {
-                      count: nullPriceCount,
-                      plural: nullPriceCount > 1 ? 's' : '',
-                    })}
+                    {t(
+                      'combos.unknownPriceNote',
+                      '{count} combo{plural} included with unknown price data.',
+                      {
+                        count: nullPriceCount,
+                        plural: nullPriceCount > 1 ? 's' : '',
+                      },
+                    )}
                   </p>
                 )}
 
@@ -553,8 +595,15 @@ export default function FindMyCombos() {
                     </h2>
                     <div className="ml-auto">
                       <SharePageButton
-                        title={t('combos.shareTitle', 'MTG Combo Finder — OffMeta')}
-                        text={t('combos.shareText', 'Found {count} combos in this deck on OffMeta', { count: filteredIncluded.length })}
+                        title={t(
+                          'combos.shareTitle',
+                          'MTG Combo Finder — OffMeta',
+                        )}
+                        text={t(
+                          'combos.shareText',
+                          'Found {count} combos in this deck on OffMeta',
+                          { count: filteredIncluded.length },
+                        )}
                         label={t('combos.shareLabel', 'Share results')}
                       />
                     </div>
@@ -564,7 +613,10 @@ export default function FindMyCombos() {
                     hasActiveFilters ? (
                       <StateMessage
                         icon={SearchX}
-                        title={t('combos.noMatchFilters', 'No combos match the current filters.')}
+                        title={t(
+                          'combos.noMatchFilters',
+                          'No combos match the current filters.',
+                        )}
                         description={t(
                           'combos.noMatchFiltersDescription',
                           'This deck has {count} combo{plural} in total, but none pass the colors, card-count, or budget filters you set.',
@@ -575,7 +627,10 @@ export default function FindMyCombos() {
                         )}
                         actions={[
                           {
-                            label: t('combos.clearFiltersAction', 'Clear all filters'),
+                            label: t(
+                              'combos.clearFiltersAction',
+                              'Clear all filters',
+                            ),
                             variant: 'default',
                             onClick: clearFilters,
                           },
@@ -591,11 +646,21 @@ export default function FindMyCombos() {
                           { count: cardNames.length },
                         )}
                         hints={[
-                          t('combos.noCombosHintOne', 'Combos below often need one more piece — check the near-miss list.'),
-                          t('combos.noCombosHintTwo', 'Search OffMeta for a missing piece, then re-run this check.'),
+                          t(
+                            'combos.noCombosHintOne',
+                            'Combos below often need one more piece — check the near-miss list.',
+                          ),
+                          t(
+                            'combos.noCombosHintTwo',
+                            'Search OffMeta for a missing piece, then re-run this check.',
+                          ),
                         ]}
                         actions={[
-                          { label: t('combos.goSearch', 'Search cards instead'), href: '/', variant: 'default' },
+                          {
+                            label: t('combos.goSearch', 'Search cards instead'),
+                            href: '/',
+                            variant: 'default',
+                          },
                         ]}
                       />
                     )
@@ -611,6 +676,8 @@ export default function FindMyCombos() {
                               expandedCombo === combo.id ? null : combo.id,
                             )
                           }
+                          saved={isSaved(combo.id)}
+                          onToggleSave={() => toggleSave(combo)}
                         />
                       ))}
                     </div>
@@ -641,6 +708,8 @@ export default function FindMyCombos() {
                               expandedCombo === combo.id ? null : combo.id,
                             )
                           }
+                          saved={isSaved(combo.id)}
+                          onToggleSave={() => toggleSave(combo)}
                         />
                       ))}
                     </div>

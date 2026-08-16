@@ -11,7 +11,10 @@
  * @module lib/search/whyItMatches
  */
 
-import { explainCardMatch, type MatchReason } from '@/lib/search/matchExplanation';
+import {
+  explainCardMatch,
+  type MatchReason,
+} from '@/lib/search/matchExplanation';
 import { extractRoles } from '@/lib/search/card-roles';
 import type { ScryfallCard } from '@/types/card';
 import type { SearchIntent } from '@/types/search';
@@ -62,11 +65,20 @@ const METHOD_PATTERNS: Array<{ method: string; patterns: RegExp[] }> = [
   },
   {
     method: 'mass_removal',
-    patterns: [/destroy all/, /exile all/, /sacrifice all/, /each player sacrifices/],
+    patterns: [
+      /destroy all/,
+      /exile all/,
+      /sacrifice all/,
+      /each player sacrifices/,
+    ],
   },
   {
     method: 'spot_removal',
-    patterns: [/destroy target/, /exile target/, /return target .*to (?:its owner's|their owner's) hand/],
+    patterns: [
+      /destroy target/,
+      /exile target/,
+      /return target .*to (?:its owner's|their owner's) hand/,
+    ],
   },
   {
     method: 'counterspell',
@@ -127,7 +139,10 @@ function fullOracleText(card: ScryfallCard): string {
 
 /** Detect the mechanical method a card uses, deterministically. */
 export function detectMethod(card: ScryfallCard): string | null {
-  const oracle = fullOracleText(card);
+  return detectMethodFromOracle(fullOracleText(card));
+}
+
+function detectMethodFromOracle(oracle: string): string | null {
   if (!oracle) return null;
   for (const { method, patterns } of METHOD_PATTERNS) {
     if (patterns.some((p) => p.test(oracle))) return method;
@@ -137,7 +152,11 @@ export function detectMethod(card: ScryfallCard): string | null {
 
 /** Pick the dominant functional role for a card, or null when undetected. */
 export function detectRole(card: ScryfallCard): string | null {
-  const roles = extractRoles(fullOracleText(card) || null);
+  return detectRoleFromOracle(fullOracleText(card));
+}
+
+function detectRoleFromOracle(oracle: string): string | null {
+  const roles = extractRoles(oracle || null);
   return roles[0] ?? null;
 }
 
@@ -145,19 +164,27 @@ export function detectRole(card: ScryfallCard): string | null {
  * Derive the primary concept the user asked for from the parsed intent.
  * Prefers Scryfall function tags, then oracle phrases, then card types.
  */
-export function deriveConcept(intent: SearchIntent | null | undefined): string | null {
+export function deriveConcept(
+  intent: SearchIntent | null | undefined,
+): string | null {
   if (!intent) return null;
   const tag = intent.tags.find(Boolean);
   if (tag) {
-    return tag
-      .replace(/^otag:|^oracletag:|^functionality:/i, '')
-      .replace(/["-]/g, ' ')
-      .trim()
-      .toLowerCase() || null;
+    return (
+      tag
+        .replace(/^otag:|^oracletag:|^functionality:/i, '')
+        .replace(/["-]/g, ' ')
+        .trim()
+        .toLowerCase() || null
+    );
   }
   const phrase = intent.oraclePatterns.find(Boolean);
   if (phrase) {
-    const clean = phrase.replace(/^o:/i, '').replace(/^"|"$/g, '').trim().toLowerCase();
+    const clean = phrase
+      .replace(/^o:/i, '')
+      .replace(/^"|"$/g, '')
+      .trim()
+      .toLowerCase();
     if (clean) return clean.length > 42 ? `${clean.slice(0, 40)}…` : clean;
   }
   const type = intent.types.find(Boolean);
@@ -175,20 +202,23 @@ export function buildWhyItMatches(
 ): WhyItMatches | null {
   if (!intent) return null;
 
-  const reasons = explainCardMatch(card, intent);
+  const oracle = fullOracleText(card);
+  const reasons = explainCardMatch(card, intent, oracle);
   if (reasons.length === 0) return null;
 
-  const semanticTokens = reasons.filter((r) => {
+  const directness: MatchDirectness = reasons.some((r) => {
     const token = r.token?.toLowerCase() ?? '';
     return token.startsWith('o:') || token.startsWith('otag:');
-  });
-  const directness: MatchDirectness = semanticTokens.length > 0 ? 'direct' : 'structural';
+  })
+    ? 'direct'
+    : 'structural';
 
-  const method = detectMethod(card);
-  const role = detectRole(card);
+  const method = detectMethodFromOracle(oracle);
+  const role = detectRoleFromOracle(oracle);
   const summary =
     directness === 'direct'
-      ? (method ? METHOD_SUMMARY[method] : null) ?? 'Its rules text covers what you asked for.'
+      ? ((method ? METHOD_SUMMARY[method] : null) ??
+        'Its rules text covers what you asked for.')
       : STRUCTURAL_SUMMARY;
 
   return {
@@ -209,7 +239,9 @@ export function buildWhyItMatches(
  * the query keeps "why it matches" available on every search without
  * inventing constraints: only tokens present in the query are reported.
  */
-export function intentFromScryfallQuery(query: string | null | undefined): SearchIntent | null {
+export function intentFromScryfallQuery(
+  query: string | null | undefined,
+): SearchIntent | null {
   if (!query || !query.trim()) return null;
 
   const oraclePatterns: string[] = [];

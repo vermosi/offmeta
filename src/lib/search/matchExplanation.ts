@@ -58,14 +58,20 @@ function cardCmc(card: ScryfallCard): number | undefined {
 
 function compare(op: string, a: number, b: number): boolean {
   switch (op) {
-    case '<': return a < b;
-    case '<=': return a <= b;
-    case '>': return a > b;
-    case '>=': return a >= b;
+    case '<':
+      return a < b;
+    case '<=':
+      return a <= b;
+    case '>':
+      return a > b;
+    case '>=':
+      return a >= b;
     case '=':
     case ':':
-    case '==': return a === b;
-    default: return false;
+    case '==':
+      return a === b;
+    default:
+      return false;
   }
 }
 
@@ -81,24 +87,24 @@ function quoteIfNeeded(value: string): string {
 export function explainCardMatch(
   card: ScryfallCard,
   intent: SearchIntent | null | undefined,
+  normalizedOracle?: string,
 ): MatchReason[] {
   if (!intent) return [];
 
   const reasons: MatchReason[] = [];
-  const cardColors = new Set(card.color_identity ?? card.colors ?? []);
-  const oracle = cardText(card);
-  const types = cardTypeLine(card);
-  const cmc = cardCmc(card);
 
   // Colors
   if (intent.colors && intent.colors.values.length > 0) {
+    const cardColors = new Set(card.color_identity ?? card.colors ?? []);
     const wanted = intent.colors.values;
     const matched = wanted.filter((c) => cardColors.has(c));
     if (matched.length > 0) {
       const names = matched.map((c) => COLOR_NAMES[c] ?? c).join('/');
       const prefix = intent.colors.isIdentity ? 'ci' : 'c';
       reasons.push({
-        label: intent.colors.isIdentity ? `Color identity: ${names}` : `Color: ${names}`,
+        label: intent.colors.isIdentity
+          ? `Color identity: ${names}`
+          : `Color: ${names}`,
         token: `${prefix}:${matched.join('').toLowerCase()}`,
       });
     }
@@ -106,17 +112,25 @@ export function explainCardMatch(
 
   // Types
   if (intent.types.length > 0) {
+    const types = cardTypeLine(card);
     const matched = intent.types.filter((t) => types.includes(t.toLowerCase()));
     if (matched.length > 0) {
       reasons.push({
         label: `Type: ${matched.join(', ')}`,
-        token: matched.map((t) => `t:${quoteIfNeeded(t.toLowerCase())}`).join(' '),
+        token: matched
+          .map((t) => `t:${quoteIfNeeded(t.toLowerCase())}`)
+          .join(' '),
       });
     }
   }
 
   // Mana value
-  if (intent.cmc && typeof cmc === 'number' && compare(intent.cmc.op, cmc, intent.cmc.value)) {
+  const cmc = intent.cmc ? cardCmc(card) : undefined;
+  if (
+    intent.cmc &&
+    typeof cmc === 'number' &&
+    compare(intent.cmc.op, cmc, intent.cmc.value)
+  ) {
     reasons.push({
       label: `Mana value ${intent.cmc.op}${intent.cmc.value} (this is ${cmc})`,
       token: `mv${intent.cmc.op}${intent.cmc.value}`,
@@ -124,15 +138,23 @@ export function explainCardMatch(
   }
 
   // Power / toughness
-  const pow = card.power ? Number(card.power) : NaN;
-  const tou = card.toughness ? Number(card.toughness) : NaN;
-  if (intent.power && !Number.isNaN(pow) && compare(intent.power.op, pow, intent.power.value)) {
+  const pow = intent.power && card.power ? Number(card.power) : NaN;
+  const tou = intent.toughness && card.toughness ? Number(card.toughness) : NaN;
+  if (
+    intent.power &&
+    !Number.isNaN(pow) &&
+    compare(intent.power.op, pow, intent.power.value)
+  ) {
     reasons.push({
       label: `Power ${intent.power.op}${intent.power.value}`,
       token: `pow${intent.power.op}${intent.power.value}`,
     });
   }
-  if (intent.toughness && !Number.isNaN(tou) && compare(intent.toughness.op, tou, intent.toughness.value)) {
+  if (
+    intent.toughness &&
+    !Number.isNaN(tou) &&
+    compare(intent.toughness.op, tou, intent.toughness.value)
+  ) {
     reasons.push({
       label: `Toughness ${intent.toughness.op}${intent.toughness.value}`,
       token: `tou${intent.toughness.op}${intent.toughness.value}`,
@@ -140,9 +162,17 @@ export function explainCardMatch(
   }
 
   // Oracle patterns (approximate: substring or regex-safe token match)
+  const oracle =
+    intent.oraclePatterns.length > 0
+      ? (normalizedOracle ?? cardText(card))
+      : '';
   for (const raw of intent.oraclePatterns) {
     if (!raw) continue;
-    const clean = raw.replace(/^o:/i, '').replace(/^"|"$/g, '').trim().toLowerCase();
+    const clean = raw
+      .replace(/^o:/i, '')
+      .replace(/^"|"$/g, '')
+      .trim()
+      .toLowerCase();
     if (!clean) continue;
     if (oracle.includes(clean)) {
       const label = clean.length > 40 ? `${clean.slice(0, 37)}…` : clean;

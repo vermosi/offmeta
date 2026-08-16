@@ -18,7 +18,10 @@ import { ExplanationPanel } from '@/components/ExplanationPanel';
 import { CLIENT_CONFIG } from '@/lib/config';
 
 import { rerankCardsWithIntelligence } from '@/lib/search/intelligence-ranking';
-import { buildWhyItMatches, intentFromScryfallQuery } from '@/lib/search/whyItMatches';
+import {
+  buildWhyItMatches,
+  intentFromScryfallQuery,
+} from '@/lib/search/whyItMatches';
 import type { ScryfallCard } from '@/types/card';
 import type { SearchIntent } from '@/types/search';
 import type { FilterState } from '@/types/filters';
@@ -134,7 +137,7 @@ export function SearchResultsArea({
 
   // Batch-fetch sparkline data for visible cards
   const sparklineNames = useMemo(
-    () => displayCards.map((c) => c.name).slice(0, 200),
+    () => displayCards.slice(0, 200).map((c) => c.name),
     [displayCards],
   );
   const { data: sparklineMap } = useBatchPriceHistory(sparklineNames);

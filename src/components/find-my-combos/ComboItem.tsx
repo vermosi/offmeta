@@ -6,8 +6,14 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { OracleText } from '@/components/ManaSymbol';
-import { Bookmark, BookmarkCheck, ChevronDown, ChevronUp, ExternalLink, Sparkles } from 'lucide-react';
-import { useSavedCombos } from '@/hooks/useSavedCombos';
+import {
+  Bookmark,
+  BookmarkCheck,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  Sparkles,
+} from 'lucide-react';
 import type { Combo } from '@/components/find-my-combos/types';
 import { useTranslation } from '@/lib/i18n';
 
@@ -15,12 +21,18 @@ interface ComboItemProps {
   combo: Combo;
   expanded: boolean;
   onToggle: () => void;
+  saved: boolean;
+  onToggleSave: () => void;
 }
 
-export function ComboItem({ combo, expanded, onToggle }: ComboItemProps) {
+export function ComboItem({
+  combo,
+  expanded,
+  onToggle,
+  saved,
+  onToggleSave,
+}: ComboItemProps) {
   const { t } = useTranslation();
-  const { isSaved, toggleSave } = useSavedCombos();
-  const saved = isSaved(combo.id);
 
   return (
     <Collapsible open={expanded} onOpenChange={onToggle}>
@@ -67,7 +79,9 @@ export function ComboItem({ combo, expanded, onToggle }: ComboItemProps) {
                 ))}
                 {combo.produces.length > 3 && (
                   <span className="text-xs text-muted-foreground">
-                    {t('comboItem.more', '+{count} more', { count: combo.produces.length - 3 })}
+                    {t('comboItem.more', '+{count} more', {
+                      count: combo.produces.length - 3,
+                    })}
                   </span>
                 )}
               </div>
@@ -146,40 +160,48 @@ export function ComboItem({ combo, expanded, onToggle }: ComboItemProps) {
           <div className="flex items-center justify-between">
             {combo.prices?.tcgplayer && (
               <span className="text-xs text-muted-foreground">
-                {t('comboItem.comboCost', 'Combo cost: ~${price}', { price: combo.prices.tcgplayer })}
+                {t('comboItem.comboCost', 'Combo cost: ~${price}', {
+                  price: combo.prices.tcgplayer,
+                })}
               </span>
             )}
             <div className="flex items-center gap-1">
-            <Button
-              variant={saved ? 'secondary' : 'ghost'}
-              size="sm"
-              className="h-7 text-xs gap-1"
-              aria-pressed={saved}
-              aria-label={saved ? t('comboItem.removeSaved', 'Remove saved combo') : t('comboItem.saveCombo', 'Save combo')}
-              onClick={() => toggleSave(combo)}
-            >
-              {saved ? (
-                <BookmarkCheck className="h-3 w-3" />
-              ) : (
-                <Bookmark className="h-3 w-3" />
-              )}
-              {saved ? t('comboItem.saved', 'Saved') : t('comboItem.save', 'Save')}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs gap-1"
-              asChild
-            >
-              <a
-                href={`https://commanderspellbook.com/combo/${combo.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Button
+                variant={saved ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-7 text-xs gap-1"
+                aria-pressed={saved}
+                aria-label={
+                  saved
+                    ? t('comboItem.removeSaved', 'Remove saved combo')
+                    : t('comboItem.saveCombo', 'Save combo')
+                }
+                onClick={onToggleSave}
               >
-                Commander Spellbook
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </Button>
+                {saved ? (
+                  <BookmarkCheck className="h-3 w-3" />
+                ) : (
+                  <Bookmark className="h-3 w-3" />
+                )}
+                {saved
+                  ? t('comboItem.saved', 'Saved')
+                  : t('comboItem.save', 'Save')}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                asChild
+              >
+                <a
+                  href={`https://commanderspellbook.com/combo/${combo.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Commander Spellbook
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </Button>
             </div>
           </div>
         </div>

@@ -80,7 +80,9 @@ function MetaRow({ label, value }: { label: string; value?: string | null }) {
       <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
         {label}
       </span>
-      <span className="text-sm text-foreground text-right break-words">{value}</span>
+      <span className="text-sm text-foreground text-right break-words">
+        {value}
+      </span>
     </div>
   );
 }
@@ -92,8 +94,12 @@ export function CardDetailView({ card }: CardDetailViewProps) {
 
   const [printings, setPrintings] = useState<CardPrinting[]>([]);
   const [isLoadingPrintings, setIsLoadingPrintings] = useState(true);
-  const [selectedPrinting, setSelectedPrinting] = useState<CardPrinting | null>(null);
-  const [refreshedPrices, setRefreshedPrices] = useState<DisplayPrices | null>(null);
+  const [selectedPrinting, setSelectedPrinting] = useState<CardPrinting | null>(
+    null,
+  );
+  const [refreshedPrices, setRefreshedPrices] = useState<DisplayPrices | null>(
+    null,
+  );
   const [currentFace, setCurrentFace] = useState(0);
   const [isFlipping, setIsFlipping] = useState(false);
   const [rulings, setRulings] = useState<CardRuling[]>([]);
@@ -199,7 +205,8 @@ export function CardDetailView({ card }: CardDetailViewProps) {
   );
 
   const displayImageUrl =
-    selectedPrinting?.image_uris?.large ?? getCardImage(card, 'large', currentFace);
+    selectedPrinting?.image_uris?.large ??
+    getCardImage(card, 'large', currentFace);
   const faceDetails = getCardFaceDetails(card, currentFace, locale);
   const displaySetName = selectedPrinting?.set_name || card.set_name;
   const displayRarity = selectedPrinting?.rarity || card.rarity;
@@ -299,7 +306,10 @@ export function CardDetailView({ card }: CardDetailViewProps) {
       </section>
 
       {/* ── 02 · Rulings ─────────────────────────────────────────────────── */}
-      <section aria-label={t('card.rulingsSection', 'Rulings')} className="space-y-4">
+      <section
+        aria-label={t('card.rulingsSection', 'Rulings')}
+        className="space-y-4"
+      >
         <SectionRule
           index="02"
           label={t('card.rulingsLabel', 'Rulings')}
@@ -307,7 +317,10 @@ export function CardDetailView({ card }: CardDetailViewProps) {
         />
         {!isLoadingRulings && rulings.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            {t('card.noRulings', 'No official rulings published for this card.')}
+            {t(
+              'card.noRulings',
+              'No official rulings published for this card.',
+            )}
           </p>
         ) : (
           <CardModalRulings
@@ -320,14 +333,23 @@ export function CardDetailView({ card }: CardDetailViewProps) {
       </section>
 
       {/* ── 03 · Legality ────────────────────────────────────────────────── */}
-      <section aria-label={t('card.formatLegality', 'Format Legality')} className="space-y-4">
-        <SectionRule index="03" label={t('card.formatLegality', 'Format Legality')} />
+      <section
+        aria-label={t('card.formatLegality', 'Format Legality')}
+        className="space-y-4"
+      >
+        <SectionRule
+          index="03"
+          label={t('card.formatLegality', 'Format Legality')}
+        />
         <CardModalLegalities legalities={card.legalities} />
       </section>
 
       {/* ── 04 · Pricing & history ───────────────────────────────────────── */}
       <section aria-label={t('card.pricing', 'Pricing')} className="space-y-4">
-        <SectionRule index="04" label={t('card.pricing', 'Pricing & History')} />
+        <SectionRule
+          index="04"
+          label={t('card.pricing', 'Pricing & History')}
+        />
         <div className="grid gap-6 lg:grid-cols-2 items-start">
           <CardModalPurchaseLinks
             card={card}
@@ -338,6 +360,7 @@ export function CardDetailView({ card }: CardDetailViewProps) {
             onAffiliateClick={handleAffiliateClick}
           />
           <CardPriceHistoryChart
+            key={selectedPrinting?.id ?? card.id}
             cardName={card.name}
             scryfallId={selectedPrinting?.id ?? card.id}
           />
@@ -345,7 +368,10 @@ export function CardDetailView({ card }: CardDetailViewProps) {
       </section>
 
       {/* ── 05 · Printings ───────────────────────────────────────────────── */}
-      <section aria-label={t('card.printingsSection', 'Printings')} className="space-y-4">
+      <section
+        aria-label={t('card.printingsSection', 'Printings')}
+        className="space-y-4"
+      >
         <SectionRule
           index="05"
           label={t('card.printingsLabel', 'Printings')}
@@ -361,7 +387,10 @@ export function CardDetailView({ card }: CardDetailViewProps) {
       </section>
 
       {/* ── 06 · Metadata ────────────────────────────────────────────────── */}
-      <section aria-label={t('card.metadata', 'Metadata')} className="space-y-4">
+      <section
+        aria-label={t('card.metadata', 'Metadata')}
+        className="space-y-4"
+      >
         <SectionRule index="06" label={t('card.metadata', 'Metadata')} />
         <div className="grid gap-6 lg:grid-cols-2 items-start">
           <div>
@@ -394,11 +423,17 @@ export function CardDetailView({ card }: CardDetailViewProps) {
         </div>
 
         <div className={comboCount > 0 ? 'pt-2' : 'hidden'}>
-          <CardModalCombos cardName={card.name} onComboCountChange={setComboCount} />
+          <CardModalCombos
+            cardName={card.name}
+            onComboCountChange={setComboCount}
+          />
         </div>
 
         <div className="pt-2">
-          <CardModalToolbox cardName={card.name} scryfallUri={card.scryfall_uri} />
+          <CardModalToolbox
+            cardName={card.name}
+            scryfallUri={card.scryfall_uri}
+          />
         </div>
       </section>
     </article>
