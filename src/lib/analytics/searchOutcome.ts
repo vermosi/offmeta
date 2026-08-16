@@ -18,6 +18,27 @@
  */
 
 import { trackEventDirect } from '@/hooks/useAnalytics';
+import { supabase } from '@/integrations/supabase/client';
+
+/**
+ * Backfill `translation_logs.result_count` for the request that just finished.
+ *
+ * The edge function only knows the result count on the AI path; deterministic,
+ * pattern, concept and cache translations returned before any Scryfall probe.
+ * Reporting the count the user actually saw makes zero-result monitoring cover
+ * every source instead of the ~4% that go through the AI.
+ */
+function reportResultCount(requestId: string, resultCount: number): void {
+  if (!Number.isFinite(resultCount) || resultCount < 0) return;
+  void supabase
+    .rpc('record_translation_result_count', {
+      p_request_id: requestId,
+      p_result_count: Math.round(resultCount),
+    })
+    .then(undefined, () => {
+      /* Telemetry only — never surface a failure to the user. */
+    });
+}
 
 export type SearchOutcome =
   | 'results'
