@@ -4,8 +4,8 @@
  * @module components/SearchResultsArea
  */
 
-import { lazy, Suspense, useMemo } from 'react';
-import { useBatchPriceHistory, useAuth } from '@/hooks';
+import { lazy, Suspense, useMemo, useRef } from 'react';
+import { useBatchPriceHistory, useAuth, useResultsEngagement } from '@/hooks';
 
 import { CardItem } from '@/components/CardItem';
 import { CardListItem } from '@/components/CardListItem';
