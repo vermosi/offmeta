@@ -288,6 +288,15 @@ function customizeHtmlForCard(templateHtml, card, slug) {
   `;
   html = html.replace(/<\/head>/i, `${seoBlock}\n  </head>`);
 
+  // The static shell ships a generic homepage <h1> inside #seo-content. Strip
+  // it (and its explanatory comment) so a prerendered card page has exactly one
+  // h1 — the card's own heading below.
+  html = html.replace(
+    /<!--[\s\S]*?Static indexable content for SEO crawlers[\s\S]*?-->\s*/i,
+    '',
+  );
+  html = html.replace(/<aside\b[^>]*id=["']seo-content["'][\s\S]*?<\/aside>\s*/i, '');
+
   // Inject noscript with the card body — right after <body ...>
   const noscript = `
     <noscript>
@@ -303,6 +312,7 @@ function customizeHtmlForCard(templateHtml, card, slug) {
     </noscript>
   `;
   html = html.replace(/<body([^>]*)>/i, `<body$1>${noscript}`);
+
 
   return html;
 }
