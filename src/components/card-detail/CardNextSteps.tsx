@@ -17,6 +17,7 @@ import { Coins, Users, Compass } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getRelatedCards } from '@/services/discovery';
 import { cardNameToSlug } from '@/lib/card-slug';
+import { searchHref } from '@/lib/landing/searchHref';
 import { logger } from '@/lib/core/logger';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useTranslation } from '@/lib/i18n';
@@ -59,10 +60,6 @@ async function fetchRoleLabels(oracleId: string): Promise<string[]> {
     if (labels.length >= MAX_ROLE_SEARCHES) break;
   }
   return labels;
-}
-
-function searchHref(query: string): string {
-  return `/?q=${encodeURIComponent(query)}`;
 }
 
 export function CardNextSteps({ card }: CardNextStepsProps) {

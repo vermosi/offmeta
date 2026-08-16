@@ -19,7 +19,6 @@ import { CLIENT_CONFIG } from '@/lib/config';
 
 import { rerankCardsWithIntelligence } from '@/lib/search/intelligence-ranking';
 import { buildWhyItMatches, intentFromScryfallQuery } from '@/lib/search/whyItMatches';
-import { getSearchRankingSignals } from '@/lib/search-ranking-signals';
 import type { ScryfallCard } from '@/types/card';
 import type { SearchIntent } from '@/types/search';
 import type { FilterState } from '@/types/filters';
@@ -140,8 +139,10 @@ export function SearchResultsArea({
   );
   const { data: sparklineMap } = useBatchPriceHistory(sparklineNames);
   const { user } = useAuth();
-  const { hadFastClick, hadRefinement } =
-    getSearchRankingSignals(originalQuery);
+  const hadFastClick =
+    sessionStorage.getItem('offmeta_fast_click_query') === originalQuery;
+  const hadRefinement =
+    sessionStorage.getItem('offmeta_once:first_refinement') === '1';
   // Only the explicit "relevance" sort defers ordering to the intelligence reranker.
   // Every other sort (including name-asc) is an explicit user ordering.
   const hasCustomSort = !!activeSort && activeSort !== 'relevance-desc';
