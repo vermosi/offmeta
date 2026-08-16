@@ -287,6 +287,8 @@ const ALLOWED_EVENT_TYPES = [
   'pro_upgrade_impression',
   'rerun_edited_query',
   'card_click',
+  'results_engagement', // Scroll depth / dwell over a rendered result set
+
   'card_modal_view',
   'card_page_view', // Dedicated /cards/:slug route view (distinct from in-app modal)
   'card_page_exit_action', // Click on the card page next-step rail (cheaper | plays_with | role_search)

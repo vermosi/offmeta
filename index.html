@@ -236,9 +236,11 @@
     <!--
       Static indexable content for SEO crawlers. Removed from the DOM by
       src/main.tsx once React mounts, so the rendered page keeps exactly one
-      <h1> (the React one) while the raw HTML still ships a heading, copy and
-      internal links for crawlers that do not execute JavaScript.
+      main heading (the React one) while the raw HTML still ships a heading,
+      copy and internal links for crawlers that do not execute JavaScript.
+      Route prerenderers strip this block and supply their own heading.
     -->
+
     <aside
       id="seo-content"
       aria-label="About OffMeta"
