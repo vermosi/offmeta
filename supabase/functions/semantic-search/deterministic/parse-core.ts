@@ -4,6 +4,7 @@
  * @module deterministic/parse-core
  */
 
+import { resolveSubtypeSlug } from '../../_shared/subtypeMatching.ts';
 import {
   COLOR_MAP,
   MULTICOLOR_MAP,
@@ -366,7 +367,17 @@ export function parseSubtypes(query: string, ir: SearchIR): string {
     }
   }
 
-  return remaining;
+  // Fall back to the full generated Scryfall subtype catalog so uncommon
+  // tribes ("hero", "monkey", "ape") resolve to t: instead of leaking into
+  // oracle text or the art-tag fallback.
+  for (const token of remaining.match(/[a-z][a-z'-]*/gi) ?? []) {
+    const slug = resolveSubtypeSlug(token);
+    if (!slug) continue;
+    if (!ir.subtypes.includes(slug)) ir.subtypes.push(slug);
+    remaining = remaining.replace(new RegExp(`\\b${token}\\b`, 'gi'), '').trim();
+  }
+
+  return remaining.replace(/\s{2,}/g, ' ').trim();
 }
 
 export function parseTypes(query: string, ir: SearchIR): string {

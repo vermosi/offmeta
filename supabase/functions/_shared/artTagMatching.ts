@@ -10,6 +10,7 @@
  * same query.
  */
 import { SCRYFALL_ART_TAG_SET } from './art-tag-vocabulary.ts';
+import { isSubtypeWord } from './subtypeMatching.ts';
 
 /** Words that carry no meaning when someone describes card artwork. */
 const FILLER_WORDS = new Set([
@@ -178,8 +179,12 @@ export function matchArtTagQuery(query: string): ArtTagMatch | null {
   // asked about artwork.
   if (
     !explicitArt &&
-    tokens.some((token) =>
-      tokenVariants(token).some((variant) => RESERVED_TERMS.has(variant)),
+    tokens.some(
+      (token) =>
+        tokenVariants(token).some((variant) => RESERVED_TERMS.has(variant)) ||
+        // Any real Scryfall subtype ("hero", "monkey", "pirate") is a type
+        // reading first: "cards that are heroes" means t:hero, not atag:hero.
+        isSubtypeWord(token),
     )
   ) {
     return null;

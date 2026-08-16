@@ -100,3 +100,11 @@ describe('never hijacks type or mechanic terms', () => {
     expect(matchArtTagQuery('shirtless artwork')?.query).toBe('atag:shirtless');
   });
 });
+
+describe('subtype words are never art tags', () => {
+  it('keeps creature types as type searches', () => {
+    expect(matchArtTagQuery('cards that are heroes')).toBeNull();
+    expect(matchArtTagQuery('heroes')).toBeNull();
+    expect(isLikelyArtTagQuery('monkey cards')).toBe(false);
+  });
+});
