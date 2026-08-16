@@ -56,6 +56,15 @@ Deno.test('resolveSubcommand and extractQuery handle sub-command payloads', () =
   assertEquals(resolveSubcommand({ type: 2, data: { name: 'other' } }), null);
 });
 
+Deno.test('buildUnknownCommandEmbed lists commands and example searches', () => {
+  const embed = buildUnknownCommandEmbed('old-query');
+  assertStringIncludes(embed.description, '/offmeta search');
+  assertStringIncludes(embed.description, '/offmeta help');
+  assertStringIncludes(embed.description, '/offmeta privacy');
+  assertStringIncludes(embed.description, 'cards like Rhystic Study');
+  assertStringIncludes(embed.description, 'budget board wipes in green');
+});
+
 Deno.test('cardNameToSlug converts card names to canonical OffMeta slugs', () => {
   assertEquals(cardNameToSlug('Sol Ring'), 'sol-ring');
   assertEquals(cardNameToSlug('Rhystic Study'), 'rhystic-study');
