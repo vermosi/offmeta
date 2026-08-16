@@ -282,6 +282,12 @@ function buildIR(query: string): SearchIR {
   remaining = remaining
     .replace(/\s+/g, ' ')
     .replace(/^[\s,]+|[\s,]+$/g, '')
+    // Subjective "obscurity" adjectives are never printed on cards — drop them
+    // instead of turning them into literal oracle text searches (o:"hidden").
+    .replace(
+      /\b(hidden(?:\s+gems?)?|underrated|underplayed|overlooked|obscure|sleeper|off\s*-?\s*meta|niche|unknown|lesser\s+known|unpopular|spicy)\b/gi,
+      '',
+    )
     .replace(/\b(that|which|with|the|a|an|cards?|released|printed|utility|in|for|from|staples?|search|searches|tribal|payoffs?|synerg(?:y|ies)|token|tokens?|creature|creatures?|opponent|opponents?|takes?|action|when|whenever|graveyard|battlefield|abilities|ability|good|best|great|nice|cool|awesome|strong|powerful|useful|top|find|give|gives|gives?|make|makes|let|lets|my|your|its|some|any|also|really|very|most|all|every|each|other|new|old|more|well|would|could|should|want|need|like|help|me|you|it|do|does|get|got|go|goes|there|their|here|these|those|being|been|have|has|had|will|can|may|might|must|shall|just|only|even|still|already|are|is|be|was|were|what|how|about|into|onto|upon|over|under|through|around|between|during)\b/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
