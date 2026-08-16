@@ -69,7 +69,9 @@ const EPHEMERAL = 1 << 6;
 
 interface DiscordOption {
   name: string;
+  type?: number;
   value?: unknown;
+  options?: DiscordOption[];
 }
 
 interface DiscordEmbedField {
