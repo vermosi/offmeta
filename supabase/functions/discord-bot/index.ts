@@ -784,7 +784,7 @@ async function fetchScryfallSlice(
     scryfallResponse = await fetch(
       `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
         `${scryfallQuery} game:paper`,
-      )}&unique=cards&page=${page}`,
+      )}&unique=cards&order=edhrec&dir=asc&page=${page}`,
       {
         headers: {
           'User-Agent': 'OffMetaDiscordBot/1.0',
