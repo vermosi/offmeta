@@ -186,8 +186,20 @@ export function SearchResultsArea({
     [activeSort, rankedCards],
   );
 
+  const resultsRef = useRef<HTMLDivElement | null>(null);
+  useResultsEngagement({
+    query: originalQuery,
+    resultCount: rankedCards.length,
+    containerRef: resultsRef,
+    enabled: activeTab === 'cards' && !isLoading,
+  });
+
   return (
-    <div id={id} className="container-main space-y-6 pt-4 sm:pt-5 lg:pt-6">
+    <div
+      id={id}
+      ref={resultsRef}
+      className="container-main space-y-6 pt-4 sm:pt-5 lg:pt-6"
+    >
       {/* Cards tab */}
       {activeTab === 'cards' && (
         <>
