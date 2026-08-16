@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { buildDeterministicIntent } from './deterministic/index.ts';
 import { lookupCardName } from './card-name-lookup.ts';
+import { buildAiRepairCandidates } from './ai-repair-candidates.ts';
 import { buildSystemPrompt, type QueryTier } from './prompts.ts';
 import { getCorsHeaders } from '../_shared/auth.ts';
 import { LOVABLE_API_KEY, supabase } from './client.ts';
@@ -1221,7 +1222,11 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         }
 
         // Strategy 1: Try deterministic query
-        if (deterministicQuery && deterministicQuery !== finalQuery) {
+        if (
+          resultCount === 0 &&
+          deterministicQuery &&
+          deterministicQuery !== finalQuery
+        ) {
           try {
             const detResp = await fetchWithTimeout(
               `https://api.scryfall.com/cards/search?q=${encodeURIComponent(deterministicQuery)}&page=1`,
