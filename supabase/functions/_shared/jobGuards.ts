@@ -1,5 +1,32 @@
-import { getCorsHeaders, requireAdmin, requireServiceRole } from './auth.ts';
+import {
+  getCorsHeaders,
+  requireAdmin,
+  requireServiceOrPipelineKey,
+  requireServiceRole,
+} from './auth.ts';
 import { checkRateLimit, maybeCleanup } from './rateLimit.ts';
+
+/**
+ * Scheduled jobs run from pg_cron, which has no admin user session. Accept the
+ * shared pipeline key (or a service-role bearer) in addition to an admin user
+ * so the same function can be triggered by cron and from the admin panel.
+ */
+export async function requirePipelineOrAdminJob(
+  req: Request,
+): Promise<
+  | { authorized: true; corsHeaders: Record<string, string> }
+  | { authorized: false; response: Response }
+> {
+  const corsHeaders = getCorsHeaders(req);
+  const pipelineCheck = await requireServiceOrPipelineKey(req, corsHeaders);
+  if (pipelineCheck.authorized) return { authorized: true, corsHeaders };
+
+  const adminCheck = await requireAdmin(req, corsHeaders);
+  if (!adminCheck.authorized) return adminCheck;
+
+  return { authorized: true, corsHeaders };
+}
+
 
 export async function requireAdminJob(
   req: Request,

@@ -13,7 +13,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
-import { applyJobRateLimit, requireAdminJob } from '../_shared/jobGuards.ts';
+import { applyJobRateLimit, requirePipelineOrAdminJob } from '../_shared/jobGuards.ts';
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = validateEnv([
   'SUPABASE_URL',
@@ -45,7 +45,7 @@ serve(withLogging('generate-patterns', async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const adminCheck = await requireAdminJob(req);
+  const adminCheck = await requirePipelineOrAdminJob(req);
   if (!adminCheck.authorized) {
     return adminCheck.response;
   }
