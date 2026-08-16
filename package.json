@@ -118,6 +118,17 @@
     "fast-uri": "^4.1.2",
     "ip-address": "^10.5.0",
     "hono": "^4.13.2",
-    "@hono/node-server": "^2.1.1"
+    "@hono/node-server": "^2.1.1",
+    "eslint": {
+      "ajv": "^6.15.0"
+    },
+    "@eslint/eslintrc": {
+      "ajv": "^6.15.0"
+    }
+  },
+  "resolutions": {
+    "eslint/ajv": "^6.15.0",
+    "@eslint/eslintrc/ajv": "^6.15.0"
   }
 }
+
