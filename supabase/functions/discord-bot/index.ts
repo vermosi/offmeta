@@ -182,8 +182,6 @@ export async function verifyDiscordSignature(
   }
 }
 
-/** Pull the free-text query out of the slash-command options. */
-export function extractQuery(interaction: DiscordInteraction): string {
 /** Sub-command names under the single `/offmeta` command. */
 export type OffmetaSubcommand = 'search' | 'privacy' | null;
 
