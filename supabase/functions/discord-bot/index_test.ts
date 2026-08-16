@@ -16,7 +16,44 @@ import {
   scryfallPageFor,
   buildPaginationComponents,
   extractEmbedContext,
+  extractQuery,
+  resolveSubcommand,
+  SLASH_COMMANDS,
 } from './index.ts';
+
+Deno.test('SLASH_COMMANDS registers one command with search/privacy sub-commands', () => {
+  assertEquals(SLASH_COMMANDS.length, 1);
+  assertEquals(SLASH_COMMANDS[0].name, 'offmeta');
+  assertEquals(
+    (SLASH_COMMANDS[0].options ?? []).map((o) => o.name),
+    ['search', 'privacy'],
+  );
+});
+
+Deno.test('resolveSubcommand and extractQuery handle sub-command payloads', () => {
+  const search = {
+    type: 2,
+    data: {
+      name: 'offmeta',
+      options: [{ name: 'search', type: 1, options: [{ name: 'query', value: 'treasure' }] }],
+    },
+  };
+  assertEquals(resolveSubcommand(search), 'search');
+  assertEquals(extractQuery(search), 'treasure');
+
+  const privacy = { type: 2, data: { name: 'offmeta', options: [{ name: 'privacy', type: 1 }] } };
+  assertEquals(resolveSubcommand(privacy), 'privacy');
+
+  // Legacy flat registration still resolves to search.
+  const legacy = {
+    type: 2,
+    data: { name: 'offmeta', options: [{ name: 'query', value: 'ramp' }] },
+  };
+  assertEquals(resolveSubcommand(legacy), 'search');
+  assertEquals(extractQuery(legacy), 'ramp');
+
+  assertEquals(resolveSubcommand({ type: 2, data: { name: 'other' } }), null);
+});
 
 Deno.test('cardNameToSlug converts card names to canonical OffMeta slugs', () => {
   assertEquals(cardNameToSlug('Sol Ring'), 'sol-ring');
