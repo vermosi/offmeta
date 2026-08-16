@@ -1,38 +1,43 @@
 # What to work on next
 
-Based on the last 7 days of live data (5,095 analytics events, 6 registered users, 3 error events, 156k ontology rows), the product works — almost nobody is seeing it, and the people who do search don't click through.
+Based on the last 7–14 days of live data, three things stand out. All are search-quality first, in priority order.
 
-## What the data says
+## 1. Zero-result monitoring is blind on 96% of searches
 
-- Funnel: 138 `search_started` → 89 `search_results` → 88 `search_success` → only **30 `card_click`**. Search quality is fine; the results-to-card step is where users stop.
-- Reach: 80 homepage views and 90 landing page views in a week. Acquisition, not features, is the ceiling.
-- Health: 4 unresolved signals — dynamic-import module load failures (3), a critical SEO regression logged on `/cards/no-mercy`, and one on `/sitemap.xml`.
-- `query_cache` holds only 25 rows, so almost every search pays the full AI translation cost.
+Verified in `translation_logs` (last 7 days): only the AI paths record a result count. Deterministic (229), pattern_match (185), concept_match (23) and cache (22) rows all store `result_count = NULL`, so the health metrics and zero-result auto-repair loop only ever see the ~71 AI searches.
 
-## Proposed order
+Fix: report the actual Scryfall result count back for every translation source, not just AI.
 
-### 1. Fix the live health signals (small, do first)
-- Chase the "error loading dynamically imported module" events — confirm whether the existing auto-recovery reload is firing or users are hitting a white screen.
-- Investigate the two logged critical SEO regressions (`/cards/no-mercy`, `/sitemap.xml`) and confirm whether they are real or false positives from the checker.
+- Client sends the observed result count for the pinned `request_id` after results land.
+- A small edge endpoint (or an extension of the existing logging path) updates the matching `translation_logs` row.
+- Health metrics and the zero-result candidate RPC then cover all sources.
 
-### 2. Close the results → card-click gap (highest product leverage)
-Only ~34% of successful searches produce a card click. Work the results surface:
-- Instrument *why*: log result-position clicks and scroll depth so we know if it's relevance, tile density, or the tile lacking a reason to click.
-- Make the first row earn the click: surface "why it matches" more prominently on the tile itself rather than after opening the card.
-- Add a lightweight hover/tap preview so scanning is cheap.
+## 2. The AI path still emits queries the deterministic layer already knows how to fix
 
-### 3. Grow reach (biggest ceiling)
-- Verify indexing status of the ~32k card pages and the AI/curated search pages actually submitted vs. indexed; fix whatever is stalling.
-- Push the Discord bot (37 searches last week from a channel with near-zero promotion) — it is the cheapest distribution channel already built.
-- Ship 2–3 high-intent guide/landing pages against real queries pulled from `search_intent_clusters`.
+Every zero-result search in the last 14 days came from the AI path, and most are cases the deterministic modules handle correctly on their own:
 
-### 4. Cache warm-up follow-through
-`query_cache` at 25 entries means the circuit breaker/pacing work is protecting rate limits but not actually filling the cache. Audit a real warmup run end to end and confirm entries land and are read on the hot path.
+- `shirtless cards` -> `o:"shirtless"` (should be `atag:shirtless`)
+- `cards with tacos in them` -> `art:taco`
+- `banned cards` -> `banned` (invalid syntax on its own)
+- `cards like hermit druid` -> `t:druid t:hermit` (a card name treated as types)
+- `mono red monkeyape` -> stacked `o:` terms that can never co-occur
+
+Fix: run the existing deterministic post-processors over the AI output before returning it — art-tag/subtype resolution, card-name detection for "cards like X", and a validity check that rejects bare `banned` and multi-`o:` stacks. Falls back to the deterministic interpretation when the AI query is provably empty.
+
+## 3. Result engagement is instrumented but has no data yet
+
+`useResultsEngagement` is wired into `SearchResultsArea`, but no `results_engagement` events exist yet — it only just shipped. Card clicks remain low (30 clicks against 89 result sets in 7 days).
+
+Action: leave the instrumentation to accumulate a week of data, then use scroll-depth and dwell to decide whether the low click rate is a relevance problem or a presentation problem. No code change now.
+
+## Suggested order
+
+1. Result-count reporting for all sources (unblocks measuring everything else).
+2. AI-output post-processing against the deterministic layer.
+3. Revisit engagement once data exists.
 
 ## Technical notes
 
-- Funnel numbers come from `public.analytics_events` (`event_type` counts, 7-day window).
-- Health signals from `public.error_events`; watchdog has run 77 times in 3 days, so the ops loop itself is alive.
-- No schema changes are needed for items 1, 2, or 4; item 2 adds new analytics event types only.
-
-Tell me which track to start with, or approve and I'll take them in the order above.
+- Files: `supabase/functions/semantic-search/index.ts` (logging call sites per source), `logging.ts`, `src/hooks/useSearchQuery.ts` (result-count report using the existing `x-request-id`), plus the deterministic modules `artTagMatching.ts`, `subtypeMatching.ts`, `parse-patterns.ts` reused as a post-AI pass in `tag-guard.ts`.
+- No schema change needed for item 1; `translation_logs.result_count` and `request_id` already exist and are indexed.
+- Tests: extend the semantic-search deterministic tests with the five failing queries above as regression cases.
