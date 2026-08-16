@@ -1264,9 +1264,10 @@ const startupCheck = runStartupCheck()
   });
 
 /**
- * Global command set. `/offmeta-privacy` exists because the Discord Developer
- * Policy requires users to be able to see what data an app collects and how to
- * have it deleted, from inside Discord.
+ * Global command set. One `/offmeta` command with sub-commands, so the app
+ * stays a single command surface in Discord. `privacy` exists because the
+ * Discord Developer Policy requires users to be able to see what data an app
+ * collects and how to have it deleted, from inside Discord.
  */
 export const SLASH_COMMANDS = [
   {
@@ -1275,19 +1276,27 @@ export const SLASH_COMMANDS = [
     type: 1,
     options: [
       {
-        name: 'query',
-        description: 'What kind of card are you after?',
-        type: 3,
-        required: true,
+        name: 'search',
+        description: 'Search Magic cards in plain English',
+        type: 1,
+        options: [
+          {
+            name: 'query',
+            description: 'What kind of card are you after?',
+            type: 3,
+            required: true,
+          },
+        ],
+      },
+      {
+        name: 'privacy',
+        description: 'What data OffMeta stores, and how to have it deleted',
+        type: 1,
       },
     ],
   },
-  {
-    name: 'offmeta-privacy',
-    description: 'What data OffMeta stores, and how to have it deleted',
-    type: 1,
-  },
 ];
+
 
 /**
  * Registers (upserts) the global slash commands with Discord.
