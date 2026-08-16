@@ -24,7 +24,7 @@ import { reportEdgeError } from '../_shared/errorReporter.ts';
 const BATCH_SIZE = 75;
 const SCRYFALL_DELAY_MS = 120;
 /** Cards processed per invocation before handing off to the next chunk. */
-const CHUNK_SIZE = 6000;
+const CHUNK_SIZE = 1500;
 /** Safety stop so a runaway catalog can never loop forever. */
 const MAX_OFFSET = 200_000;
 const log = createLogger('price-snapshot');
