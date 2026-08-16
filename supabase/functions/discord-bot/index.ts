@@ -1412,6 +1412,43 @@ async function registerSlashCommand(): Promise<Response> {
   return Response.json({ ok: true, commands: SLASH_COMMANDS.map((c) => c.name) });
 }
 
+/** Stable fingerprint of the command definitions we expect Discord to hold. */
+export async function commandsFingerprint(): Promise<string> {
+  const bytes = new TextEncoder().encode(JSON.stringify(SLASH_COMMANDS));
+  const digest = await crypto.subtle.digest('SHA-256', asBufferSource(bytes));
+  return Array.from(new Uint8Array(digest))
+    .slice(0, 12)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+let commandSyncStarted = false;
+
+/**
+ * Keeps Discord's global command list in sync with `SLASH_COMMANDS`.
+ *
+ * Discord answers "This command is outdated" when a client holds a command
+ * shape we no longer serve, so a redeploy that changes the definitions must
+ * re-register. Guarded by a durable dedupe key on the definition hash: the
+ * PUT happens once per shape, not once per cold start. If the database is
+ * unreachable we skip rather than register blindly — Discord rate-limits
+ * global command writes.
+ */
+async function syncSlashCommands(): Promise<void> {
+  if (commandSyncStarted) return;
+  commandSyncStarted = true;
+  if (!Deno.env.get('DISCORD_APPLICATION_ID') || !Deno.env.get('DISCORD_BOT_TOKEN')) return;
+  try {
+    const hash = await commandsFingerprint();
+    const claim = await claimDedupe(`discord:commands:${hash}`, 7 * 24 * 60 * 60, { hash });
+    if (!claim.claimed || !claim.expiresAt) return;
+    const res = await registerSlashCommand();
+    log.info('command_sync_ran', { hash, status: res.status });
+  } catch (err) {
+    log.error('command_sync_failed', err);
+  }
+}
+
 /**
  * Background work started by an interaction (search + follow-up edit). Tracked
  * so end-to-end tests can await the deferred phase deterministically.
