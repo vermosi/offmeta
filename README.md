@@ -49,21 +49,7 @@ OffMeta helps players find Magic cards by intent instead of memorizing Scryfall 
 
 ## Documentation
 
-Start with the centralized index: [docs/README.md](docs/README.md).
-
-Core references:
-
-- [Architecture](docs/architecture.md)
-- [API](docs/api.md)
-- [Configuration](docs/configuration.md)
-- [Deployment](docs/deployment.md)
-- [Development](docs/development.md)
-- [Testing](docs/testing.md)
-- [Guides](docs/guides.md)
-- [Roadmap](docs/roadmap.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Internationalization](docs/i18n.md)
-- [Security](docs/security.md)
+All docs live in the centralized index: [docs/README.md](docs/README.md).
 
 ## Quick Start
 
