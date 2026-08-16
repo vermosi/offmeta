@@ -84,4 +84,13 @@ describe('Footer', () => {
     expect(screen.getByText('TopDeck.gg').closest('a')).toHaveAttribute('href', 'https://topdeck.gg');
   });
 
+  it('renders Partners section with Lifelink MTG backlink', () => {
+    renderFooter();
+    expect(screen.getByText('Partners')).toBeInTheDocument();
+    const link = screen.getByText('Lifelink MTG').closest('a');
+    expect(link).toHaveAttribute('href', 'https://lifelinkmtg.app');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
 });
