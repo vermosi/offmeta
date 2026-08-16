@@ -43,9 +43,22 @@ export async function enforceSupportedTags(
     return response;
   }
 
+  /**
+   * Stamp the server request id so the browser can attach it to its terminal
+   * `search_outcome` event — that id is the only join key between the
+   * translation row and what the user actually saw.
+   */
+  const withRequestId = (body: SearchPayload): Response =>
+    options.requestId
+      ? new Response(JSON.stringify({ ...body, requestId: options.requestId }), {
+          status: response.status,
+          headers: response.headers,
+        })
+      : response;
+
   const scryfallQuery = payload.scryfallQuery;
   if (typeof scryfallQuery !== 'string' || !scryfallQuery.trim()) {
-    return response;
+    return withRequestId(payload);
   }
 
   let validation;
@@ -55,8 +68,10 @@ export async function enforceSupportedTags(
     logWarn('tag_runtime_validation_failed', {
       error: error instanceof Error ? error.message : String(error),
     });
-    return response;
+    return withRequestId(payload);
   }
+
+
 
   if (validation.valid) return response;
 
