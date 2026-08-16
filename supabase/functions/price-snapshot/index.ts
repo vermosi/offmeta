@@ -27,9 +27,6 @@ const SCRYFALL_DELAY_MS = 120;
 const CHUNK_SIZE = 6000;
 /** Safety stop so a runaway catalog can never loop forever. */
 const MAX_OFFSET = 200_000;
-/** Scryfall ids are v4 UUIDs; locally generated v5 ids are rejected by the API. */
-const SCRYFALL_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 const log = createLogger('price-snapshot');
 
 interface Snapshot {
@@ -44,15 +41,15 @@ interface Snapshot {
 async function loadCatalogChunk(
   supabase: ReturnType<typeof createClient>,
   offset: number,
-): Promise<Array<{ name: string; id: string | null }>> {
-  const rows: Array<{ name: string; id: string | null }> = [];
+): Promise<string[]> {
+  const rows: string[] = [];
   const PAGE = 1000;
 
   for (let read = 0; read < CHUNK_SIZE; read += PAGE) {
     const from = offset + read;
     const { data, error } = await supabase
       .from('cards')
-      .select('name, scryfall_id')
+      .select('name')
       .order('name', { ascending: true })
       .range(from, from + PAGE - 1);
 
@@ -60,9 +57,9 @@ async function loadCatalogChunk(
       log.warn('Catalog page read failed', { from, error: error.message });
       break;
     }
-    const page = (data ?? []) as Array<{ name: string; scryfall_id: string | null }>;
+    const page = (data ?? []) as Array<{ name: string }>;
     for (const row of page) {
-      if (row.name) rows.push({ name: row.name, id: row.scryfall_id ?? null });
+      if (row.name) rows.push(row.name);
     }
     if (page.length < PAGE) break;
   }
@@ -114,12 +111,9 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
 
     const snapshots: Snapshot[] = [];
 
-    /**
-     * Fetches one identifier batch. Scryfall rejects an entire batch when a
-     * single id is malformed, so callers retry by name on `rejected`.
-     */
+    /** Fetches prices for one batch of card names. */
     const collectPrices = async (
-      identifiers: Array<{ id: string } | { name: string }>,
+      identifiers: Array<{ name: string }>,
       label: string,
     ): Promise<'ok' | 'rejected' | 'failed'> => {
       try {
@@ -158,14 +152,9 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
 
     for (let i = 0; i < cardList.length; i += BATCH_SIZE) {
       const batch = cardList.slice(i, i + BATCH_SIZE);
-      const identifiers = batch.map(({ name, id }) =>
-        id && SCRYFALL_UUID.test(id) ? { id } : { name },
-      );
-
-      const outcome = await collectPrices(identifiers, String(i));
+      const outcome = await collectPrices(batch.map((name) => ({ name })), String(i));
       if (outcome === 'rejected') {
-        await new Promise((r) => setTimeout(r, SCRYFALL_DELAY_MS));
-        await collectPrices(batch.map(({ name }) => ({ name })), `${i}:by-name`);
+        log.warn('Batch rejected by Scryfall', { offset, batchStart: i });
       }
 
       if (i + BATCH_SIZE < cardList.length) {
