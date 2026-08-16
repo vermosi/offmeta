@@ -1246,7 +1246,7 @@ export async function runStartupCheck(
       // Import the configured key to prove WebCrypto accepts it verbatim.
       await crypto.subtle.importKey(
         'raw',
-        hexToBytes(trimmed),
+        asBufferSource(hexToBytes(trimmed)),
         { name: 'Ed25519' },
         false,
         ['verify'],
