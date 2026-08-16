@@ -67,6 +67,7 @@ import {
   parseRequestBudget,
   sanitizeError,
 } from './handlers/http.ts';
+import { enforceSupportedTags } from './tag-guard.ts';
 
 type BudgetStage = 'dynamic_rules' | 'pre_translation' | 'ai_call';
 
