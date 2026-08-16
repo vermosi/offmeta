@@ -188,12 +188,18 @@ export function SearchResultsArea({
     [intent, searchQuery],
   );
   const whyReportsByCardId = useMemo(() => {
+    if (
+      viewMode === 'grid' &&
+      displayCards.length > CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD
+    ) {
+      return null;
+    }
     const reports = new Map<string, ReturnType<typeof buildWhyItMatches>>();
     for (const card of rankedCards) {
       reports.set(card.id, buildWhyItMatches(card, effectiveIntent));
     }
     return reports;
-  }, [effectiveIntent, rankedCards]);
+  }, [displayCards.length, effectiveIntent, rankedCards, viewMode]);
   const virtualizedGridKey = useMemo(
     () =>
       `${activeSort ?? 'relevance-desc'}:${rankedCards.length}:${rankedCards
@@ -241,7 +247,7 @@ export function SearchResultsArea({
                     isError={isError || isFetchNextPageError}
                     onRetry={retryNextPage}
                     getWhyReport={(card) =>
-                      whyReportsByCardId.get(card.id) ?? null
+                      buildWhyItMatches(card, effectiveIntent)
                     }
                   />
                 ) : viewMode === 'list' ? (
@@ -272,7 +278,7 @@ export function SearchResultsArea({
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
-                            whyReport={whyReportsByCardId.get(card.id) ?? null}
+                            whyReport={whyReportsByCardId?.get(card.id) ?? null}
                           />
                         </div>
                       );
@@ -308,7 +314,7 @@ export function SearchResultsArea({
                             tabIndex={rovingProps.tabIndex}
                             isOwned={collectionLookup.has(card.name)}
                             sparklineData={sparklineMap?.get(card.name)}
-                            whyReport={whyReportsByCardId.get(card.id) ?? null}
+                            whyReport={whyReportsByCardId?.get(card.id) ?? null}
                           />
                         </div>
                       );
