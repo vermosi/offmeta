@@ -180,7 +180,13 @@ Deno.test({
           member: { user: { id: userId } },
           data: {
             name: 'offmeta',
-            options: [{ name: 'query', value: 'cards that make treasure' }],
+            options: [
+              {
+                name: 'search',
+                type: 1,
+                options: [{ name: 'query', value: 'cards that make treasure' }],
+              },
+            ],
           },
         }),
       );

@@ -69,7 +69,9 @@ const EPHEMERAL = 1 << 6;
 
 interface DiscordOption {
   name: string;
+  type?: number;
   value?: unknown;
+  options?: DiscordOption[];
 }
 
 interface DiscordEmbedField {
@@ -180,11 +182,28 @@ export async function verifyDiscordSignature(
   }
 }
 
-/** Pull the free-text query out of the slash-command options. */
+/** Sub-command names under the single `/offmeta` command. */
+export type OffmetaSubcommand = 'search' | 'privacy' | null;
+
+/**
+ * Resolve which action an interaction asks for. Everything lives under one
+ * `/offmeta` command, so `privacy` is a sub-command rather than a second app
+ * command. A bare `/offmeta <query>` (legacy registration) still means search.
+ */
+export function resolveSubcommand(interaction: DiscordInteraction): OffmetaSubcommand {
+  if (interaction.data?.name !== 'offmeta') return null;
+  const sub = interaction.data?.options?.find((opt) => opt.type === 1);
+  if (!sub) return 'search';
+  if (sub.name === 'privacy') return 'privacy';
+  if (sub.name === 'search') return 'search';
+  return null;
+}
+
+/** Pull the free-text query out of the slash-command (or sub-command) options. */
 export function extractQuery(interaction: DiscordInteraction): string {
-  const option = interaction.data?.options?.find(
-    (opt) => opt.name === 'query' || opt.name === 'search',
-  );
+  const top = interaction.data?.options ?? [];
+  const flattened = top.flatMap((opt) => (opt.type === 1 ? (opt.options ?? []) : [opt]));
+  const option = flattened.find((opt) => opt.name === 'query' || opt.name === 'search');
   const raw = typeof option?.value === 'string' ? option.value : '';
   const stripped = Array.from(raw)
     .map((char) => (char.charCodeAt(0) < 0x20 ? ' ' : char))
@@ -621,7 +640,7 @@ export function buildEmbed(
           ],
         }
       : {}),
-    footer: { text: `offmeta.app${showing} · /offmeta-privacy for data use` },
+    footer: { text: `offmeta.app${showing} · /offmeta privacy for data use` },
 
     ...(cards[0]?.imageUrl ? { thumbnail: { url: cards[0].imageUrl } } : {}),
   };
@@ -630,7 +649,7 @@ export function buildEmbed(
 
 
 /**
- * Ephemeral data-use notice for `/offmeta-privacy`.
+ * Ephemeral data-use notice for `/offmeta privacy`.
  *
  * The Discord Developer Policy requires users to be able to find out what data
  * an app collects, why, how long it is kept, and how to have it removed. This
@@ -1245,9 +1264,10 @@ const startupCheck = runStartupCheck()
   });
 
 /**
- * Global command set. `/offmeta-privacy` exists because the Discord Developer
- * Policy requires users to be able to see what data an app collects and how to
- * have it deleted, from inside Discord.
+ * Global command set. One `/offmeta` command with sub-commands, so the app
+ * stays a single command surface in Discord. `privacy` exists because the
+ * Discord Developer Policy requires users to be able to see what data an app
+ * collects and how to have it deleted, from inside Discord.
  */
 export const SLASH_COMMANDS = [
   {
@@ -1256,19 +1276,27 @@ export const SLASH_COMMANDS = [
     type: 1,
     options: [
       {
-        name: 'query',
-        description: 'What kind of card are you after?',
-        type: 3,
-        required: true,
+        name: 'search',
+        description: 'Search Magic cards in plain English',
+        type: 1,
+        options: [
+          {
+            name: 'query',
+            description: 'What kind of card are you after?',
+            type: 3,
+            required: true,
+          },
+        ],
+      },
+      {
+        name: 'privacy',
+        description: 'What data OffMeta stores, and how to have it deleted',
+        type: 1,
       },
     ],
   },
-  {
-    name: 'offmeta-privacy',
-    description: 'What data OffMeta stores, and how to have it deleted',
-    type: 1,
-  },
 ];
+
 
 /**
  * Registers (upserts) the global slash commands with Discord.
@@ -1467,17 +1495,24 @@ export async function handleDiscordRequest(req: Request): Promise<Response> {
         return Response.json({ type: InteractionResponseType.PONG });
       }
 
+      // Legacy top-level `/offmeta-privacy` stays supported until the old
+      // global command finishes propagating out.
+      const subcommand =
+        interaction.data?.name === 'offmeta-privacy'
+          ? 'privacy'
+          : resolveSubcommand(interaction);
 
-      if (interaction.data?.name === 'offmeta-privacy') {
+      if (subcommand === 'privacy') {
         return Response.json({
           type: InteractionResponseType.CHANNEL_MESSAGE,
           data: { flags: EPHEMERAL, embeds: [buildPrivacyEmbed()] },
         });
       }
 
-      if (interaction.data?.name !== 'offmeta') {
+      if (subcommand !== 'search') {
         return Response.json({ type: InteractionResponseType.PONG });
       }
+
 
       const userId = extractUserId(interaction);
       const guildId = interaction.guild_id;
