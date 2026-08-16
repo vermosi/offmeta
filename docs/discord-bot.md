@@ -103,6 +103,5 @@ pseudonymised Discord user id, the query, outcome, and card count.
 
 `offmeta-api` is private. Requests must carry `x-offmeta-key` (or
 `Authorization: Bearer <key>`) matching the `OFFMETA_API_KEY` secret; anything
-else gets a bare 404 so the surface is not discoverable. The `/api`
-documentation page, its sitemap entry, and `docs/api.md` were removed — do not
-re-publish endpoint documentation until we decide to open the data layer.
+else gets a bare 404 so the surface is not discoverable. The `/api` documentation page and its
+sitemap entry were removed — do not re-publish endpoint documentation until we decide to open the data layer.
