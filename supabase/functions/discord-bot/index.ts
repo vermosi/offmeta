@@ -640,7 +640,7 @@ export function buildEmbed(
           ],
         }
       : {}),
-    footer: { text: `offmeta.app${showing} · /offmeta-privacy for data use` },
+    footer: { text: `offmeta.app${showing} · /offmeta privacy for data use` },
 
     ...(cards[0]?.imageUrl ? { thumbnail: { url: cards[0].imageUrl } } : {}),
   };
@@ -649,7 +649,7 @@ export function buildEmbed(
 
 
 /**
- * Ephemeral data-use notice for `/offmeta-privacy`.
+ * Ephemeral data-use notice for `/offmeta privacy`.
  *
  * The Discord Developer Policy requires users to be able to find out what data
  * an app collects, why, how long it is kept, and how to have it removed. This
