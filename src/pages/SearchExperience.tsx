@@ -211,6 +211,43 @@ const Index = () => {
     setViewModeState((prev) => (prev === urlViewMode ? prev : urlViewMode));
   }, [urlViewMode]);
 
+  // Google Ads delayed-navigation helper: exposes `gtagSendEvent` so homepage
+  // CTAs and outbound links can report a conversion before navigating.
+  useEffect(() => {
+    const scriptId = 'google-ads-conversion-helper';
+    if (document.getElementById(scriptId)) return;
+
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.innerHTML = `
+      function gtagSendEvent(url) {
+        if (typeof gtag !== 'function') {
+          if (typeof url === 'string') {
+            window.location = url;
+          }
+          return false;
+        }
+        var callback = function () {
+          if (typeof url === 'string') {
+            window.location = url;
+          }
+        };
+        gtag('event', 'conversion_event_page_view', {
+          'event_callback': callback,
+          'event_timeout': 2000,
+        });
+        return false;
+      }
+    `;
+    document.head.appendChild(script);
+
+    return () => {
+      document.getElementById(scriptId)?.remove();
+    };
+  }, []);
+
+
+
   // Cards is the only results view — Similar / Deck Ideas / Explain removed.
   const activeTab: ResultsTab = 'cards';
 
