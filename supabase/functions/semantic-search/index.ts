@@ -324,6 +324,13 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         'request_completed',
         buildPerfLogFields(stageDurationsMs, 'forced_fallback', responseTimeMs),
       );
+      logFallbackTranslation(
+        'forced_fallback',
+        fallbackResult.sanitized,
+        responseTimeMs,
+        0.6,
+        fallbackResult.issues,
+      );
       return createSearchFallbackResponse(
         query,
         fallbackResult.sanitized,
@@ -704,6 +711,12 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         'request_completed',
         buildPerfLogFields(stageDurationsMs, 'fallback', responseTimeMs),
       );
+      logFallbackTranslation(
+        'fallback',
+        fallback.sanitized,
+        responseTimeMs,
+        0.6,
+      );
       return createSearchFallbackResponse(
         query,
         fallback.sanitized,
@@ -831,6 +844,12 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         deadlineMs: requestBudget.deadlineMs,
       });
 
+      logFallbackTranslation(
+        'budget_fallback',
+        fallback.sanitized,
+        responseTimeMs,
+        confidence,
+      );
       return createSearchFallbackResponse(
         query,
         fallback.sanitized,
@@ -1344,6 +1363,12 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           responseTimeMs,
         ),
       );
+      logFallbackTranslation(
+        'ai_failure_fallback',
+        fallback.sanitized,
+        responseTimeMs,
+        0.6,
+      );
       return createSearchFallbackResponse(
         query,
         fallback.sanitized,
@@ -1374,8 +1399,7 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
  */
 serve(async (req: Request) => {
   const response = await searchHandler(req);
-  const { logWarn } = createLogger(
-    req.headers.get('x-request-id') ?? 'tag-guard',
-  );
-  return await enforceSupportedTags(response, logWarn);
+  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
+  const { logWarn } = createLogger(requestId);
+  return await enforceSupportedTags(response, logWarn, { requestId });
 });
