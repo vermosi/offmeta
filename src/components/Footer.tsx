@@ -103,7 +103,7 @@ export function Footer() {
             </span>
           </Link>
 
-          <div className="grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-3 md:gap-x-14">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 md:gap-x-14">
             <FooterColumn title={t('footer.explore', 'Explore')}>
               {EXPLORE_LINKS.map((link) => (
                 <li key={link.to}>
@@ -131,6 +131,14 @@ export function Footer() {
               {DATA_SOURCES.map((source) => (
                 <li key={source.name}>
                   <ExternalAnchor href={source.href}>{source.name}</ExternalAnchor>
+                </li>
+              ))}
+            </FooterColumn>
+
+            <FooterColumn title={t('footer.partners', 'Partners')}>
+              {PARTNERS.map((partner) => (
+                <li key={partner.name}>
+                  <ExternalAnchor href={partner.href}>{partner.name}</ExternalAnchor>
                 </li>
               ))}
             </FooterColumn>
