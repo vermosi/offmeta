@@ -175,6 +175,16 @@ function buildIR(query: string): SearchIR {
     if (priceDollarsMatch) {
       ir.numeric.push({ field: 'usd', op: '<', value: Number(priceDollarsMatch[1]) });
       remaining = remaining.replace(priceDollarsMatch[0], '').trim();
+    } else {
+      // Bare "under 5" with no unit → price (players say "under 5" for budget;
+      // mana constraints are written as "under 5 mana"/"5 mv or less")
+      const bareBudgetMatch = remaining.match(
+        /\b(?:under|below|less\s+than)\s+(\d+(?:\.\d+)?)\b(?!\s*(?:mana|mv|cmc|power|toughness|counters?|lands?|cards?))/i,
+      );
+      if (bareBudgetMatch) {
+        ir.numeric.push({ field: 'usd', op: '<', value: Number(bareBudgetMatch[1]) });
+        remaining = remaining.replace(bareBudgetMatch[0], '').trim();
+      }
     }
   }
 
@@ -272,6 +282,12 @@ function buildIR(query: string): SearchIR {
   remaining = remaining
     .replace(/\s+/g, ' ')
     .replace(/^[\s,]+|[\s,]+$/g, '')
+    // Subjective "obscurity" adjectives are never printed on cards — drop them
+    // instead of turning them into literal oracle text searches (o:"hidden").
+    .replace(
+      /\b(hidden(?:\s+gems?)?|underrated|underplayed|overlooked|obscure|sleeper|off\s*-?\s*meta|niche|unknown|lesser\s+known|unpopular|spicy)\b/gi,
+      '',
+    )
     .replace(/\b(that|which|with|the|a|an|cards?|released|printed|utility|in|for|from|staples?|search|searches|tribal|payoffs?|synerg(?:y|ies)|token|tokens?|creature|creatures?|opponent|opponents?|takes?|action|when|whenever|graveyard|battlefield|abilities|ability|good|best|great|nice|cool|awesome|strong|powerful|useful|top|find|give|gives|gives?|make|makes|let|lets|my|your|its|some|any|also|really|very|most|all|every|each|other|new|old|more|well|would|could|should|want|need|like|help|me|you|it|do|does|get|got|go|goes|there|their|here|these|those|being|been|have|has|had|will|can|may|might|must|shall|just|only|even|still|already|are|is|be|was|were|what|how|about|into|onto|upon|over|under|through|around|between|during)\b/gi, '')
     .replace(/\s+/g, ' ')
     .trim();

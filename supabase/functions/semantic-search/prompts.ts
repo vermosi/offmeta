@@ -305,11 +305,22 @@ Preserve explicit budgets exactly.
 - "$10 or less" -> usd<=10
 - "between $5 and $20" -> usd>=5 usd<=20
 
+A bare "under N" / "below N" / "less than N" with NO unit means PRICE, not mana value:
+- "finishers under 5" -> usd<5 (NOT mv=5, NOT mv<5)
+Only treat it as mana value when the user says mana / mv / cmc / mana value.
+
 Default qualitative meanings:
 - cheap / budget / affordable -> usd<5
 - expensive -> usd>20
 
 Never remove a price constraint because it produces few results.
+
+Subjective adjectives such as hidden, hidden gem, underrated, underplayed,
+overlooked, obscure, sleeper, off-meta, niche or spicy are NOT printed on cards.
+Drop them entirely. Never emit o:"hidden" or similar literal text searches for them.
+
+Finishers / win cons / game enders -> otag:win-condition (otag:finisher does NOT exist)
+- "hidden finishers under 5" -> usd<5 otag:win-condition
 
 ==================================================
 14. DATE / YEAR
