@@ -135,10 +135,16 @@ export function SearchResultsArea({
     [cards],
   );
 
-  // Batch-fetch sparkline data for visible cards
+  // Batch-fetch sparkline data only when the current view can render it.
+  const shouldFetchSparklineData =
+    viewMode !== 'grid' ||
+    displayCards.length <= CLIENT_CONFIG.VIRTUALIZATION_THRESHOLD;
   const sparklineNames = useMemo(
-    () => displayCards.slice(0, 200).map((c) => c.name),
-    [displayCards],
+    () =>
+      shouldFetchSparklineData
+        ? displayCards.slice(0, 200).map((c) => c.name)
+        : [],
+    [displayCards, shouldFetchSparklineData],
   );
   const { data: sparklineMap } = useBatchPriceHistory(sparklineNames);
   const { user } = useAuth();
