@@ -178,8 +178,7 @@ async function withTimeoutFallback<T>(
 /**
  * Main Edge Function Handler
  */
-serve(
-  withLogging('semantic-search', async (req) => {
+const searchHandler = withLogging('semantic-search', async (req: Request) => {
     // Trigger periodic in-memory cache cleanup (serverless-safe)
     maybeCacheCleanup();
 
