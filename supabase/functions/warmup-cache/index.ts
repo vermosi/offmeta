@@ -386,60 +386,115 @@ serve(withLogging('warmup-cache', async (req) => {
       .slice(0, popularQueryLimit)
       .map(([query]) => query);
 
-    const queriesToWarm =
+    const candidateQueries =
       customQueries.length > 0
         ? customQueries
         : popularQueries.length > 0
           ? popularQueries
           : FALLBACK_NATURAL_LANGUAGE_QUERIES.slice(0, popularQueryLimit);
 
+    // Queries already sitting in a live cache row need no work. Skipping them
+    // keeps the run well under semantic-search's 30 req/min bucket.
+    const normalize = (q: string) => q.toLowerCase().trim().replace(/\s+/g, ' ');
+    const { data: liveCacheRows } = await supabase
+      .from('query_cache')
+      .select('normalized_query')
+      .in('normalized_query', candidateQueries.map(normalize))
+      .gte('expires_at', new Date().toISOString());
+
+    const alreadyCached = new Set(
+      (liveCacheRows ?? []).map((row) => row.normalized_query as string),
+    );
+
+    // Hard cap per run: the shared rate limit is 30 requests/minute.
+    const MAX_WARM_PER_RUN = 25;
+    const queriesToWarm = candidateQueries
+      .filter((q) => !alreadyCached.has(normalize(q)))
+      .slice(0, MAX_WARM_PER_RUN);
+
     logger.info('warmup_started', {
+      candidateCount: candidateQueries.length,
       queryCount: queriesToWarm.length,
+      alreadyCached: alreadyCached.size,
       custom: customQueries.length > 0,
     });
 
     const results = {
-      total: queriesToWarm.length,
+      total: candidateQueries.length,
       successful: 0,
       failed: 0,
-      skipped: 0,
+      skipped: candidateQueries.length - queriesToWarm.length,
       errors: [] as string[],
     };
 
-    // Process queries in batches to avoid overwhelming the system
-    const BATCH_SIZE = 5;
-    const DELAY_BETWEEN_BATCHES = 1000; // 1 second
+    // Serial-ish pacing keeps the internal caller inside semantic-search's
+    // per-principal rate limit instead of burning the whole bucket at once.
+    const BATCH_SIZE = 2;
+    const DELAY_BETWEEN_BATCHES = 2500;
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    let rateLimited = false;
+
+    /**
+     * Calls semantic-search directly so the HTTP status and body are visible;
+     * supabase-js collapses every failure into "non-2xx status code".
+     */
+    async function warmQuery(
+      query: string,
+    ): Promise<{ status: number; body: string }> {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/semantic-search`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: serviceKey || SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${serviceKey || SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ query, useCache: true, locale: 'en' }),
+      });
+      return { status: res.status, body: (await res.text()).slice(0, 300) };
+    }
 
     for (let i = 0; i < queriesToWarm.length; i += BATCH_SIZE) {
+      if (rateLimited) {
+        results.skipped += queriesToWarm.length - i;
+        break;
+      }
       const batch = queriesToWarm.slice(i, i + BATCH_SIZE);
 
       const batchPromises = batch.map(async (query) => {
         try {
-          const { data, error } = await supabase.functions.invoke(
-            'semantic-search',
-            {
-              body: { query },
-            },
-          );
+          let { status, body } = await warmQuery(query);
 
-          if (error) {
-            logger.error('warmup_query_failed', {
-              query,
-              error: error.message,
-            });
+          if (status === 429) {
+            await new Promise((resolve) => setTimeout(resolve, 5000));
+            ({ status, body } = await warmQuery(query));
+          }
+
+          if (status === 429) {
+            rateLimited = true;
             results.failed++;
-            results.errors.push(`${query}: ${error.message}`);
-          } else if (data?.cached) {
-            results.skipped++;
-          } else if (data?.success) {
+            results.errors.push(`${query}: rate limited (429)`);
+            logger.warn('warmup_rate_limited', { query });
+            return;
+          }
+
+          if (status < 200 || status >= 300) {
+            results.failed++;
+            results.errors.push(`${query}: HTTP ${status} ${body}`);
+            logger.error('warmup_query_failed', { query, status, body });
+            return;
+          }
+
+          const data = JSON.parse(body || '{}');
+          if (data?.success) {
             results.successful++;
             logger.info('query_warmed', {
               query: query.substring(0, 50),
+              cached: Boolean(data.cached),
               confidence: data.explanation?.confidence,
             });
           } else {
             results.failed++;
-            results.errors.push(`${query}: Unknown error`);
+            results.errors.push(`${query}: ${data?.error ?? 'unknown error'}`);
           }
         } catch (err) {
           logger.error('warmup_query_exception', {
@@ -460,6 +515,7 @@ serve(withLogging('warmup-cache', async (req) => {
         );
       }
     }
+
 
     const duration = Date.now() - startTime;
 
