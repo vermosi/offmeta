@@ -1,0 +1,42 @@
+{
+  "timestamp_utc": "2026-08-13T05:35:46+00:00",
+  "repo": "vermosi/offmeta",
+  "auth_context": {
+    "token_present": false,
+    "gh_available": true,
+    "gh_authenticated": false,
+    "mode": "unauthenticated"
+  },
+  "token_present": false,
+  "endpoints": {
+    "views": {
+      "error": "All provider attempts failed. api(public): Requires authentication | gh: gh api error: gh: Bad credentials (HTTP 401)",
+      "status": null
+    },
+    "clones": {
+      "error": "All provider attempts failed. api(public): Requires authentication | gh: gh api error: gh: Bad credentials (HTTP 401)",
+      "status": null
+    },
+    "referrers": {
+      "error": "All provider attempts failed. api(public): Requires authentication | gh: gh api error: gh: Bad credentials (HTTP 401)",
+      "status": null
+    },
+    "paths": {
+      "error": "All provider attempts failed. api(public): Requires authentication | gh: gh api error: gh: Bad credentials (HTTP 401)",
+      "status": null
+    }
+  },
+  "limitations": [
+    "No GitHub token found and gh CLI is not authenticated. Traffic endpoints require auth. Run `gh auth login -h github.com` or set GITHUB_TOKEN/GH_TOKEN.",
+    "views endpoint failed: All provider attempts failed. api(public): Requires authentication | gh: gh api error: gh: Bad credentials (HTTP 401) (status: None)",
+    "clones endpoint failed: All provider attempts failed. api(public): Requires authentication | gh: gh api error: gh: Bad credentials (HTTP 401) (status: None)",
+    "referrers endpoint failed: All provider attempts failed. api(public): Requires authentication | gh: gh api error: gh: Bad credentials (HTTP 401) (status: None)",
+    "paths endpoint failed: All provider attempts failed. api(public): Requires authentication | gh: gh api error: gh: Bad credentials (HTTP 401) (status: None)"
+  ],
+  "totals": {
+    "views_count": null,
+    "views_uniques": null,
+    "clones_count": null,
+    "clones_uniques": null
+  }
+}

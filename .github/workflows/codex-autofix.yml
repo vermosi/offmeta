@@ -15,7 +15,12 @@ concurrency:
 
 jobs:
   generate-fix:
-    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure' }}
+    if: >-
+      ${{
+        github.event_name == 'workflow_run' &&
+        github.event.workflow_run.conclusion == 'failure' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      }}
     runs-on: ubuntu-latest
     outputs:
       has_changes: ${{ steps.diff.outputs.has_changes }}
@@ -24,6 +29,7 @@ jobs:
       - name: Checkout failing commit
         uses: actions/checkout@v4
         with:
+          repository: ${{ github.event.workflow_run.head_repository.full_name }}
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
