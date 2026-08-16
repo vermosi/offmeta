@@ -332,6 +332,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         filters,
         false,
         'pattern_match',
+        null,
+        undefined,
+        requestId,
       );
       flushLogQueue();
 
@@ -421,6 +424,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           filters,
           false,
           'deterministic',
+          null,
+          undefined,
+          requestId,
         );
         flushLogQueue();
 
@@ -525,6 +531,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         filters,
         false,
         'deterministic',
+        null,
+        undefined,
+        requestId,
       );
       flushLogQueue(); // fire-and-forget
 
@@ -582,6 +591,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           filters,
           false,
           'cache',
+          null,
+          undefined,
+          requestId,
         );
         flushLogQueue(); // fire-and-forget — don't block the response
 
@@ -628,6 +640,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         filters,
         false,
         'pattern_match',
+        null,
+        undefined,
+        requestId,
       );
       flushLogQueue(); // fire-and-forget
 
@@ -689,6 +704,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         filters,
         false,
         'raw_syntax',
+        null,
+        undefined,
+        requestId,
       );
       flushLogQueue(); // fire-and-forget
 
@@ -1249,6 +1267,7 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           preTranslationAttempted,
           preTranslationSkippedReason,
         },
+        requestId,
       );
       logInfo('ai_translation_success', {
         responseTimeMs,
