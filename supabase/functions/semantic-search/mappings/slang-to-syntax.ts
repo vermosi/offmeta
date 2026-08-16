@@ -284,7 +284,8 @@ export const SLANG_TO_SYNTAX_MAP: SlangMapping[] = [
     description: 'Game-ending threats',
   },
   {
-    pattern: /\bwin\s*cons?(?:ditions?)?\b/gi,
+    // "win con(s)" / "win condition(s)" — but not "alternate win condition"
+    pattern: /(?<!\balt\s)(?<!\balternate\s)\bwin\s*cons?(?:ditions?)?\b/gi,
     syntax: '(otag:finisher or otag:win-condition)',
     description: 'Win conditions',
   },
