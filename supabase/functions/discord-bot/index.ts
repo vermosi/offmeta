@@ -1480,6 +1480,9 @@ export async function flushPendingWork(): Promise<void> {
  * Discord interactions (PING, slash command, pagination buttons).
  */
 export async function handleDiscordRequest(req: Request): Promise<Response> {
+      // Fire-and-forget: re-registers commands only when their shape changed.
+      void syncSlashCommands();
+
       if (req.method === 'GET' && new URL(req.url).searchParams.has('s')) {
         return handleClickRedirect(req);
       }
