@@ -1263,6 +1263,7 @@ export type Database = {
           pre_translation_attempted: boolean | null
           pre_translation_skipped_reason: string | null
           quality_flags: string[] | null
+          request_id: string | null
           response_time_ms: number | null
           result_count: number | null
           source: string | null
@@ -1280,6 +1281,7 @@ export type Database = {
           pre_translation_attempted?: boolean | null
           pre_translation_skipped_reason?: string | null
           quality_flags?: string[] | null
+          request_id?: string | null
           response_time_ms?: number | null
           result_count?: number | null
           source?: string | null
@@ -1297,6 +1299,7 @@ export type Database = {
           pre_translation_attempted?: boolean | null
           pre_translation_skipped_reason?: string | null
           quality_flags?: string[] | null
+          request_id?: string | null
           response_time_ms?: number | null
           result_count?: number | null
           source?: string | null
@@ -1624,6 +1627,7 @@ export type Database = {
           sources: string
         }[]
       }
+      get_search_health_metrics: { Args: { days_back?: number }; Returns: Json }
       get_search_outcome_breakdown: {
         Args: { days_back?: number }
         Returns: Json

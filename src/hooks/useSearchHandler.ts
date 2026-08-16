@@ -234,6 +234,7 @@ export function useSearchHandler({
           cacheSalt: cacheSalt || undefined,
           bypassCache: options?.bypassCache,
           locale,
+          requestId,
         });
 
         const result: TranslationResult = await Promise.race([

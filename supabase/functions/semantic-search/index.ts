@@ -250,9 +250,38 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       REQUEST_BUDGET_MS,
     );
 
+    /**
+     * Fallback answers never reached translation_logs, so `fallback_used` was
+     * always false in analytics and degraded traffic was invisible. Log them
+     * with the same shape as successful translations.
+     */
+    const logFallbackTranslation = (
+      source: string,
+      translatedQuery: string,
+      responseTimeMs: number,
+      confidence: number,
+      validationIssues: string[] = [],
+    ): void => {
+      logTranslation(
+        query,
+        translatedQuery,
+        confidence,
+        responseTimeMs,
+        validationIssues,
+        ['fallback'],
+        filters,
+        true,
+        source,
+        null,
+        undefined,
+        requestId,
+      );
+      flushLogQueue();
+    };
+
     const createBudgetExceededResponse = (): Response => {
       const fallback = buildFallbackQuery(query, filters);
-      return new Response(
+      const budgetResponse = new Response(
         JSON.stringify({
           originalQuery: query,
           scryfallQuery: fallback.sanitized,
@@ -267,6 +296,13 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         }),
         { headers: jsonHeaders },
       );
+      logFallbackTranslation(
+        'budget_fallback',
+        fallback.sanitized,
+        Date.now() - requestStartTime,
+        0.5,
+      );
+      return budgetResponse;
     };
 
     // Type-safe debug options
@@ -287,6 +323,13 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       logInfo(
         'request_completed',
         buildPerfLogFields(stageDurationsMs, 'forced_fallback', responseTimeMs),
+      );
+      logFallbackTranslation(
+        'forced_fallback',
+        fallbackResult.sanitized,
+        responseTimeMs,
+        0.6,
+        fallbackResult.issues,
       );
       return createSearchFallbackResponse(
         query,
@@ -332,6 +375,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         filters,
         false,
         'pattern_match',
+        null,
+        undefined,
+        requestId,
       );
       flushLogQueue();
 
@@ -421,6 +467,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           filters,
           false,
           'deterministic',
+          null,
+          undefined,
+          requestId,
         );
         flushLogQueue();
 
@@ -525,6 +574,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         filters,
         false,
         'deterministic',
+        null,
+        undefined,
+        requestId,
       );
       flushLogQueue(); // fire-and-forget
 
@@ -582,6 +634,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           filters,
           false,
           'cache',
+          null,
+          undefined,
+          requestId,
         );
         flushLogQueue(); // fire-and-forget — don't block the response
 
@@ -628,6 +683,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         filters,
         false,
         'pattern_match',
+        null,
+        undefined,
+        requestId,
       );
       flushLogQueue(); // fire-and-forget
 
@@ -652,6 +710,12 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       logInfo(
         'request_completed',
         buildPerfLogFields(stageDurationsMs, 'fallback', responseTimeMs),
+      );
+      logFallbackTranslation(
+        'fallback',
+        fallback.sanitized,
+        responseTimeMs,
+        0.6,
       );
       return createSearchFallbackResponse(
         query,
@@ -689,6 +753,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         filters,
         false,
         'raw_syntax',
+        null,
+        undefined,
+        requestId,
       );
       flushLogQueue(); // fire-and-forget
 
@@ -777,6 +844,12 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         deadlineMs: requestBudget.deadlineMs,
       });
 
+      logFallbackTranslation(
+        'budget_fallback',
+        fallback.sanitized,
+        responseTimeMs,
+        confidence,
+      );
       return createSearchFallbackResponse(
         query,
         fallback.sanitized,
@@ -1249,6 +1322,7 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           preTranslationAttempted,
           preTranslationSkippedReason,
         },
+        requestId,
       );
       logInfo('ai_translation_success', {
         responseTimeMs,
@@ -1289,6 +1363,12 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           responseTimeMs,
         ),
       );
+      logFallbackTranslation(
+        'ai_failure_fallback',
+        fallback.sanitized,
+        responseTimeMs,
+        0.6,
+      );
       return createSearchFallbackResponse(
         query,
         fallback.sanitized,
@@ -1318,9 +1398,18 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
  * query, unsupported otag/atag values are repaired before the client sees it.
  */
 serve(async (req: Request) => {
-  const response = await searchHandler(req);
-  const { logWarn } = createLogger(
-    req.headers.get('x-request-id') ?? 'tag-guard',
-  );
-  return await enforceSupportedTags(response, logWarn);
+  // Pin one request id for the whole request so the translation row, the logs
+  // and the id handed back to the browser all agree.
+  let request = req;
+  let requestId = req.headers.get('x-request-id') ?? '';
+  if (!requestId) {
+    requestId = crypto.randomUUID();
+    const headers = new Headers(req.headers);
+    headers.set('x-request-id', requestId);
+    request = new Request(req, { headers });
+  }
+
+  const response = await searchHandler(request);
+  const { logWarn } = createLogger(requestId);
+  return await enforceSupportedTags(response, logWarn, { requestId });
 });

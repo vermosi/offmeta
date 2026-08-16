@@ -48,6 +48,11 @@ interface TranslationParams {
   cacheSalt?: string;
   bypassCache?: boolean;
   locale?: string;
+  /**
+   * Client request id, forwarded as `x-request-id` so the server's
+   * translation_logs row can be joined to this search's analytics events.
+   */
+  requestId?: string;
 }
 
 // Request deduplication map for in-flight requests
@@ -218,7 +223,7 @@ function recordSearch(query: string): void {
 export async function translateQueryWithDedup(
   params: TranslationParams,
 ): Promise<TranslationResult> {
-  const { query, filters, cacheSalt, bypassCache, locale } = params;
+  const { query, filters, cacheSalt, bypassCache, locale, requestId } = params;
   const key = getTranslationKey(query, filters, cacheSalt, locale);
 
   // Check rate limit (skip for cache hits)
@@ -303,6 +308,7 @@ export async function translateQueryWithDedup(
           },
           headers: {
             'x-session-id': sessionId,
+            ...(requestId ? { 'x-request-id': requestId } : {}),
             'x-request-start': String(requestStart),
             'x-deadline-ms': String(requestDeadline),
           },
