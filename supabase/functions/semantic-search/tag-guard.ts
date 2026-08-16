@@ -28,6 +28,7 @@ interface SearchPayload {
 export async function enforceSupportedTags(
   response: Response,
   logWarn: LogFn,
+  options: { requestId?: string } = {},
 ): Promise<Response> {
   const contentType = response.headers.get('Content-Type') ?? '';
   if (!contentType.includes('application/json') || response.status >= 400) {
