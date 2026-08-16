@@ -11,7 +11,7 @@ declare const Deno: {
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders } from '../_shared/auth.ts';
 import { logEvent, withLogging } from '../_shared/logger.ts';
-import { requireServiceJob } from '../_shared/jobGuards.ts';
+import { requirePipelineOrAdminJob } from '../_shared/jobGuards.ts';
 import { pingSitemapSubmission } from '../_shared/sitemapPing.ts';
 
 
@@ -26,7 +26,7 @@ Deno.serve(withLogging('auto-generate-seo-pages', async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const authz = requireServiceJob(req);
+  const authz = await requirePipelineOrAdminJob(req);
   if (!authz.authorized) {
     return authz.response;
   }
