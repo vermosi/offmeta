@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { buildDeterministicIntent } from './deterministic/index.ts';
 import { lookupCardName } from './card-name-lookup.ts';
+import { buildAiRepairCandidates } from './ai-repair-candidates.ts';
 import { buildSystemPrompt, type QueryTier } from './prompts.ts';
 import { getCorsHeaders } from '../_shared/auth.ts';
 import { LOVABLE_API_KEY, supabase } from './client.ts';
@@ -1180,8 +1181,52 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           scryfallStatus,
         });
 
+        // Strategy 0: Deterministic rewrites of the AI output (art tags,
+        // creature types, legality formats, card names). Each candidate is
+        // probed before adoption, so a bad rewrite can never be applied.
+        const likeNameMatch =
+          /^\s*(?:cards?|something|anything)\s+(?:like|similar to)\s+(.+?)\s*$/i.exec(
+            query,
+          );
+        const likeName = likeNameMatch?.[1]?.trim().toLowerCase() ?? null;
+        const likeNameIsCard = likeName
+          ? await lookupCardName(likeName).catch(() => false)
+          : false;
+        const repairCandidates = buildAiRepairCandidates(query, finalQuery, {
+          isKnownCardName: (name) =>
+            likeNameIsCard && name.trim().toLowerCase() === likeName,
+        });
+        for (const candidate of repairCandidates) {
+          try {
+            const candidateResp = await fetchWithTimeout(
+              `https://api.scryfall.com/cards/search?q=${encodeURIComponent(candidate.query)}&page=1`,
+              {},
+              2000,
+            );
+            if (candidateResp.status !== 200) continue;
+            const candidateData = await candidateResp.json();
+            if (!candidateData.total_cards) continue;
+            finalQuery = candidate.query;
+            resultCount = candidateData.total_cards;
+            aiValidationNote = candidate.note;
+            logInfo('ai_zero_results_recovered_deterministic_rewrite', {
+              query: query.substring(0, 50),
+              reason: candidate.reason,
+              repairedQuery: finalQuery,
+              recoveredCount: resultCount,
+            });
+            break;
+          } catch {
+            // Candidate probe failed — try the next one.
+          }
+        }
+
         // Strategy 1: Try deterministic query
-        if (deterministicQuery && deterministicQuery !== finalQuery) {
+        if (
+          resultCount === 0 &&
+          deterministicQuery &&
+          deterministicQuery !== finalQuery
+        ) {
           try {
             const detResp = await fetchWithTimeout(
               `https://api.scryfall.com/cards/search?q=${encodeURIComponent(deterministicQuery)}&page=1`,
