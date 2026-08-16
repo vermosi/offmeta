@@ -14,6 +14,7 @@ export interface LogEntry {
   result_count: number | null;
   pre_translation_attempted: boolean;
   pre_translation_skipped_reason: string | null;
+  request_id: string | null;
 }
 
 interface PreTranslationTelemetry {
@@ -76,6 +77,7 @@ export function logTranslation(
   source: string = 'ai',
   resultCount: number | null = null,
   preTranslationTelemetry?: PreTranslationTelemetry,
+  requestId: string | null = null,
 ): void {
   // Skip warmup and spam queries
   if (shouldSkipLog(naturalQuery) || shouldSkipLog(translatedQuery)) return;
@@ -96,6 +98,7 @@ export function logTranslation(
       preTranslationTelemetry?.preTranslationAttempted ?? false,
     pre_translation_skipped_reason:
       preTranslationTelemetry?.preTranslationSkippedReason ?? null,
+    request_id: requestId,
   });
 
   if (logQueue.length >= LOG_BATCH_SIZE) {
