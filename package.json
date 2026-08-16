@@ -22,7 +22,7 @@
     "check": "npm run lint && npm run typecheck && npm run check:design-tokens && npm run test",
     "prepare": "husky install",
     "prebuild": "node scripts/generate-sitemap.mjs",
-    "postbuild": "node scripts/prerender-cards.mjs"
+    "postbuild": "node scripts/prerender-cards.mjs && node scripts/prerender-static-routes.mjs"
   },
   "dependencies": {
     "@lovable.dev/cloud-auth-js": "^1.0.0",
