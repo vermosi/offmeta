@@ -35,15 +35,20 @@ function extractTitle(html: string): string {
   return (html.match(/<title>([\s\S]*?)<\/title>/i)?.[1] ?? '').trim();
 }
 
+function stripComments(html: string): string {
+  return html.replace(/<!--[\s\S]*?-->/g, '');
+}
+
 function countTag(html: string, tag: string): number {
-  return (html.match(new RegExp(`<${tag}[\\s>]`, 'gi')) ?? []).length;
+  return (stripComments(html).match(new RegExp(`<${tag}[\\s>]`, 'gi')) ?? []).length;
 }
 
 function extractFirstH1(html: string): string {
-  const m = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+  const m = stripComments(html).match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
   if (!m) return '';
   return m[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 }
+
 
 async function fetchAsGooglebot(path: string): Promise<{
   status: number;
