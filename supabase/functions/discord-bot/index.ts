@@ -17,6 +17,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
+import { claimDedupe } from '../_shared/dedupe.ts';
 import { resolveAlternativesQuery } from './alternatives.ts';
 
 function normalizeDiacritics(str: string): string {
