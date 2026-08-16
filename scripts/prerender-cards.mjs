@@ -292,7 +292,7 @@ function customizeHtmlForCard(templateHtml, card, slug) {
   // it (and its explanatory comment) so a prerendered card page has exactly one
   // h1 — the card's own heading below.
   html = html.replace(
-    /<!--[\s\S]*?Static indexable content for SEO crawlers[\s\S]*?-->\s*/i,
+    /<!--(?:(?!-->)[\s\S])*?Static indexable content for SEO crawlers(?:(?!-->)[\s\S])*?-->\s*/i,
     '',
   );
   html = html.replace(/<aside\b[^>]*id=["']seo-content["'][\s\S]*?<\/aside>\s*/i, '');

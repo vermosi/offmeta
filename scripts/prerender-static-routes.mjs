@@ -222,7 +222,7 @@ function customizeHtmlForRoute(templateHtml, route) {
   // The shell ships a homepage <h1> inside #seo-content; strip it so each
   // prerendered route has exactly one h1 — its own.
   html = html.replace(
-    /<!--[\s\S]*?Static indexable content for SEO crawlers[\s\S]*?-->\s*/i,
+    /<!--(?:(?!-->)[\s\S])*?Static indexable content for SEO crawlers(?:(?!-->)[\s\S])*?-->\s*/i,
     '',
   );
   html = html.replace(/<aside\b[^>]*id=["']seo-content["'][\s\S]*?<\/aside>\s*/i, '');
