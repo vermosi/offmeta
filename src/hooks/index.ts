@@ -21,6 +21,7 @@ export { usePriceHistory, computePriceTrend, type PriceSnapshot } from './usePri
 export { useQueryIntelligence, type QueryIntelligence } from './useQueryIntelligence';
 export { useQuerySuggestions, type QuerySuggestion } from './useQuerySuggestions';
 export { useRealtimeCache, RealtimeCacheProvider } from './useRealtimeCache';
+export { useResultsEngagement } from './useResultsEngagement';
 export { useRovingTabIndex } from './useRovingTabIndex';
 export { useSavedCombos, type SavedCombo } from './useSavedCombos';
 export { useSearch } from './useSearch';
