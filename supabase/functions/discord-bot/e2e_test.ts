@@ -206,6 +206,10 @@ Deno.test({
       assertEquals(firstRow[1].label, 'Page 1 / 9');
       assertEquals(firstRow[2].custom_id, 'offmeta_page:1');
       assertEquals(firstRow[2].disabled, false);
+      assertEquals(
+        new Set(firstRow.map((component) => component.custom_id)).size,
+        firstRow.length,
+      );
 
       // ── 2. Next button re-renders the same message ──────────────────────
       const buttonRes = await handleDiscordRequest(
@@ -243,6 +247,10 @@ Deno.test({
       assertEquals(secondRow[1].label, 'Page 2 / 9');
       assertEquals(secondRow[2].custom_id, 'offmeta_page:2');
       assertEquals(secondRow[2].disabled, false);
+      assertEquals(
+        new Set(secondRow.map((component) => component.custom_id)).size,
+        secondRow.length,
+      );
 
       // ── 3. /go click on the tracked link from the embed ─────────────────
       const trackedUrl = new URL(firstEmbed.url);

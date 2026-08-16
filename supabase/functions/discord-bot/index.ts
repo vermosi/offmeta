@@ -541,7 +541,12 @@ export function buildPaginationComponents(
           type: 2,
           style: 2,
           label: `Page ${page + 1} / ${pages}`,
-          custom_id: `${PAGE_BUTTON_PREFIX}:${page}`,
+          // Discord requires every component custom_id in a message to be
+          // unique, including disabled buttons. A page-derived ID collides
+          // with Prev on the first page and Next on the last page, causing the
+          // entire follow-up PATCH to be rejected while Discord keeps showing
+          // "OffMeta is thinking...".
+          custom_id: `${PAGE_BUTTON_PREFIX}_label:${page}`,
           disabled: true,
         },
         {
