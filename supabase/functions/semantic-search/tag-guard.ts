@@ -70,10 +70,7 @@ export async function enforceSupportedTags(
     });
     return withRequestId(payload);
   }
-
-
-
-  if (validation.valid) return response;
+  if (validation.valid) return withRequestId(payload);
 
   logWarn('unsupported_tags_repaired', {
     original: scryfallQuery.slice(0, 200),
