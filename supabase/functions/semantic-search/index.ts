@@ -1183,8 +1183,17 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         // Strategy 0: Deterministic rewrites of the AI output (art tags,
         // creature types, legality formats, card names). Each candidate is
         // probed before adoption, so a bad rewrite can never be applied.
+        const likeNameMatch =
+          /^\s*(?:cards?|something|anything)\s+(?:like|similar to)\s+(.+?)\s*$/i.exec(
+            query,
+          );
+        const likeName = likeNameMatch?.[1]?.trim().toLowerCase() ?? null;
+        const likeNameIsCard = likeName
+          ? await lookupCardName(likeName).catch(() => false)
+          : false;
         const repairCandidates = buildAiRepairCandidates(query, finalQuery, {
-          isKnownCardName: (name) => knownCardNames.has(name.toLowerCase()),
+          isKnownCardName: (name) =>
+            likeNameIsCard && name.trim().toLowerCase() === likeName,
         });
         for (const candidate of repairCandidates) {
           try {
