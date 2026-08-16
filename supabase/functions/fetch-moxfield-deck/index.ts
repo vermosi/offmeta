@@ -13,7 +13,7 @@ import { validateAuth, getCorsHeaders, logAuthFailure } from '../_shared/auth.ts
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
 import { rateLimitedResponse } from '../_shared/rateLimitTelemetry.ts';
 import { withLogging } from '../_shared/logger.ts';
-import { createClient } from '../_shared/supabaseAdminClient.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 
 const MOXFIELD_API = 'https://api2.moxfield.com/v3/decks/all'; // v3 public deck endpoint
