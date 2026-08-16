@@ -1,0 +1,1 @@
+REFRESH MATERIALIZED VIEW public.price_mover_stats;
