@@ -1180,6 +1180,37 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           scryfallStatus,
         });
 
+        // Strategy 0: Deterministic rewrites of the AI output (art tags,
+        // creature types, legality formats, card names). Each candidate is
+        // probed before adoption, so a bad rewrite can never be applied.
+        const repairCandidates = buildAiRepairCandidates(query, finalQuery, {
+          isKnownCardName: (name) => knownCardNames.has(name.toLowerCase()),
+        });
+        for (const candidate of repairCandidates) {
+          try {
+            const candidateResp = await fetchWithTimeout(
+              `https://api.scryfall.com/cards/search?q=${encodeURIComponent(candidate.query)}&page=1`,
+              {},
+              2000,
+            );
+            if (candidateResp.status !== 200) continue;
+            const candidateData = await candidateResp.json();
+            if (!candidateData.total_cards) continue;
+            finalQuery = candidate.query;
+            resultCount = candidateData.total_cards;
+            aiValidationNote = candidate.note;
+            logInfo('ai_zero_results_recovered_deterministic_rewrite', {
+              query: query.substring(0, 50),
+              reason: candidate.reason,
+              repairedQuery: finalQuery,
+              recoveredCount: resultCount,
+            });
+            break;
+          } catch {
+            // Candidate probe failed — try the next one.
+          }
+        }
+
         // Strategy 1: Try deterministic query
         if (deterministicQuery && deterministicQuery !== finalQuery) {
           try {
