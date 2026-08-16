@@ -1398,8 +1398,18 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
  * query, unsupported otag/atag values are repaired before the client sees it.
  */
 serve(async (req: Request) => {
-  const response = await searchHandler(req);
-  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
+  // Pin one request id for the whole request so the translation row, the logs
+  // and the id handed back to the browser all agree.
+  let request = req;
+  let requestId = req.headers.get('x-request-id') ?? '';
+  if (!requestId) {
+    requestId = crypto.randomUUID();
+    const headers = new Headers(req.headers);
+    headers.set('x-request-id', requestId);
+    request = new Request(req, { headers });
+  }
+
+  const response = await searchHandler(request);
   const { logWarn } = createLogger(requestId);
   return await enforceSupportedTags(response, logWarn, { requestId });
 });
