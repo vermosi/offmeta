@@ -123,5 +123,8 @@
     "@uppy/core": {
       "nanoid": "^6.0.1"
     }
+  },
+  "resolutions": {
+    "@uppy/core/nanoid": "^6.0.1"
   }
 }
