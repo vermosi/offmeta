@@ -1495,17 +1495,24 @@ export async function handleDiscordRequest(req: Request): Promise<Response> {
         return Response.json({ type: InteractionResponseType.PONG });
       }
 
+      // Legacy top-level `/offmeta-privacy` stays supported until the old
+      // global command finishes propagating out.
+      const subcommand =
+        interaction.data?.name === 'offmeta-privacy'
+          ? 'privacy'
+          : resolveSubcommand(interaction);
 
-      if (interaction.data?.name === 'offmeta-privacy') {
+      if (subcommand === 'privacy') {
         return Response.json({
           type: InteractionResponseType.CHANNEL_MESSAGE,
           data: { flags: EPHEMERAL, embeds: [buildPrivacyEmbed()] },
         });
       }
 
-      if (interaction.data?.name !== 'offmeta') {
+      if (subcommand !== 'search') {
         return Response.json({ type: InteractionResponseType.PONG });
       }
+
 
       const userId = extractUserId(interaction);
       const guildId = interaction.guild_id;
