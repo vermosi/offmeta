@@ -706,6 +706,32 @@ export function buildHelpEmbed() {
   };
 }
 
+/**
+ * Friendly ephemeral fallback when Discord sends a command (or sub-command)
+ * this bot does not know — usually a stale/legacy registration still cached in
+ * a client. Points the user at the current `/offmeta` surface instead of
+ * silently doing nothing.
+ */
+export function buildUnknownCommandEmbed(attempted?: string) {
+  const label = (attempted ?? '').trim();
+  const safeLabel = label ? `\`/${label.replace(/[`\n\r]/g, '').slice(0, 64)}\`` : 'That command';
+  return {
+    title: "OffMeta doesn't know that command",
+    url: SITE_URL,
+    color: 0x1c1b22,
+    description: [
+      `${safeLabel} isn't an OffMeta command. Everything lives under \`/offmeta\`:`,
+      '',
+      '`/offmeta search <query>` — find cards from a plain-English description',
+      '`/offmeta help` — list every command and what it does',
+      '`/offmeta privacy` — what data OffMeta stores and how to delete it',
+      '',
+      'If an old command still shows up in your client, give Discord a few minutes to refresh.',
+    ].join('\n'),
+    footer: { text: 'offmeta.app · admin@offmeta.app' },
+  };
+}
+
 function summarize(card: Record<string, unknown>): CardSummary {
   const faces = card.card_faces as
     | Array<{
@@ -1553,7 +1579,12 @@ export async function handleDiscordRequest(req: Request): Promise<Response> {
       }
 
       if (subcommand !== 'search') {
-        return Response.json({ type: InteractionResponseType.PONG });
+        const sub = interaction.data?.options?.find((opt) => opt.type === 1);
+        const attempted = [interaction.data?.name, sub?.name].filter(Boolean).join(' ');
+        return Response.json({
+          type: InteractionResponseType.CHANNEL_MESSAGE,
+          data: { flags: EPHEMERAL, embeds: [buildUnknownCommandEmbed(attempted)] },
+        });
       }
 
 
