@@ -440,7 +440,7 @@ serve(withLogging('warmup-cache', async (req) => {
      */
     async function warmQuery(
       query: string,
-    ): Promise<{ status: number; body: string }> {
+    ): Promise<{ status: number; body: string; retryAfterMs: number | null }> {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/semantic-search`, {
         method: 'POST',
         headers: {
@@ -450,7 +450,67 @@ serve(withLogging('warmup-cache', async (req) => {
         },
         body: JSON.stringify({ query, useCache: true, locale: 'en' }),
       });
-      return { status: res.status, body: (await res.text()).slice(0, 300) };
+
+      const retryAfterHeader = res.headers.get('retry-after');
+      const retryAfterSeconds = retryAfterHeader
+        ? Number(retryAfterHeader)
+        : NaN;
+
+      return {
+        status: res.status,
+        body: (await res.text()).slice(0, 300),
+        retryAfterMs: Number.isFinite(retryAfterSeconds)
+          ? retryAfterSeconds * 1000
+          : null,
+      };
+    }
+
+    // Transient statuses worth retrying: rate limits, gateway/runtime blips.
+    const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
+    const MAX_ATTEMPTS = 3;
+    const BASE_BACKOFF_MS = 2000;
+    const MAX_BACKOFF_MS = 15000;
+
+    const backoffDelayMs = (attempt: number, retryAfterMs: number | null) => {
+      const exponential = Math.min(
+        BASE_BACKOFF_MS * 2 ** (attempt - 1),
+        MAX_BACKOFF_MS,
+      );
+      // Jitter avoids the parallel batch members retrying in lockstep.
+      const jittered = exponential * (0.5 + Math.random() * 0.5);
+      return Math.min(Math.max(retryAfterMs ?? 0, jittered), MAX_BACKOFF_MS);
+    };
+
+    /** Runs warmQuery with exponential backoff on transient failures. */
+    async function warmQueryWithRetry(query: string) {
+      let last: Awaited<ReturnType<typeof warmQuery>> | null = null;
+      let lastError: unknown = null;
+
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        try {
+          last = await warmQuery(query);
+          lastError = null;
+          if (!RETRYABLE_STATUSES.has(last.status)) return last;
+        } catch (err) {
+          // Network-level failures are transient too.
+          lastError = err;
+          last = null;
+        }
+
+        if (attempt < MAX_ATTEMPTS) {
+          const delay = backoffDelayMs(attempt, last?.retryAfterMs ?? null);
+          logger.warn('warmup_query_retry', {
+            query: query.substring(0, 50),
+            attempt,
+            status: last?.status ?? null,
+            delayMs: Math.round(delay),
+          });
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+
+      if (!last) throw lastError ?? new Error('warmup request failed');
+      return last;
     }
 
     for (let i = 0; i < queriesToWarm.length; i += BATCH_SIZE) {
@@ -462,12 +522,7 @@ serve(withLogging('warmup-cache', async (req) => {
 
       const batchPromises = batch.map(async (query) => {
         try {
-          let { status, body } = await warmQuery(query);
-
-          if (status === 429) {
-            await new Promise((resolve) => setTimeout(resolve, 5000));
-            ({ status, body } = await warmQuery(query));
-          }
+          const { status, body } = await warmQueryWithRetry(query);
 
           if (status === 429) {
             rateLimited = true;
@@ -476,6 +531,7 @@ serve(withLogging('warmup-cache', async (req) => {
             logger.warn('warmup_rate_limited', { query });
             return;
           }
+
 
           if (status < 200 || status >= 300) {
             results.failed++;
