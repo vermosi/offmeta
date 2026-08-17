@@ -52,6 +52,7 @@ export interface SearchResult {
   intent?: SearchIntent;
   source?: string;
   recommendationCards?: ScryfallCard[];
+  rankerVersion?: 'baseline' | 'v2';
 }
 
 interface UnifiedSearchBarProps {

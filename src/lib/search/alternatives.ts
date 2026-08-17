@@ -23,7 +23,11 @@ import {
   mergePlanCandidates,
   rankSimilarityCandidates,
 } from '@/lib/recommendations/ranking';
-import type { QueryPlan, RecommendationIntent } from '@/types/recommendations';
+import type {
+  QueryPlan,
+  RecommendationConstraints,
+  RecommendationIntent,
+} from '@/types/recommendations';
 
 /**
  * Which wrapper phrasing produced the intent. Recorded in telemetry so we can
@@ -44,6 +48,8 @@ export interface AlternativesIntent {
   budget: boolean;
   /** Explicit user price ceiling, when present. */
   maxPrice?: number;
+  /** Explicit format qualifier normalized to Scryfall's format name. */
+  format?: string;
   /** The wrapper phrasing that matched. */
   kind: AlternativesIntentKind;
   /**
@@ -60,6 +66,7 @@ export interface ResolvedAlternatives {
   cardName: string;
   budget: boolean;
   maxPrice?: number;
+  format?: string;
   kind: AlternativesIntentKind;
   /** Present when resolution came from the category table. */
   category?: string;
@@ -109,6 +116,8 @@ const ALTERNATIVES_PATTERNS: Array<{
 /** Trailing qualifiers that are not part of the card name. */
 const TRAILING_NOISE =
   /\s+\b(?:in|for)\s+(?:commander|edh|modern|legacy|pioneer|standard|pauper|vintage|brawl)\b.*$/i;
+const FORMAT_QUALIFIER =
+  /\s+\b(?:in|for)\s+(commander|edh|modern|legacy|pioneer|standard|pauper|vintage|brawl)\b/i;
 
 /** Leading budget adjectives ("budget fetch land alternatives"). */
 const LEADING_BUDGET =
@@ -166,6 +175,7 @@ export function resolveCategoryQuery(
   term: string,
   budget: boolean,
   maxPrice?: number,
+  format?: string,
 ): string | null {
   const normalized = normalizeCategoryTerm(term);
   const base =
@@ -178,7 +188,9 @@ export function resolveCategoryQuery(
     : budget
       ? BUDGET_CEILING
       : null;
-  return [base, priceClause, 'game:paper'].filter(Boolean).join(' ');
+  return [base, priceClause, format ? `f:${format}` : null, 'game:paper']
+    .filter(Boolean)
+    .join(' ');
 }
 
 function cleanCardName(raw: string): string {
@@ -204,13 +216,21 @@ export function detectAlternativesIntent(
   if (/[():!<>=]/.test(trimmed)) return null;
 
   const priceMatch = trimmed.match(PRICE_CEILING);
+  const formatMatch = trimmed.match(FORMAT_QUALIFIER);
+  const format =
+    formatMatch?.[1].toLowerCase() === 'edh'
+      ? 'commander'
+      : formatMatch?.[1].toLowerCase();
   const maxPrice = priceMatch ? Number(priceMatch[1]) : undefined;
   const queryWithoutPrice = priceMatch
     ? trimmed.replace(PRICE_CEILING, '').trim()
     : trimmed;
+  const queryForPattern = formatMatch
+    ? queryWithoutPrice.replace(FORMAT_QUALIFIER, '').trim()
+    : queryWithoutPrice;
 
   for (const { kind, pattern } of ALTERNATIVES_PATTERNS) {
-    const match = queryWithoutPrice.match(pattern);
+    const match = queryForPattern.match(pattern);
     if (!match) continue;
 
     const cardName = cleanCardName(match[1] ?? '');
@@ -228,12 +248,25 @@ export function detectAlternativesIntent(
       ? normalizeCategoryTerm(stripped)
       : null;
     if (category) {
-      return { cardName: stripped, budget, kind, category, maxPrice };
+      return {
+        cardName: stripped,
+        budget,
+        kind,
+        category,
+        maxPrice,
+        ...(format ? { format } : {}),
+      };
     }
 
     if (BUDGET_WORDS.test(cardName)) continue;
 
-    return { cardName, budget, kind, maxPrice };
+    return {
+      cardName,
+      budget,
+      kind,
+      maxPrice,
+      ...(format ? { format } : {}),
+    };
   }
 
   return null;
@@ -254,6 +287,7 @@ function excludeSelf(query: string, cardName: string): string {
  */
 export async function resolveAlternativesQuery(
   query: string,
+  constraints: RecommendationConstraints = {},
 ): Promise<ResolvedAlternatives | null> {
   const intent = detectAlternativesIntent(query);
   if (!intent) return null;
@@ -265,6 +299,7 @@ export async function resolveAlternativesQuery(
       intent.category,
       intent.budget,
       intent.maxPrice,
+      intent.format ?? constraints.format,
     );
     if (!categoryQuery) return null;
     return {
@@ -274,6 +309,7 @@ export async function resolveAlternativesQuery(
       maxPrice: intent.maxPrice,
       kind: intent.kind,
       category: intent.category,
+      format: intent.format ?? constraints.format,
     };
   }
 
@@ -304,16 +340,42 @@ export async function resolveAlternativesQuery(
       return null;
     }
 
+    const effectiveConstraints: RecommendationConstraints = {
+      ...constraints,
+      ...(intent.format ? { format: intent.format } : {}),
+      ...(intent.maxPrice !== undefined ? { maxPrice: intent.maxPrice } : {}),
+    };
+    const constraintClauses = [
+      effectiveConstraints.format ? `f:${effectiveConstraints.format}` : '',
+      effectiveConstraints.colors?.length
+        ? `id<=${effectiveConstraints.colors.join('')}`
+        : '',
+      ...(effectiveConstraints.types ?? []).map((type) => `t:${type}`),
+      effectiveConstraints.minManaValue !== undefined
+        ? `mv>=${effectiveConstraints.minManaValue}`
+        : '',
+      effectiveConstraints.maxManaValue !== undefined
+        ? `mv<=${effectiveConstraints.maxManaValue}`
+        : '',
+    ].filter(Boolean);
+    const withConstraints = (value: string | undefined) =>
+      value ? [value, ...constraintClauses].join(' ') : undefined;
+
     const chosen: string | undefined = intent.budget
       ? data.budgetQuery
       : data.similarQuery || data.budgetQuery;
     if (!chosen) return null;
 
     const plans = Array.isArray(data.queryPlans)
-      ? (data.queryPlans as QueryPlan[]).slice(0, 4)
+      ? (data.queryPlans as QueryPlan[]).slice(0, 4).map((plan) => ({
+          ...plan,
+          query: withConstraints(plan.query) ?? plan.query,
+        }))
       : [];
-    const recommendationIntent = data.intent as
-      RecommendationIntent | undefined;
+    const edgeIntent = data.intent as RecommendationIntent | undefined;
+    const recommendationIntent = edgeIntent
+      ? { ...edgeIntent, hardConstraints: effectiveConstraints }
+      : undefined;
     let recommendationCards: ScryfallCard[] | undefined;
     if (plans.length > 0 && recommendationIntent?.version === 'v2') {
       const activePlans = [...plans];
@@ -334,7 +396,14 @@ export async function resolveAlternativesQuery(
       const needsRecovery =
         candidates.length < 20 ||
         (selected[0]?.breakdown.confidence ?? 0) < 0.5;
-      const recoveryPlan = data.recoveryPlan as QueryPlan | undefined;
+      const rawRecoveryPlan = data.recoveryPlan as QueryPlan | undefined;
+      const recoveryPlan = rawRecoveryPlan
+        ? {
+            ...rawRecoveryPlan,
+            query:
+              withConstraints(rawRecoveryPlan.query) ?? rawRecoveryPlan.query,
+          }
+        : undefined;
       if (needsRecovery && recoveryPlan && activePlans.length < 5) {
         const recoveryResult = await searchCards(recoveryPlan.query, 1);
         activePlans.push(recoveryPlan);
@@ -355,12 +424,13 @@ export async function resolveAlternativesQuery(
     }
 
     return {
-      scryfallQuery: excludeSelf(chosen, card.name),
+      scryfallQuery: excludeSelf(withConstraints(chosen) ?? chosen, card.name),
       cardName: card.name,
       budget: intent.budget,
       maxPrice: intent.maxPrice,
       kind: intent.kind,
       recommendationCards,
+      format: effectiveConstraints.format,
     };
   } catch (err) {
     logger.warn('Alternatives resolution threw', err);

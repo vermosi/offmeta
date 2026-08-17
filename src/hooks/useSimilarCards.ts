@@ -18,6 +18,7 @@ import {
 } from '@/lib/recommendations/ranking';
 import type { QueryPlan, RecommendationIntent } from '@/types/recommendations';
 import { RECOMMENDATION_VERSION } from '@/types/recommendations';
+import { getRecommendationRolloutAssignment } from '@/lib/recommendations/rollout';
 import {
   recordSimilarError,
   recordSimilarNoSource,
@@ -189,14 +190,16 @@ export function useSimilarCards(
   } = useQuery({
     queryKey: ['similar-cards', debouncedQuery, fallbackFingerprint],
     queryFn: async (): Promise<SimilarityData | null> => {
-      const cached = readCache(key);
+      const assignment = await getRecommendationRolloutAssignment();
+      const rolloutKey = `${key}::${assignment.stage}:${assignment.serveVersion}`;
+      const cached = readCache(rolloutKey);
       if (cached !== undefined) return cached;
 
       const sourceCard =
         (await detectCardName(debouncedQuery)) ?? fallbackCard ?? null;
       if (!sourceCard) {
         recordSimilarNoSource(debouncedQuery);
-        writeCache(key, null);
+        writeCache(rolloutKey, null);
         return null;
       }
 
@@ -239,7 +242,23 @@ export function useSimilarCards(
       const queryPlans = Array.isArray(data.queryPlans)
         ? (data.queryPlans as QueryPlan[]).slice(0, 4)
         : [];
-      if (queryPlans.length > 0) {
+      const fetchBaseline = () =>
+        Promise.all([
+          data.similarQuery
+            ? searchCards(data.similarQuery, 1)
+            : Promise.resolve(null),
+          data.budgetQuery
+            ? searchCards(data.budgetQuery, 1)
+            : Promise.resolve(null),
+        ]);
+      const baselinePromise =
+        assignment.serveVersion === 'baseline' || assignment.runShadow
+          ? fetchBaseline()
+          : null;
+      if (
+        queryPlans.length > 0 &&
+        (assignment.serveVersion === 'v2' || assignment.runShadow)
+      ) {
         const planResults = await Promise.all(
           queryPlans.map((plan) => searchCards(plan.query, 1)),
         );
@@ -290,19 +309,17 @@ export function useSimilarCards(
           rankedSimilar: ranked.similar,
           rankedBudget: ranked.budget,
         };
+        if (assignment.serveVersion === 'baseline' && baselinePromise) {
+          const [similarResults, budgetResults] = await baselinePromise;
+          result = { sourceCard, similarResults, budgetResults };
+        }
       } else {
         // Compatibility path for an older deployed edge function.
-        const [similarResults, budgetResults] = await Promise.all([
-          data.similarQuery
-            ? searchCards(data.similarQuery, 1)
-            : Promise.resolve(null),
-          data.budgetQuery
-            ? searchCards(data.budgetQuery, 1)
-            : Promise.resolve(null),
-        ]);
+        const [similarResults, budgetResults] = await (baselinePromise ??
+          fetchBaseline());
         result = { sourceCard, similarResults, budgetResults };
       }
-      writeCache(key, result);
+      writeCache(rolloutKey, result);
       return result;
     },
     enabled: enabled && (!!debouncedQuery.trim() || !!fallbackCard),

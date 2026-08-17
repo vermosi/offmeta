@@ -42,7 +42,10 @@ import {
   detectAlternativesIntent,
   resolveAlternativesQuery,
 } from '../alternatives';
-import { buildClientFallbackQuery, extractCardNameCandidate } from '../fallback';
+import {
+  buildClientFallbackQuery,
+  extractCardNameCandidate,
+} from '../fallback';
 import {
   clearRecoveryAttempts,
   getRecoveryAttempt,
@@ -120,6 +123,32 @@ describe('zero-result regressions (logged failing queries)', () => {
       // Budget phrasing must prefer the budget query over the plain one.
       expect(resolved?.scryfallQuery).toContain('usd<5');
       expect(resolved?.scryfallQuery).toContain('-!"Rhystic Study"');
+    });
+
+    it('preserves active filters as hard constraints', async () => {
+      getCardByName.mockResolvedValue(card('Rhystic Study'));
+      invoke.mockResolvedValue({
+        data: {
+          success: true,
+          similarQuery: 'o:"unless that player pays"',
+          budgetQuery: 'o:"unless that player pays" usd<5',
+        },
+        error: null,
+      });
+
+      const resolved = await resolveAlternativesQuery(QUERY, {
+        format: 'commander',
+        colors: ['U', 'R'],
+        types: ['enchantment'],
+        minManaValue: 2,
+        maxManaValue: 4,
+      });
+
+      expect(resolved?.scryfallQuery).toContain('f:commander');
+      expect(resolved?.scryfallQuery).toContain('id<=UR');
+      expect(resolved?.scryfallQuery).toContain('t:enchantment');
+      expect(resolved?.scryfallQuery).toContain('mv>=2');
+      expect(resolved?.scryfallQuery).toContain('mv<=4');
     });
 
     it('recovers end-to-end and records alternatives telemetry', async () => {

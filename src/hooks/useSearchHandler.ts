@@ -18,7 +18,9 @@ import {
 } from '@/lib/search/alternatives';
 import { estimateQueryComplexity } from '@/lib/search/complexity';
 import { CLIENT_CONFIG } from '@/lib/config';
+import { MAX_CMC } from '@/lib/search/url-params';
 import { generateRequestId } from '@/lib/search/search-state';
+import { getRecommendationRolloutAssignment } from '@/lib/recommendations/rollout';
 import type { FilterState } from '@/types/filters';
 import type { SearchResult } from '@/components/UnifiedSearchBar';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -241,7 +243,20 @@ export function useSearchHandler({
         markSearchPhase(traceId, 'translation:start');
         const translationPromise: Promise<TranslationResult> =
           recommendationIntent
-            ? resolveAlternativesQuery(queryToSearch).then((resolved) => {
+            ? Promise.all([
+                resolveAlternativesQuery(queryToSearch, {
+                  ...(filters?.format ? { format: filters.format } : {}),
+                  ...(filters?.colors.length ? { colors: filters.colors } : {}),
+                  ...(filters?.types.length ? { types: filters.types } : {}),
+                  ...(filters?.cmcRange[0] > 0
+                    ? { minManaValue: filters.cmcRange[0] }
+                    : {}),
+                  ...(filters?.cmcRange[1] < MAX_CMC
+                    ? { maxManaValue: filters.cmcRange[1] }
+                    : {}),
+                }),
+                getRecommendationRolloutAssignment(),
+              ]).then(([resolved, assignment]) => {
                 if (!resolved) {
                   return translateQueryWithDedup({
                     query: queryToSearch,
@@ -254,8 +269,8 @@ export function useSearchHandler({
                 }
                 return {
                   scryfallQuery: resolved.scryfallQuery,
-                  source: 'recommendation_v2',
-                  edgeSource: 'recommendation_v2',
+                  source: `recommendation_${assignment.serveVersion}`,
+                  edgeSource: `recommendation_${assignment.serveVersion}`,
                   explanation: {
                     readable: resolved.budget
                       ? `Budget alternatives to ${resolved.cardName}`
@@ -268,7 +283,11 @@ export function useSearchHandler({
                     ],
                     confidence: 0.9,
                   },
-                  recommendationCards: resolved.recommendationCards,
+                  recommendationCards:
+                    assignment.serveVersion === 'v2'
+                      ? resolved.recommendationCards
+                      : undefined,
+                  rankerVersion: assignment.serveVersion,
                 };
               })
             : translateQueryWithDedup({
@@ -335,6 +354,8 @@ export function useSearchHandler({
             validationIssues: result.validationIssues,
             intent: result.intent,
             source,
+            recommendationCards: result.recommendationCards,
+            rankerVersion: result.rankerVersion ?? 'v2',
           },
           rawQuery, // Always pass original query as naturalQuery
           requestId,

@@ -29,7 +29,11 @@ import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
 import { buildFilterQuery, validateScryfallQuery } from '@/lib/scryfall/query';
 import { useAnalytics, toLatencyBucket } from '@/hooks/useAnalytics';
-import { reportSearchOutcome } from '@/lib/analytics/searchOutcome';
+import {
+  beginSearchOutcome,
+  reportSearchOutcome,
+} from '@/lib/analytics/searchOutcome';
+import { observeRecommendationRollout } from '@/lib/recommendations/rollout';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { useTranslation } from '@/lib/i18n';
 import { LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n/constants';
@@ -343,6 +347,7 @@ export function useSearch() {
       const latencyMs =
         startedAt != null ? Math.max(0, Date.now() - startedAt) : 0;
       const source = lastSearchResult.source || 'ai';
+      const rankerVersion = lastSearchResult.rankerVersion ?? 'v2';
       reportSearchOutcome('results', {
         requestId: currentRequestId,
         resultsCount: totalCards,
@@ -352,7 +357,7 @@ export function useSearch() {
         translated_query: lastSearchResult.scryfallQuery,
         results_count: totalCards,
         request_id: currentRequestId ?? undefined,
-        ranker_version: 'v2',
+        ranker_version: rankerVersion,
       });
       trackSearchSuccess({
         query: originalQuery,
@@ -362,8 +367,15 @@ export function useSearch() {
         latency_bucket: toLatencyBucket(latencyMs),
         source,
         request_id: currentRequestId ?? undefined,
-        ranker_version: 'v2',
+        ranker_version: rankerVersion,
       });
+      if (source.startsWith('recommendation_') && currentRequestId) {
+        observeRecommendationRollout(
+          currentRequestId,
+          rankerVersion,
+          latencyMs,
+        );
+      }
       // Only attribute latency to the first success per handleSearch invocation.
       searchStartMsRef.current = null;
       trackFirstSearchSuccess({
@@ -635,7 +647,6 @@ export function useSearch() {
   const handleRerunEditedQuery = useCallback(
     (editedQuery: string) => {
       const requestId = generateRequestId();
-      setCurrentRequestId(requestId);
 
       setFilteredCards([]);
       setRecommendationCards(null);
@@ -666,6 +677,15 @@ export function useSearch() {
         return;
       }
 
+      setCurrentRequestId(requestId);
+      beginSearchOutcome(requestId, originalQuery);
+      trackEvent('search_started', {
+        query: originalQuery,
+        request_id: requestId,
+        placement: 'edited_query',
+        ranker_version: 'v2',
+      });
+
       setSearchQuery(validation.sanitized);
       setHasSearched(true);
 
@@ -693,6 +713,17 @@ export function useSearch() {
         edited_query: editedQuery,
         request_id: requestId,
       });
+      if (
+        currentRequestId &&
+        lastSearchResult?.source?.startsWith('recommendation_')
+      ) {
+        observeRecommendationRollout(
+          currentRequestId,
+          lastSearchResult.rankerVersion ?? 'v2',
+          0,
+          { immediateRefinement: true },
+        );
+      }
       trackFirstRefinement({
         query: originalQuery,
         request_id: requestId,
@@ -714,6 +745,8 @@ export function useSearch() {
       trackFirstRefinement,
       activeFilters,
       scryfallLang,
+      currentRequestId,
+      lastSearchResult,
     ],
   );
 
@@ -733,7 +766,7 @@ export function useSearch() {
         request_id: currentRequestId ?? undefined,
         result_set_id: currentRequestId ?? undefined,
         surface: 'main_search',
-        ranker_version: 'v2',
+        ranker_version: lastSearchResult?.rankerVersion ?? 'v2',
         time_to_click_ms: latencyMs,
       });
       trackFirstResultClick({
@@ -755,6 +788,17 @@ export function useSearch() {
           });
         }
       }
+      if (
+        currentRequestId &&
+        lastSearchResult?.source?.startsWith('recommendation_')
+      ) {
+        observeRecommendationRollout(
+          currentRequestId,
+          lastSearchResult.rankerVersion ?? 'v2',
+          latencyMs ?? 0,
+          { usefulClick: true },
+        );
+      }
       // Navigate to the canonical card page — the single card experience.
       navigate(`/cards/${cardNameToSlug(card.name)}`);
     },
@@ -766,6 +810,7 @@ export function useSearch() {
       trackFirstResultClick,
       trackEvent,
       navigate,
+      lastSearchResult,
     ],
   );
 

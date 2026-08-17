@@ -23,14 +23,19 @@ describe('detectAlternativesIntent', () => {
     });
   });
 
-  it('strips format qualifiers', () => {
+  it('retains and normalizes format qualifiers', () => {
     expect(
       detectAlternativesIntent('replacements for mana crypt in commander'),
     ).toEqual({
       cardName: 'mana crypt',
       budget: false,
       kind: 'alternatives_to',
+      format: 'commander',
     });
+
+    expect(
+      detectAlternativesIntent('cards like Sol Ring for edh'),
+    ).toMatchObject({ format: 'commander' });
   });
 
   it('detects "X but cheaper"', () => {
