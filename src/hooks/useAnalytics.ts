@@ -287,6 +287,10 @@ const ALLOWED_EVENT_TYPES = [
   'pro_upgrade_impression',
   'rerun_edited_query',
   'card_click',
+  'recommendation_impression',
+  'recommendation_click',
+  'recommendation_rejected',
+  'ranker_shadow_evaluated',
   'results_engagement', // Scroll depth / dwell over a rendered result set
 
   'card_modal_view',
@@ -388,6 +392,7 @@ interface SearchEventData {
   search_duration_ms?: number;
   request_id?: string;
   source?: string; // 'deterministic' | 'ai' | 'cache'
+  ranker_version?: string;
 }
 
 /**
@@ -419,6 +424,7 @@ interface SearchSuccessEventData {
   /** Which pipeline produced the results (deterministic | cache | ai | ai_recovered | concept_match | client_recovery | fuzzy). */
   source: string;
   request_id?: string;
+  ranker_version?: string;
 }
 
 interface SearchFailureEventData {
@@ -510,6 +516,9 @@ interface PaginationEventData {
 interface FeedbackEventData {
   query: string;
   issue_description: string;
+  request_id?: string;
+  surface?: string;
+  ranker_version?: string;
 }
 
 interface RerunEditedQueryEventData {
@@ -554,6 +563,23 @@ interface LifecycleEventData {
   cta?: string;
 }
 
+interface RecommendationEventData {
+  query: string;
+  executed_query?: string;
+  request_id?: string;
+  result_set_id?: string;
+  card_id?: string;
+  card_name?: string;
+  source_card?: string;
+  visible_position?: number;
+  surface: string;
+  ranker_version: string;
+  score?: number;
+  confidence?: number;
+  score_breakdown?: string;
+  time_to_click_ms?: number;
+}
+
 interface ShareClickedEventData {
   surface: string;
   url?: string;
@@ -585,6 +611,7 @@ type EventData =
   | RouteViewEventData
   | ExampleQueryEventData
   | LifecycleEventData
+  | RecommendationEventData
   | ShareClickedEventData
   | DeckClickEventData
   | SearchStartedEventData;

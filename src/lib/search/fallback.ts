@@ -202,6 +202,13 @@ const STRATEGY_HATE_PATTERNS: Array<{ regex: RegExp; syntax: string }> = [
   },
   {
     regex: new RegExp(
+      String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?mill${HATE_SUFFIX}\b`,
+      'i',
+    ),
+    syntax: '(otag:mill or o:"mill")',
+  },
+  {
+    regex: new RegExp(
       String.raw`\b(?:cards?\s+(?:that\s+)?)?${HATE_VERB}\s+(?:the\s+)?(?:storm|spellslinger|spells?|instants?\s+and\s+sorceries?|combo)${HATE_SUFFIX}\b`,
       'i',
     ),
@@ -911,7 +918,13 @@ export function buildClientFallbackQuery(naturalQuery: string): string {
   // Scryfall's 700-char query ceiling even when a user throws many intents
   // at us (each syntax averages ~80 chars once wrapped).
   const MAX_HATE_CLAUSES = 6;
-  const cappedHate = hateMatches.slice(0, MAX_HATE_CLAUSES);
+  const MAX_HATE_GROUP_LENGTH = 500;
+  const cappedHate: string[] = [];
+  for (const syntax of hateMatches.slice(0, MAX_HATE_CLAUSES)) {
+    const candidate = `(${[...cappedHate, syntax].join(' or ')})`;
+    if (candidate.length > MAX_HATE_GROUP_LENGTH) break;
+    cappedHate.push(syntax);
+  }
   if (cappedHate.length === 1) {
     parts.push(cappedHate[0]);
   } else if (cappedHate.length > 1) {

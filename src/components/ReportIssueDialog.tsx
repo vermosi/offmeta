@@ -99,14 +99,22 @@ export function ReportIssueDialog({
         originalQuery,
         translatedQuery: compiledQuery,
         issueDescription: fullDescription,
+        requestId,
+        surface: 'main_search',
+        rankerVersion: 'v2',
       });
 
       try {
         trackFeedback({
           query: originalQuery,
           issue_description: validationResult.data.issueDescription,
+          request_id: requestId,
+          surface: 'main_search',
+          ranker_version: 'v2',
         });
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       const remaining = checkRateLimit().remainingSubmissions;
       toast.success(t('report.success', 'Issue reported'), {

@@ -12,16 +12,11 @@ import type { ScryfallCard, SearchResult } from '@/types/card';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { logger } from '@/lib/core/logger';
 import {
-  provenancePrior,
+  mergePlanCandidates,
   rankSimilarityCandidates,
-  type CandidateWithProvenance,
   type RankedRecommendation,
 } from '@/lib/recommendations/ranking';
-import type {
-  CandidateProvenance,
-  QueryPlan,
-  RecommendationIntent,
-} from '@/types/recommendations';
+import type { QueryPlan, RecommendationIntent } from '@/types/recommendations';
 import { RECOMMENDATION_VERSION } from '@/types/recommendations';
 import {
   recordSimilarError,
@@ -62,8 +57,20 @@ interface SimilarityCacheEntry {
 
 const similarityCache = new Map<string, SimilarityCacheEntry>();
 
-function cacheKey(query: string, fallbackId: string | null): string {
-  return `${RECOMMENDATION_VERSION}::${query.trim().toLowerCase()}::${fallbackId ?? ''}`;
+function cardFingerprint(card?: ScryfallCard | null): string {
+  if (!card) return '';
+  return JSON.stringify([
+    card.id,
+    card.oracle_text ?? '',
+    card.cmc,
+    card.color_identity ?? [],
+    card.type_line,
+    card.prices.usd ?? '',
+  ]);
+}
+
+function cacheKey(query: string, fallbackFingerprint: string): string {
+  return `${RECOMMENDATION_VERSION}::${query.trim().toLowerCase()}::${fallbackFingerprint}`;
 }
 
 function readCache(key: string): SimilarityData | null | undefined {
@@ -101,40 +108,6 @@ function toSearchResult(cards: ScryfallCard[]): SearchResult {
     has_more: false,
     data: cards,
   };
-}
-
-function mergePlanResults(
-  plans: QueryPlan[],
-  results: SearchResult[],
-): CandidateWithProvenance[] {
-  const candidates = new Map<string, CandidateWithProvenance>();
-  for (const [planIndex, plan] of plans.entries()) {
-    const result = results[planIndex];
-    for (const [index, card] of (result?.data ?? []).entries()) {
-      const identity = card.oracle_id ?? card.id;
-      const provenance: CandidateProvenance = {
-        planId: plan.id,
-        strategy: plan.strategy,
-        sourceRank: index + 1,
-        planWeight: plan.weight,
-        signal: plan.signal,
-      };
-      const existing = candidates.get(identity);
-      if (existing) {
-        existing.provenance.push(provenance);
-      } else {
-        candidates.set(identity, { card, provenance: [provenance] });
-      }
-    }
-  }
-  return [...candidates.values()]
-    .sort(
-      (left, right) =>
-        provenancePrior(right.provenance, plans) -
-          provenancePrior(left.provenance, plans) ||
-        left.card.name.localeCompare(right.card.name),
-    )
-    .slice(0, 500);
 }
 
 function defaultIntent(
@@ -206,14 +179,15 @@ export function useSimilarCards(
   }, [query]);
 
   const fallbackId = fallbackCard?.id ?? null;
-  const key = cacheKey(debouncedQuery, fallbackId);
+  const fallbackFingerprint = cardFingerprint(fallbackCard);
+  const key = cacheKey(debouncedQuery, fallbackFingerprint);
 
   const {
     data: similarityData,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['similar-cards', debouncedQuery, fallbackId],
+    queryKey: ['similar-cards', debouncedQuery, fallbackFingerprint],
     queryFn: async (): Promise<SimilarityData | null> => {
       const cached = readCache(key);
       if (cached !== undefined) return cached;
@@ -270,7 +244,10 @@ export function useSimilarCards(
           queryPlans.map((plan) => searchCards(plan.query, 1)),
         );
         let activePlans = queryPlans;
-        let candidates = mergePlanResults(activePlans, planResults);
+        let candidates = mergePlanCandidates(
+          activePlans,
+          planResults.map((planResult) => planResult.data),
+        );
         const intent =
           data.intent && data.intent.version === RECOMMENDATION_VERSION
             ? (data.intent as RecommendationIntent)
@@ -288,10 +265,12 @@ export function useSimilarCards(
           const recoveryPlan = data.recoveryPlan as QueryPlan;
           const recoveryResult = await searchCards(recoveryPlan.query, 1);
           activePlans = [...activePlans, recoveryPlan];
-          candidates = mergePlanResults(activePlans, [
-            ...planResults,
-            recoveryResult,
-          ]);
+          candidates = mergePlanCandidates(
+            activePlans,
+            [...planResults, recoveryResult].map(
+              (planResult) => planResult.data,
+            ),
+          );
           ranked = rankSimilarityCandidates(
             sourceCard,
             candidates,

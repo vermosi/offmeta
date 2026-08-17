@@ -31,6 +31,7 @@ const SearchHelpModal = lazy(() =>
 );
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
+import type { ScryfallCard } from '@/types/card';
 import { useTranslation } from '@/lib/i18n';
 
 const VoiceSearchControl = lazy(() =>
@@ -50,6 +51,7 @@ export interface SearchResult {
   validationIssues?: string[];
   intent?: SearchIntent;
   source?: string;
+  recommendationCards?: ScryfallCard[];
 }
 
 interface UnifiedSearchBarProps {
@@ -57,6 +59,7 @@ interface UnifiedSearchBarProps {
     query: string,
     result?: SearchResult,
     naturalQuery?: string,
+    requestId?: string,
   ) => void;
   isLoading: boolean;
   lastTranslatedQuery?: string;
@@ -93,9 +96,7 @@ function PhaseIndicator({
       aria-live="polite"
       aria-label={label}
     >
-      <div
-        className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground"
-      >
+      <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
         {isTranslating ? (
           <>
             <Sparkles className="h-3 w-3 animate-pulse" aria-hidden="true" />
@@ -206,9 +207,7 @@ export const UnifiedSearchBar = forwardRef<
   const collapsedCount = isMobile ? 4 : 6;
 
   const visibleExamples = useMemo(() => {
-    const maxVisible = showAllExamples
-      ? exampleQueries.length
-      : collapsedCount;
+    const maxVisible = showAllExamples ? exampleQueries.length : collapsedCount;
     return exampleQueries.slice(0, maxVisible).map((query, position) => ({
       query,
       position,
@@ -218,27 +217,24 @@ export const UnifiedSearchBar = forwardRef<
   const hasHiddenExamples =
     !showAllExamples && exampleQueries.length > collapsedCount;
 
-
   const flattenedVisibleExamples = visibleExamples;
 
   useEffect(() => {
     if (!showExamples) return;
 
-    flattenedVisibleExamples.forEach(
-      ({ query: example, position }) => {
-        const impressionKey = `offmeta_example_impression:${example}:${isMobile ? 'mobile' : 'desktop'}`;
-        if (sessionStorage.getItem(impressionKey)) return;
+    flattenedVisibleExamples.forEach(({ query: example, position }) => {
+      const impressionKey = `offmeta_example_impression:${example}:${isMobile ? 'mobile' : 'desktop'}`;
+      if (sessionStorage.getItem(impressionKey)) return;
 
-        sessionStorage.setItem(impressionKey, '1');
-        trackExampleQueryImpression({
-          query: example,
-          category: 'flat',
-          position,
-          visible_count: flattenedVisibleExamples.length,
-          is_mobile: isMobile,
-        });
-      },
-    );
+      sessionStorage.setItem(impressionKey, '1');
+      trackExampleQueryImpression({
+        query: example,
+        category: 'flat',
+        position,
+        visible_count: flattenedVisibleExamples.length,
+        is_mobile: isMobile,
+      });
+    });
   }, [
     flattenedVisibleExamples,
     isMobile,
@@ -362,10 +358,16 @@ export const UnifiedSearchBar = forwardRef<
                   <span>{rateLimitCountdown}s</span>
                 </>
               ) : isSearching ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                <Loader2
+                  className="h-3.5 w-3.5 animate-spin"
+                  aria-hidden="true"
+                />
               ) : (
                 <>
-                  <Search className="h-3.5 w-3.5 sm:hidden" aria-hidden="true" />
+                  <Search
+                    className="h-3.5 w-3.5 sm:hidden"
+                    aria-hidden="true"
+                  />
                   <span className="hidden sm:inline">
                     {t('search.button')} →
                   </span>
@@ -441,7 +443,6 @@ export const UnifiedSearchBar = forwardRef<
           )}
         </div>
       )}
-
     </div>
   );
 });

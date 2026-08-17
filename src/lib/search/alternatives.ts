@@ -16,9 +16,14 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { getCardByName } from '@/lib/scryfall/client';
+import { getCardByName, searchCards } from '@/lib/scryfall/client';
 import { logger } from '@/lib/core/logger';
 import type { ScryfallCard } from '@/types/card';
+import {
+  mergePlanCandidates,
+  rankSimilarityCandidates,
+} from '@/lib/recommendations/ranking';
+import type { QueryPlan, RecommendationIntent } from '@/types/recommendations';
 
 /**
  * Which wrapper phrasing produced the intent. Recorded in telemetry so we can
@@ -58,6 +63,8 @@ export interface ResolvedAlternatives {
   kind: AlternativesIntentKind;
   /** Present when resolution came from the category table. */
   category?: string;
+  /** Fused and reranked V2 cards; category searches still use Scryfall directly. */
+  recommendationCards?: ScryfallCard[];
 }
 
 const BUDGET_WORDS =
@@ -302,12 +309,58 @@ export async function resolveAlternativesQuery(
       : data.similarQuery || data.budgetQuery;
     if (!chosen) return null;
 
+    const plans = Array.isArray(data.queryPlans)
+      ? (data.queryPlans as QueryPlan[]).slice(0, 4)
+      : [];
+    const recommendationIntent = data.intent as
+      RecommendationIntent | undefined;
+    let recommendationCards: ScryfallCard[] | undefined;
+    if (plans.length > 0 && recommendationIntent?.version === 'v2') {
+      const activePlans = [...plans];
+      const resultSets = await Promise.all(
+        activePlans.map((plan) => searchCards(plan.query, 1)),
+      );
+      let candidates = mergePlanCandidates(
+        activePlans,
+        resultSets.map((result) => result.data),
+      );
+      let ranked = rankSimilarityCandidates(
+        card,
+        candidates,
+        activePlans,
+        recommendationIntent,
+      );
+      const selected = intent.budget ? ranked.budget : ranked.similar;
+      const needsRecovery =
+        candidates.length < 20 ||
+        (selected[0]?.breakdown.confidence ?? 0) < 0.5;
+      const recoveryPlan = data.recoveryPlan as QueryPlan | undefined;
+      if (needsRecovery && recoveryPlan && activePlans.length < 5) {
+        const recoveryResult = await searchCards(recoveryPlan.query, 1);
+        activePlans.push(recoveryPlan);
+        candidates = mergePlanCandidates(activePlans, [
+          ...resultSets.map((result) => result.data),
+          recoveryResult.data,
+        ]);
+        ranked = rankSimilarityCandidates(
+          card,
+          candidates,
+          activePlans,
+          recommendationIntent,
+        );
+      }
+      recommendationCards = (intent.budget ? ranked.budget : ranked.similar)
+        .slice(0, 100)
+        .map((entry) => entry.card);
+    }
+
     return {
       scryfallQuery: excludeSelf(chosen, card.name),
       cardName: card.name,
       budget: intent.budget,
       maxPrice: intent.maxPrice,
       kind: intent.kind,
+      recommendationCards,
     };
   } catch (err) {
     logger.warn('Alternatives resolution threw', err);

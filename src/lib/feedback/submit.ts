@@ -12,6 +12,11 @@ export interface FeedbackPayload {
   originalQuery: string;
   translatedQuery: string | null;
   issueDescription: string;
+  requestId?: string;
+  surface?: string;
+  rankerVersion?: string;
+  rejectedCardId?: string;
+  resultRank?: number;
 }
 
 /**
@@ -28,6 +33,11 @@ export async function submitFeedback(
     original_query: payload.originalQuery.substring(0, 500),
     translated_query: payload.translatedQuery?.substring(0, 1000) ?? null,
     issue_description: payload.issueDescription.substring(0, 2000),
+    request_id: payload.requestId ?? null,
+    surface: payload.surface ?? null,
+    ranker_version: payload.rankerVersion ?? null,
+    rejected_card_id: payload.rejectedCardId ?? null,
+    result_rank: payload.resultRank ?? null,
   });
 
   if (error) {

@@ -161,6 +161,23 @@ describe('useSearch', () => {
     expect(result.current.hasSearched).toBe(true);
   });
 
+  it('preserves the request id created by the translation handler', () => {
+    const { result } = renderHook(() => useSearch(), {
+      wrapper: createWrapper(),
+    });
+
+    act(() => {
+      result.current.handleSearch(
+        't:creature',
+        undefined,
+        'creatures',
+        'request-from-handler',
+      );
+    });
+
+    expect(result.current.currentRequestId).toBe('request-from-handler');
+  });
+
   it('handleSearch with result stores search result', () => {
     const { result } = renderHook(() => useSearch(), {
       wrapper: createWrapper(),

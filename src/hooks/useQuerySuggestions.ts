@@ -113,9 +113,7 @@ const SIMPLIFY_STRATEGIES: Array<{
     label: 'Without oracle text filter',
     apply: (q) => {
       const simplified = cleanupQuery(
-        q
-          .replace(/\s*-?o:"[^"]*"/gi, '')
-          .replace(/\s*-?o:[^\s)]+/gi, ''),
+        q.replace(/\s*-?o:"[^"]*"/gi, '').replace(/\s*-?o:[^\s)]+/gi, ''),
       );
       return simplified !== q && simplified.length > 0 ? simplified : null;
     },
@@ -185,19 +183,33 @@ async function checkQueryResults(query: string): Promise<number | null> {
   }
 }
 
-function scoreSuggestion(
+export function scoreSuggestion(
   originalQuery: string,
   suggestionQuery: string,
   totalCards: number,
 ): number {
-  const originalTokens = originalQuery.trim().split(/\s+/).length;
-  const suggestionTokens = suggestionQuery.trim().split(/\s+/).length;
-  const tokenRetention =
-    originalTokens > 0 ? suggestionTokens / originalTokens : 0;
-  const countScore = Math.min(Math.log10(totalCards + 1) / 3, 1); // 0..1
-  const retentionScore = Math.max(Math.min(tokenRetention, 1), 0); // 0..1
+  const tokenize = (value: string) =>
+    new Set(value.toLowerCase().match(/[a-z]+:[^\s]+|[a-z0-9]+/g) ?? []);
+  const originalTokens = tokenize(originalQuery);
+  const suggestionTokens = tokenize(suggestionQuery);
+  const retained = [...originalTokens].filter((token) =>
+    suggestionTokens.has(token),
+  ).length;
+  const retentionScore =
+    originalTokens.size > 0 ? retained / originalTokens.size : 0;
+  const usefulCenter = 50;
+  const spread = Math.log(4);
+  const countScore =
+    totalCards <= 0
+      ? 0
+      : Math.exp(
+          -(
+            Math.log((totalCards + 1) / (usefulCenter + 1)) ** 2 /
+            (2 * spread ** 2)
+          ),
+        );
 
-  return Number((countScore * 0.65 + retentionScore * 0.35).toFixed(4));
+  return Number((countScore * 0.35 + retentionScore * 0.65).toFixed(4));
 }
 
 /**

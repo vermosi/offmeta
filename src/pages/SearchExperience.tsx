@@ -145,6 +145,7 @@ const Index = () => {
     cards,
     displayCards,
     totalCards,
+    isRecommendationResultSet,
     isSearching,
     hasNextPage,
     isFetchingNextPage,
@@ -757,6 +758,7 @@ const Index = () => {
                 queryQualityScore={queryQualityScore}
                 queryConfidence={queryQualityConfidence}
                 querySampleSize={queryQualitySampleSize}
+                preserveRanking={isRecommendationResultSet}
                 hasNextPage={hasNextPage}
                 isFetchingNextPage={isFetchingNextPage}
                 isFetchNextPageError={isFetchNextPageError}

@@ -71,6 +71,9 @@ export function useSearch() {
   const [lastSearchResult, setLastSearchResult] = useState<SearchResult | null>(
     null,
   );
+  const [recommendationCards, setRecommendationCards] = useState<
+    ScryfallCard[] | null
+  >(null);
   const [filteredCards, setFilteredCards] = useState<ScryfallCard[]>([]);
   const [hasActiveFilters, setHasActiveFilters] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
@@ -199,6 +202,7 @@ export function useSearch() {
         setOriginalQuery('');
         setHasSearched(false);
         setLastSearchResult(null);
+        setRecommendationCards(null);
         setFilteredCards([]);
         setHasActiveFilters(false);
         setActiveFilters(null);
@@ -232,9 +236,9 @@ export function useSearch() {
   // --- Infinite query ---
   const {
     data,
-    isLoading: isSearching,
+    isLoading: fetchedIsSearching,
     fetchNextPage,
-    hasNextPage,
+    hasNextPage: fetchedHasNextPage,
     isFetchingNextPage,
     error,
     isError,
@@ -247,9 +251,11 @@ export function useSearch() {
     getNextPageParam: (lastPage, allPages) =>
       lastPage.has_more ? allPages.length + 1 : undefined,
     initialPageParam: 1,
-    enabled: !!validatedSearchQuery,
+    enabled: !!validatedSearchQuery && recommendationCards === null,
     staleTime: CLIENT_CONFIG.CARD_SEARCH_STALE_TIME_MS,
   });
+  const hasNextPage = recommendationCards ? false : fetchedHasNextPage;
+  const isSearching = recommendationCards ? false : fetchedIsSearching;
 
   // Refs for IntersectionObserver (avoid stale closures)
   const hasNextPageRef = useRef(hasNextPage);
@@ -299,8 +305,10 @@ export function useSearch() {
 
   // --- Flatten pages ---
   const cards = useMemo(() => {
-    return data?.pages.flatMap((page) => page.data) || [];
-  }, [data]);
+    return (
+      recommendationCards ?? data?.pages.flatMap((page) => page.data) ?? []
+    );
+  }, [data, recommendationCards]);
 
   const localSearchIndex = useMemo(() => {
     if (cards.length === 0) return null;
@@ -311,7 +319,8 @@ export function useSearch() {
     return searchCardIndex(localSearchIndex, cards, validatedSearchQuery, 6);
   }, [cards, localSearchIndex, validatedSearchQuery]);
 
-  const totalCards = data?.pages[0]?.total_cards || 0;
+  const totalCards =
+    recommendationCards?.length ?? data?.pages[0]?.total_cards ?? 0;
 
   // --- Dynamic document title ---
   useEffect(() => {
@@ -343,6 +352,7 @@ export function useSearch() {
         translated_query: lastSearchResult.scryfallQuery,
         results_count: totalCards,
         request_id: currentRequestId ?? undefined,
+        ranker_version: 'v2',
       });
       trackSearchSuccess({
         query: originalQuery,
@@ -352,6 +362,7 @@ export function useSearch() {
         latency_bucket: toLatencyBucket(latencyMs),
         source,
         request_id: currentRequestId ?? undefined,
+        ranker_version: 'v2',
       });
       // Only attribute latency to the first success per handleSearch invocation.
       searchStartMsRef.current = null;
@@ -531,17 +542,25 @@ export function useSearch() {
   // --- Callbacks ---
 
   const handleSearch = useCallback(
-    (query: string, result?: SearchResult, naturalQuery?: string) => {
-      const requestId = generateRequestId();
+    (
+      query: string,
+      result?: SearchResult,
+      naturalQuery?: string,
+      inheritedRequestId?: string,
+    ) => {
+      const requestId = inheritedRequestId ?? generateRequestId();
       setCurrentRequestId(requestId);
-      trackFirstSearchStart({
-        query: naturalQuery || query,
-        request_id: requestId,
-      });
+      if (!inheritedRequestId) {
+        trackFirstSearchStart({
+          query: naturalQuery || query,
+          request_id: requestId,
+        });
+      }
       searchStartMsRef.current = Date.now();
       updateQueryQuality(naturalQuery || query, { searches: 1 });
 
       setFilteredCards([]);
+      setRecommendationCards(result?.recommendationCards ?? null);
       setHasActiveFilters(false);
       setActiveFilters(null);
       setFiltersResetKey((prev) => prev + 1);
@@ -619,6 +638,7 @@ export function useSearch() {
       setCurrentRequestId(requestId);
 
       setFilteredCards([]);
+      setRecommendationCards(null);
       setHasActiveFilters(false);
 
       const filterQuery = buildFilterQuery(activeFilters);
@@ -922,6 +942,7 @@ export function useSearch() {
     localSearchSuggestions,
     displayCards,
     totalCards,
+    isRecommendationResultSet: recommendationCards !== null,
     isSearching,
     hasNextPage,
     isFetchingNextPage,

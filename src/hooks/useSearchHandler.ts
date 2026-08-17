@@ -44,6 +44,7 @@ interface UseSearchHandlerOptions {
     query: string,
     result?: SearchResult,
     naturalQuery?: string,
+    requestId?: string,
   ) => void;
   addToHistory: (query: string) => void;
   saveContext: (query: string, scryfall: string) => void;
@@ -192,6 +193,7 @@ export function useSearchHandler({
         query: rawQuery,
         request_id: requestId,
         placement: searchSource ?? 'search_bar',
+        ranker_version: 'v2',
       });
       trackFirstSearchStart({
         query: rawQuery,
@@ -266,6 +268,7 @@ export function useSearchHandler({
                     ],
                     confidence: 0.9,
                   },
+                  recommendationCards: resolved.recommendationCards,
                 };
               })
             : translateQueryWithDedup({
@@ -334,6 +337,7 @@ export function useSearchHandler({
             source,
           },
           rawQuery, // Always pass original query as naturalQuery
+          requestId,
         );
         endSearchTrace(traceId, {
           phase: 'handoff',
@@ -393,6 +397,7 @@ export function useSearchHandler({
               source: 'client_fallback',
             },
             queryToSearch,
+            requestId,
           );
         } else if (
           errorMessage.includes('429') ||
@@ -450,6 +455,7 @@ export function useSearchHandler({
               source: 'client_fallback',
             },
             queryToSearch,
+            requestId,
           );
         }
         endSearchTrace(traceId, { fellBack: true });

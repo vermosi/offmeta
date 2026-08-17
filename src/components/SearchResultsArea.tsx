@@ -62,6 +62,7 @@ interface SearchResultsAreaProps {
   queryQualityScore: number;
   queryConfidence: number;
   querySampleSize: number;
+  preserveRanking?: boolean;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   isFetchNextPageError?: boolean;
@@ -111,6 +112,7 @@ export function SearchResultsArea({
   queryQualityScore,
   queryConfidence,
   querySampleSize,
+  preserveRanking = false,
   hasNextPage,
   isFetchingNextPage,
   isFetchNextPageError,
@@ -157,7 +159,7 @@ export function SearchResultsArea({
   );
   const rankedCards = useMemo(
     () =>
-      hasCustomSort
+      hasCustomSort || preserveRanking
         ? displayCards
         : rerankCardsWithIntelligence(displayCards, {
             queryQualityScore,
@@ -172,6 +174,7 @@ export function SearchResultsArea({
     [
       displayCards,
       hasCustomSort,
+      preserveRanking,
       queryQualityScore,
       queryConfidence,
       querySampleSize,

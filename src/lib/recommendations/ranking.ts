@@ -49,6 +49,36 @@ export interface CandidateWithProvenance {
   provenance: CandidateProvenance[];
 }
 
+export function mergePlanCandidates(
+  plans: QueryPlan[],
+  resultSets: ScryfallCard[][],
+): CandidateWithProvenance[] {
+  const candidates = new Map<string, CandidateWithProvenance>();
+  for (const [planIndex, plan] of plans.entries()) {
+    for (const [index, card] of (resultSets[planIndex] ?? []).entries()) {
+      const identity = card.oracle_id ?? card.id;
+      const evidence: CandidateProvenance = {
+        planId: plan.id,
+        strategy: plan.strategy,
+        sourceRank: index + 1,
+        planWeight: plan.weight,
+        signal: plan.signal,
+      };
+      const existing = candidates.get(identity);
+      if (existing) existing.provenance.push(evidence);
+      else candidates.set(identity, { card, provenance: [evidence] });
+    }
+  }
+  return [...candidates.values()]
+    .sort(
+      (left, right) =>
+        provenancePrior(right.provenance, plans) -
+          provenancePrior(left.provenance, plans) ||
+        left.card.name.localeCompare(right.card.name),
+    )
+    .slice(0, 500);
+}
+
 function clamp(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
@@ -122,12 +152,20 @@ function functionalProvenance(
     'functional-expansion',
     'oracle-mechanic',
   ]);
-  const raw = provenance
-    .filter((item) => functionalStrategies.has(item.strategy))
-    .reduce((sum, item) => sum + item.planWeight / (60 + item.sourceRank), 0);
+  const supportedPlans = new Set(
+    provenance
+      .filter((item) => functionalStrategies.has(item.strategy))
+      .map((item) => item.planId),
+  );
+  const raw = plans
+    .filter(
+      (plan) =>
+        functionalStrategies.has(plan.strategy) && supportedPlans.has(plan.id),
+    )
+    .reduce((sum, plan) => sum + plan.weight, 0);
   const maximum = plans
     .filter((plan) => functionalStrategies.has(plan.strategy))
-    .reduce((sum, plan) => sum + plan.weight / 61, 0);
+    .reduce((sum, plan) => sum + plan.weight, 0);
   return maximum > 0 ? clamp(raw / maximum) : 0;
 }
 
@@ -173,8 +211,8 @@ function satisfiesConstraints(
   if (constraints.colors?.length) {
     const actual = new Set(card.color_identity ?? []);
     const wanted = new Set(constraints.colors);
-    const includesAll = [...wanted].every((color) => actual.has(color));
-    if (!includesAll) return false;
+    const withinIdentity = [...actual].every((color) => wanted.has(color));
+    if (!withinIdentity) return false;
     if (constraints.exactColorIdentity && actual.size !== wanted.size)
       return false;
   }
@@ -219,18 +257,16 @@ export function rankSimilarityCandidates(
   const ceiling =
     intent.hardConstraints.maxPrice ?? automaticBudgetCeiling(source);
   const eligible = candidates.filter(({ card }) =>
-    satisfiesConstraints(card, {
-      ...intent,
-      hardConstraints: {
-        ...intent.hardConstraints,
-        maxPrice: undefined,
-      },
-    }),
+    satisfiesConstraints(card, intent),
   );
 
   const scored = eligible.map(({ card, provenance }) => {
     const functional = functionalProvenance(provenance, plans);
-    const oracleCoverage = jaccard(sourceMechanics, mechanicFeatures(card));
+    const candidateMechanics = mechanicFeatures(card);
+    const oracleCoverage =
+      sourceMechanics.size === 0 || candidateMechanics.size === 0
+        ? 0
+        : jaccard(sourceMechanics, candidateMechanics);
     const typeScore = jaccard(primaryTypes(source), primaryTypes(card));
     const colorScore = jaccard(
       new Set(source.color_identity ?? []),
@@ -268,13 +304,14 @@ export function rankSimilarityCandidates(
       left.card.name.localeCompare(right.card.name),
   );
 
-  const similar = scored.map((entry, index): RankedRecommendation => {
-    const nextScore = scored[index + 1]?.similarity ?? 0;
-    const separation = clamp((entry.similarity - nextScore) / 0.15);
+  const scoreSeparation = clamp(
+    ((scored[0]?.similarity ?? 0) - (scored[1]?.similarity ?? 0)) / 0.15,
+  );
+  const similar = scored.map((entry): RankedRecommendation => {
     const confidence = clamp(
       0.35 * entry.agreement +
         0.3 * entry.semanticCoverage +
-        0.2 * separation +
+        0.2 * scoreSeparation +
         0.15 * intent.confidence,
     );
     return {

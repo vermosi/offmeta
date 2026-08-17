@@ -28,7 +28,8 @@ function mapRow(row: RecommendationRow): RankedRelationship {
     cardName: row.card_name,
     weight: Number(row.weight) || 0,
     cooccurrenceCount: row.cooccurrence_count,
-    relationshipType: (row.relationship_type ?? 'co_played') as RelationshipType,
+    relationshipType: (row.relationship_type ??
+      'co_played') as RelationshipType,
     manaCost: row.mana_cost,
     typeLine: row.type_line,
     imageUrl: row.image_url,
@@ -53,7 +54,12 @@ export async function getRelatedCards(
   const invoke = () =>
     supabase.functions
       .invoke('card-recommendations', {
-        body: { oracle_id: oracleId, format, limit },
+        body: {
+          oracle_id: oracleId,
+          format,
+          limit,
+          relationship_type: options?.relationshipType,
+        },
       })
       .catch((err) => {
         logger.error('[discovery] card-recommendations invoke failed:', err);
@@ -61,28 +67,41 @@ export async function getRelatedCards(
       });
 
   const withTimeout = (timeoutMs: number) => {
-    const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs));
+    const timeout = new Promise<null>((resolve) =>
+      setTimeout(() => resolve(null), timeoutMs),
+    );
     return Promise.race([invoke(), timeout]);
   };
 
   // First attempt with 8s timeout; retry once on timeout (handles cold starts)
   let result = await withTimeout(8000);
   if (!result) {
-    logger.warn('[discovery] card-recommendations timed out, retrying once for', oracleId);
+    logger.warn(
+      '[discovery] card-recommendations timed out, retrying once for',
+      oracleId,
+    );
     result = await withTimeout(10000);
   }
 
   if (!result) {
-    logger.warn('[discovery] card-recommendations retry also failed for', oracleId);
+    logger.warn(
+      '[discovery] card-recommendations retry also failed for',
+      oracleId,
+    );
     return [];
   }
   if ('error' in result && result.error) {
-    logger.error('[discovery] card-recommendations returned error:', result.error);
+    logger.error(
+      '[discovery] card-recommendations returned error:',
+      result.error,
+    );
     return [];
   }
   if (!('data' in result) || !result.data?.recommendations) return [];
 
-  let results = (result.data.recommendations as RecommendationRow[]).map(mapRow);
+  let results = (result.data.recommendations as RecommendationRow[]).map(
+    mapRow,
+  );
 
   if (options?.relationshipType) {
     results = filterByType(results, options.relationshipType);
@@ -117,8 +136,7 @@ export async function getRelatedCardsForSearchResults(
     topIds.map((id) => getRelatedCards(id, { limit: 6 })),
   );
 
-  const seen = new Set<string>();
-  const merged: RankedRelationship[] = [];
+  const merged = new Map<string, RankedRelationship>();
 
   // Also exclude the source cards themselves
   const sourceSet = new Set(oracleIds);
@@ -126,11 +144,17 @@ export async function getRelatedCardsForSearchResults(
   for (const result of allResults) {
     if (result.status !== 'fulfilled') continue;
     for (const rel of result.value) {
-      if (seen.has(rel.oracleId) || sourceSet.has(rel.oracleId)) continue;
-      seen.add(rel.oracleId);
-      merged.push(rel);
+      if (sourceSet.has(rel.oracleId)) continue;
+      const existing = merged.get(rel.oracleId);
+      if (!existing) {
+        merged.set(rel.oracleId, rel);
+        continue;
+      }
+      // Combine independent evidence without allowing the total to exceed 1.
+      existing.weight = 1 - (1 - existing.weight) * (1 - rel.weight);
+      existing.cooccurrenceCount += rel.cooccurrenceCount;
     }
   }
 
-  return rankRelationships(merged, limit);
+  return rankRelationships([...merged.values()], limit);
 }

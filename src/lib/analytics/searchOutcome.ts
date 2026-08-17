@@ -30,6 +30,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 function reportResultCount(requestId: string, resultCount: number): void {
   if (!Number.isFinite(resultCount) || resultCount < 0) return;
+  if (typeof supabase.rpc !== 'function') return;
   void supabase
     .rpc('record_translation_result_count', {
       p_request_id: requestId,
@@ -51,9 +52,7 @@ export type SearchOutcome =
   | 'navigated_away';
 
 export type SearchDegradation =
-  | 'translate_timeout'
-  | 'translate_error'
-  | 'rate_limited';
+  'translate_timeout' | 'translate_error' | 'rate_limited';
 
 interface OpenSearch {
   requestId: string;

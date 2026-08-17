@@ -134,6 +134,44 @@ describe('recommendation V2 ranking', () => {
     );
 
     expect(ranked.budget.map((entry) => entry.card.name)).toEqual(['Under']);
+    expect(ranked.similar.map((entry) => entry.card.name)).toEqual(['Under']);
+  });
+
+  it('does not treat missing oracle mechanics as verified evidence', () => {
+    const source = card('Vanilla Source');
+    const candidate = card('Vanilla Candidate');
+    const ranked = rankSimilarityCandidates(
+      source,
+      [{ card: candidate, provenance: [provenance(plans[1], 1)] }],
+      plans,
+      { ...intent, exclusions: ['Vanilla Source'] },
+    );
+
+    expect(ranked.similar[0].breakdown.semanticCoverage).toBe(0);
+  });
+
+  it('treats commander color constraints as an allowed identity set', () => {
+    const source = card('Source');
+    const colorIntent = {
+      ...intent,
+      hardConstraints: { colors: ['U', 'R'] },
+      exclusions: ['Source'],
+    };
+    const monoBlue = card('Mono Blue', { color_identity: ['U'] });
+    const offColor = card('Off Color', { color_identity: ['U', 'G'] });
+    const ranked = rankSimilarityCandidates(
+      source,
+      [
+        { card: monoBlue, provenance: [provenance(plans[1], 1)] },
+        { card: offColor, provenance: [provenance(plans[0], 1)] },
+      ],
+      plans,
+      colorIntent,
+    );
+
+    expect(ranked.similar.map((entry) => entry.card.name)).toEqual([
+      'Mono Blue',
+    ]);
   });
 
   it('does not invent an automatic ceiling for missing or sub-$2 prices', () => {

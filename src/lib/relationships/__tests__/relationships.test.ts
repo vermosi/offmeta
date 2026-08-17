@@ -4,9 +4,21 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { normalizeCardId, normalizeDeckEntry, canonicalPairKey } from '../normalization';
-import { computeCoPlayScore, normalizeRelationshipWeight, RELATIONSHIP_TYPES } from '../scoring';
-import { rankRelationships, filterByType, getRelationshipLabel } from '../ranking';
+import {
+  normalizeCardId,
+  normalizeDeckEntry,
+  canonicalPairKey,
+} from '../normalization';
+import {
+  computeCoPlayScore,
+  normalizeRelationshipWeight,
+  RELATIONSHIP_TYPES,
+} from '../scoring';
+import {
+  rankRelationships,
+  filterByType,
+  getRelationshipLabel,
+} from '../ranking';
 import type { RankedRelationship } from '../ranking';
 
 // ─── normalization ──────────────────────────────────────
@@ -52,14 +64,14 @@ describe('computeCoPlayScore', () => {
     expect(computeCoPlayScore(15, 10, 10)).toBe(0);
   });
 
-  it('computes correct PMI-style score', () => {
-    // both=10, A=100, B=100 → 10 / sqrt(10000) = 10/100 = 0.1
-    expect(computeCoPlayScore(10, 100, 100)).toBeCloseTo(0.1);
+  it('computes support-shrunk Ochiai score', () => {
+    // Ochiai=.1, support shrinkage=.5.
+    expect(computeCoPlayScore(10, 100, 100)).toBeCloseTo(0.05);
   });
 
-  it('returns 1 when perfectly correlated', () => {
-    // both=10, A=10, B=10 → 10 / sqrt(100) = 10/10 = 1
-    expect(computeCoPlayScore(10, 10, 10)).toBe(1);
+  it('shrinks perfect correlation when support is limited', () => {
+    expect(computeCoPlayScore(10, 10, 10)).toBe(0.5);
+    expect(computeCoPlayScore(1, 1, 1)).toBeCloseTo(1 / 11);
   });
 
   it('penalizes universally popular cards', () => {
@@ -180,8 +192,12 @@ describe('getRelationshipLabel', () => {
   it('returns labels for all types', () => {
     expect(getRelationshipLabel('co_played')).toBe('Commonly played with');
     expect(getRelationshipLabel('similar_role')).toBe('Similar role');
-    expect(getRelationshipLabel('budget_alternative')).toBe('Budget alternative');
+    expect(getRelationshipLabel('budget_alternative')).toBe(
+      'Budget alternative',
+    );
     expect(getRelationshipLabel('archetype_core')).toBe('Core in archetype');
-    expect(getRelationshipLabel('user_behavior_related')).toBe('Players also viewed');
+    expect(getRelationshipLabel('user_behavior_related')).toBe(
+      'Players also viewed',
+    );
   });
 });
