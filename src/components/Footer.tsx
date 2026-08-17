@@ -62,15 +62,17 @@ function FooterLink({ to, children }: { to: string; children: React.ReactNode })
   );
 }
 
-function handleExternalClick(
-  e: React.MouseEvent<HTMLAnchorElement>,
-  href: string,
-) {
-  if (typeof window.gtagSendEvent === 'function') {
-    e.preventDefault();
-    window.gtagSendEvent(href);
+function handleExternalClick(href: string) {
+  // Fire-and-forget: never block or hijack navigation. The links open in a new
+  // tab via target="_blank"; preventing default here broke them whenever the
+  // gtag callback was blocked or the helper was not mounted.
+  try {
+    window.gtag?.('event', 'outbound_click', { link_url: href });
+  } catch {
+    /* analytics must never break navigation */
   }
 }
+
 
 function ExternalAnchor({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -78,7 +80,7 @@ function ExternalAnchor({ href, children }: { href: string; children: React.Reac
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={(e) => handleExternalClick(e, href)}
+      onClick={() => handleExternalClick(href)}
       className={`${LINK_CLASS} inline-flex items-center gap-1`}
     >
       {children}

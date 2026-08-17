@@ -248,12 +248,13 @@ export function useSearchHandler({
                   ...(filters?.format ? { format: filters.format } : {}),
                   ...(filters?.colors.length ? { colors: filters.colors } : {}),
                   ...(filters?.types.length ? { types: filters.types } : {}),
-                  ...(filters?.cmcRange[0] > 0
+                  ...(filters && filters.cmcRange[0] > 0
                     ? { minManaValue: filters.cmcRange[0] }
                     : {}),
-                  ...(filters?.cmcRange[1] < MAX_CMC
+                  ...(filters && filters.cmcRange[1] < MAX_CMC
                     ? { maxManaValue: filters.cmcRange[1] }
                     : {}),
+
                 }),
                 getRecommendationRolloutAssignment(),
               ]).then(([resolved, assignment]) => {

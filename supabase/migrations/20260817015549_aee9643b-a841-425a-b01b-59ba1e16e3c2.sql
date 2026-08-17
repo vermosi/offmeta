@@ -1,0 +1,6 @@
+ALTER TABLE public.search_feedback
+  ADD COLUMN IF NOT EXISTS request_id TEXT,
+  ADD COLUMN IF NOT EXISTS surface TEXT,
+  ADD COLUMN IF NOT EXISTS ranker_version TEXT,
+  ADD COLUMN IF NOT EXISTS rejected_card_id TEXT,
+  ADD COLUMN IF NOT EXISTS result_rank INTEGER;

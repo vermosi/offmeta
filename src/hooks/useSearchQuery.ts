@@ -8,6 +8,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { FilterState } from '@/types/filters';
 import type { SearchIntent } from '@/types/search';
+import type { ScryfallCard } from '@/types/card';
+
 import { CLIENT_CONFIG } from '@/lib/config';
 import { logger } from '@/lib/core/logger';
 import { PRETRANSLATED } from '@/lib/search/fallback';
@@ -40,7 +42,13 @@ export interface TranslationResult {
   validationIssues?: string[];
   intent?: SearchIntent;
   source?: string;
+  /** Pre-resolved recommendation cards (alternatives intent only). */
+  recommendationCards?: ScryfallCard[];
+  /** Ranker variant used to produce recommendationCards. */
+  rankerVersion?: 'baseline' | 'v2';
+
 }
+
 
 interface TranslationParams {
   query: string;
