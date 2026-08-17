@@ -7,7 +7,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
 import { withLogging } from '../_shared/logger.ts';
-import { deriveFunctionalTags, isStrongFingerprint } from './functional.ts';
+import {
+  deriveFunctionalTags,
+  isStrongFingerprint,
+  scoreFunctionalTags,
+} from './functional.ts';
 import { budgetCeiling, buildBudgetQuery, buildSimilarQuery } from './query.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -232,9 +236,11 @@ serve(
       }
 
       const functionalTags = deriveFunctionalTags(body);
-      const functionalQuery = isStrongFingerprint(functionalTags)
-        ? await resolveFunctionalQuery(body, functionalTags)
-        : null;
+      const functionalConfidence = scoreFunctionalTags(functionalTags);
+      const functionalQuery =
+        isStrongFingerprint(functionalTags) && functionalConfidence >= 0.45
+          ? await resolveFunctionalQuery(body, functionalTags)
+          : null;
 
       const mechanics = await getMechanicsForCard(body);
       const similarQuery =

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { deriveFunctionalTags, isStrongFingerprint } from './functional.ts';
+import {
+  deriveFunctionalTags,
+  isStrongFingerprint,
+  scoreFunctionalTags,
+} from './functional.ts';
 
 describe('deriveFunctionalTags', () => {
   it('detects treasure generation before generic token heuristics', () => {
@@ -21,5 +25,10 @@ describe('deriveFunctionalTags', () => {
 
     expect(tags).toContain('impulsive-draw');
     expect(isStrongFingerprint(tags)).toBe(true);
+  });
+
+  it('scores weak generic fingerprints below the functional confidence gate', () => {
+    expect(scoreFunctionalTags(['draw'])).toBeLessThan(0.45);
+    expect(scoreFunctionalTags(['draw-engine'])).toBeGreaterThanOrEqual(0.45);
   });
 });

@@ -21,6 +21,11 @@ export interface FunctionalCard {
   keywords?: string[];
 }
 
+export interface FunctionalTagScore {
+  tag: string;
+  specificity: number;
+}
+
 interface Signature {
   /** Scryfall oracle tag emitted when the signature matches. */
   tag: string;
@@ -159,6 +164,37 @@ const SIGNATURES: readonly Signature[] = [
 /** Signatures whose tag is too broad to stand alone as a fingerprint. */
 const GENERIC_TAGS = new Set(['draw', 'ramp', 'mill', 'lifegain', 'discard']);
 
+const SPECIFIC_TAGS = new Set([
+  'self-mill',
+  'mill-opponent',
+  'reanimate',
+  'cast-from-graveyard',
+  'cheat-into-play',
+  'impulsive-draw',
+  'wheel',
+  'loot',
+  'draw-engine',
+  'tutor',
+  'land-ramp',
+  'mana-rock',
+  'mana-dork',
+  'counterspell',
+  'sweeper',
+  'spot-removal',
+  'bounce',
+  'sacrifice-outlet',
+  'repeatable-token-generator',
+  'repeatable-treasures',
+  'flicker',
+  'untapper',
+  'extra-turn',
+  'extra-combat',
+  'copy',
+  'tax',
+  'pillowfort',
+  'protects-creature',
+]);
+
 /**
  * Derives up to two Scryfall oracle tags describing what the card *does*.
  * Returns an empty array when nothing matches, so callers can fall back to the
@@ -191,4 +227,14 @@ export function deriveFunctionalTags(card: FunctionalCard): string[] {
 /** True when the fingerprint is specific enough to replace type/mv matching. */
 export function isStrongFingerprint(tags: string[]): boolean {
   return tags.some((tag) => !GENERIC_TAGS.has(tag));
+}
+
+export function scoreFunctionalTags(tags: string[]): number {
+  if (tags.length === 0) return 0;
+  const weighted = tags.reduce((sum, tag, index) => {
+    const specificity = SPECIFIC_TAGS.has(tag) ? 1 : 0.5;
+    const bonus = index === 0 ? 0.2 : 0.1;
+    return sum + specificity + bonus;
+  }, 0);
+  return Math.min(weighted / 2.5, 1);
 }
