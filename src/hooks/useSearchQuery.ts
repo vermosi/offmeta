@@ -41,9 +41,10 @@ export interface TranslationResult {
   intent?: SearchIntent;
   source?: string;
   /** Pre-resolved recommendation cards (alternatives intent only). */
-  recommendationCards?: unknown[];
+  recommendationCards?: ScryfallCard[];
   /** Ranker variant used to produce recommendationCards. */
-  rankerVersion?: string;
+  rankerVersion?: 'baseline' | 'v2';
+
 }
 
 
