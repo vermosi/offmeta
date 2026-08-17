@@ -323,7 +323,6 @@ export function useSearch() {
     return () => {
       document.title = 'MTG Card Search in Plain English | OffMeta';
     };
-
   }, [hasSearched, originalQuery]);
 
   // --- Track results count + zero-result failures ---
@@ -332,7 +331,8 @@ export function useSearch() {
 
     if (totalCards > 0) {
       const startedAt = searchStartMsRef.current;
-      const latencyMs = startedAt != null ? Math.max(0, Date.now() - startedAt) : 0;
+      const latencyMs =
+        startedAt != null ? Math.max(0, Date.now() - startedAt) : 0;
       const source = lastSearchResult.source || 'ai';
       reportSearchOutcome('results', {
         requestId: currentRequestId,
@@ -488,7 +488,15 @@ export function useSearch() {
     } else if (!isError) {
       paginationErrorShownRef.current = false;
     }
-  }, [isError, hasNextPage, isFetchingNextPage, originalQuery, error, currentPageCount, trackPaginationErrorShown]);
+  }, [
+    isError,
+    hasNextPage,
+    isFetchingNextPage,
+    originalQuery,
+    error,
+    currentPageCount,
+    trackPaginationErrorShown,
+  ]);
 
   const retryNextPage = useCallback(() => {
     trackPaginationRetryClicked({
@@ -500,7 +508,14 @@ export function useSearch() {
     } else {
       void refetch();
     }
-  }, [fetchNextPage, refetch, hasNextPage, originalQuery, currentPageCount, trackPaginationRetryClicked]);
+  }, [
+    fetchNextPage,
+    refetch,
+    hasNextPage,
+    originalQuery,
+    currentPageCount,
+    trackPaginationRetryClicked,
+  ]);
 
   const hasSortOverride =
     !!activeFilters?.sortBy && activeFilters.sortBy !== 'relevance-desc';
@@ -684,36 +699,54 @@ export function useSearch() {
 
   const handleCardClick = useCallback(
     (card: ScryfallCard, index: number) => {
+      const latencyMs = searchStartMsRef.current
+        ? Date.now() - searchStartMsRef.current
+        : undefined;
       trackCardClick({
         card_id: card.id,
         card_name: card.name,
         set_code: card.set,
         rarity: card.rarity,
         position_in_results: index,
+        query: originalQuery,
+        executed_query: searchQuery,
+        request_id: currentRequestId ?? undefined,
+        result_set_id: currentRequestId ?? undefined,
+        surface: 'main_search',
+        ranker_version: 'v2',
+        time_to_click_ms: latencyMs,
       });
       trackFirstResultClick({
         query: originalQuery,
         card_id: card.id,
       });
       if (searchStartMsRef.current) {
-        const latencyMs = Date.now() - searchStartMsRef.current;
-        setLastClickLatencyMs(latencyMs);
+        const measuredLatencyMs = latencyMs ?? 0;
+        setLastClickLatencyMs(measuredLatencyMs);
         updateQueryQuality(originalQuery, {
           clicks: 1,
-          avgTimeToClickMs: latencyMs,
+          avgTimeToClickMs: measuredLatencyMs,
         });
-        if (latencyMs < 1200) {
+        if (measuredLatencyMs < 1200) {
           sessionStorage.setItem('offmeta_fast_click_query', originalQuery);
           trackEvent('fast_click_detected', {
             query: originalQuery,
-            time_to_click_ms: latencyMs,
+            time_to_click_ms: measuredLatencyMs,
           });
         }
       }
       // Navigate to the canonical card page — the single card experience.
       navigate(`/cards/${cardNameToSlug(card.name)}`);
     },
-    [originalQuery, trackCardClick, trackFirstResultClick, trackEvent, navigate],
+    [
+      currentRequestId,
+      originalQuery,
+      searchQuery,
+      trackCardClick,
+      trackFirstResultClick,
+      trackEvent,
+      navigate,
+    ],
   );
 
   const handleTryExample = useCallback((query: string) => {
@@ -830,19 +863,15 @@ export function useSearch() {
     [flushFilterUrlSync],
   );
 
-
   /**
    * Patch the active filters from outside `SearchFilters` (e.g. the empty
    * state broaden chips). Bumps `filterOverrideKey` so the child hook can
    * apply the patch on the next render.
    */
-  const applyFilterPatch = useCallback(
-    (patch: Partial<FilterState>) => {
-      setPendingFilterOverride(patch);
-      setFilterOverrideKey((k) => k + 1);
-    },
-    [],
-  );
+  const applyFilterPatch = useCallback((patch: Partial<FilterState>) => {
+    setPendingFilterOverride(patch);
+    setFilterOverrideKey((k) => k + 1);
+  }, []);
 
   /**
    * Reset all client-side filters back to defaults and strip filter params
@@ -865,7 +894,6 @@ export function useSearch() {
       { replace: true },
     );
   }, [setSearchParams, cancelPendingUrlSync]);
-
 
   return {
     // State
@@ -917,10 +945,7 @@ export function useSearch() {
     applyFilterPatch,
     clearAllFilters,
 
-
-
     // Initial URL filters (for hydrating SearchFilters on load)
     initialUrlFilters,
   };
 }
-

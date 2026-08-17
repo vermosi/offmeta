@@ -1,6 +1,5 @@
 import type { ScryfallCard } from '@/types/card';
 import type { SearchIntent } from '@/types/search';
-import { explainCardMatch } from '@/lib/search/matchExplanation';
 
 export interface RankingContext {
   queryQualityScore: number;
@@ -10,132 +9,181 @@ export interface RankingContext {
   hadFastClick: boolean;
   hadRefinement: boolean;
   isAuthenticated: boolean;
-  /**
-   * Parsed intent from the translation pipeline. When present, the ranker
-   * boosts cards that match more of the user's inferred signals (colors,
-   * types, mana value, oracle patterns, tags), so the strongest matches
-   * surface first under the default "Best match" sort.
-   */
   intent?: SearchIntent | null;
 }
 
+interface ScoredCard {
+  card: ScryfallCard;
+  semanticCoverage: number;
+  structuralCoverage: number;
+  popularity: number;
+  provenancePrior: number;
+  score: number;
+}
+
+function clamp(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function fullOracleText(card: ScryfallCard): string {
+  return [
+    card.oracle_text,
+    ...(card.card_faces?.map((face) => face.oracle_text) ?? []),
+  ]
+    .filter((text): text is string => Boolean(text))
+    .join('\n')
+    .toLowerCase();
+}
+
 function popularityScore(card: ScryfallCard): number {
-  if (!card.edhrec_rank) return 0.25;
-  return Math.max(0, 1 - Math.min(card.edhrec_rank, 50000) / 50000);
+  const rank = card.edhrec_rank;
+  if (typeof rank !== 'number' || rank <= 0) return 0;
+  return clamp(1 - Math.log1p(Math.min(rank, 50000)) / Math.log1p(50000));
 }
 
-function ownershipScore(
+function semanticCoverage(
   card: ScryfallCard,
-  ownedCards: Map<string, number>,
+  intent: SearchIntent | null | undefined,
 ): number {
-  return ownedCards.has(card.name) ? 1 : 0;
+  if (!intent || intent.oraclePatterns.length === 0) return 0;
+  const oracle = fullOracleText(card);
+  let matched = 0;
+  for (const pattern of intent.oraclePatterns) {
+    const normalized = pattern
+      .replace(/^o:/i, '')
+      .replace(/^"|"$/g, '')
+      .trim()
+      .toLowerCase();
+    if (normalized && oracle.includes(normalized)) matched += 1;
+  }
+  return matched / intent.oraclePatterns.length;
 }
 
-function isDirectReason(reason: { label: string; token?: string }): boolean {
-  const token = reason.token?.toLowerCase() ?? '';
-  const label = reason.label.toLowerCase();
-  return (
-    token.startsWith('o:') ||
-    token.startsWith('otag:') ||
-    label.startsWith('oracle text:')
+function numericConstraintMatches(
+  actual: number,
+  constraint: { op: string; value: number },
+): boolean {
+  switch (constraint.op) {
+    case '<':
+      return actual < constraint.value;
+    case '<=':
+      return actual <= constraint.value;
+    case '>':
+      return actual > constraint.value;
+    case '>=':
+      return actual >= constraint.value;
+    case '=':
+    case ':':
+    case '==':
+      return actual === constraint.value;
+    default:
+      return false;
+  }
+}
+
+function colorConstraintMatches(
+  card: ScryfallCard,
+  intent: SearchIntent,
+): boolean {
+  if (!intent.colors || intent.colors.values.length === 0) return true;
+  const actual = new Set(
+    intent.colors.isIdentity ? card.color_identity : (card.colors ?? []),
   );
+  const wanted = new Set(intent.colors.values);
+  if (wanted.has('C')) return actual.size === 0;
+  if (intent.colors.isOr) {
+    return [...wanted].some((color) => actual.has(color));
+  }
+  const containsAll = [...wanted].every((color) => actual.has(color));
+  return intent.colors.isExact
+    ? containsAll && actual.size === wanted.size
+    : containsAll;
 }
 
-/** Normalized match-strength score in [0, 1] from parsed intent. */
-function matchStrengthScore(
+function structuralCoverage(
   card: ScryfallCard,
   intent: SearchIntent | null | undefined,
 ): number {
   if (!intent) return 0;
-  const reasons = explainCardMatch(card, intent);
-  if (reasons.length === 0) return 0;
-  let directReasons = 0;
-  let structuralReasons = 0;
-
-  for (const reason of reasons) {
-    if (isDirectReason(reason)) {
-      directReasons += 1;
-    } else {
-      structuralReasons += 1;
-    }
-  }
-
-  if (directReasons > 0) {
-    const directScore = 0.75 + directReasons * 0.1;
-    const structuralBonus = structuralReasons * 0.03;
-    return Math.min(1, directScore + structuralBonus);
-  }
-
-  return Math.min(0.15, structuralReasons * 0.05);
-}
-
-function intentMismatchPenalty(
-  card: ScryfallCard,
-  intent: SearchIntent | null | undefined,
-): number {
-  if (!intent) return 0;
-
-  let penalty = 0;
-
-  if (intent.colors && intent.colors.values.length > 0) {
-    const cardColors = new Set(card.color_identity ?? card.colors ?? []);
-    const matches = intent.colors.values.some((color) => cardColors.has(color));
-    if (!matches) penalty += 0.18;
-  }
-
+  const matches: boolean[] = [];
+  if (intent.colors?.values.length)
+    matches.push(colorConstraintMatches(card, intent));
   if (intent.types.length > 0) {
-    const typeLine = (card.type_line ?? '').toLowerCase();
-    const matches = intent.types.some((type) =>
-      typeLine.includes(type.toLowerCase()),
+    const typeLine = [
+      card.type_line,
+      ...(card.card_faces?.map((face) => face.type_line) ?? []),
+    ]
+      .join(' ')
+      .toLowerCase();
+    matches.push(
+      intent.types.every((type) => typeLine.includes(type.toLowerCase())),
     );
-    if (!matches) penalty += 0.12;
   }
-
-  if (intent.cmc && typeof card.cmc === 'number') {
-    const { op, value } = intent.cmc;
-    const meets =
-      (op === '<' && card.cmc < value) ||
-      (op === '<=' && card.cmc <= value) ||
-      (op === '>' && card.cmc > value) ||
-      (op === '>=' && card.cmc >= value) ||
-      ((op === '=' || op === ':' || op === '==') && card.cmc === value);
-    if (!meets) penalty += 0.1;
+  if (intent.cmc) matches.push(numericConstraintMatches(card.cmc, intent.cmc));
+  if (intent.power) {
+    const power = Number(card.power);
+    matches.push(
+      Number.isFinite(power) && numericConstraintMatches(power, intent.power),
+    );
   }
+  if (intent.toughness) {
+    const toughness = Number(card.toughness);
+    matches.push(
+      Number.isFinite(toughness) &&
+        numericConstraintMatches(toughness, intent.toughness),
+    );
+  }
+  if (matches.length === 0) return 0;
+  return matches.filter(Boolean).length / matches.length;
+}
 
-  return Math.min(penalty, 0.35);
+function hasStructuralIntent(intent: SearchIntent | null | undefined): boolean {
+  return Boolean(
+    intent &&
+    (intent.colors?.values.length ||
+      intent.types.length ||
+      intent.cmc ||
+      intent.power ||
+      intent.toughness),
+  );
 }
 
 export function rerankCardsWithIntelligence(
   cards: ScryfallCard[],
   context: RankingContext,
 ): ScryfallCard[] {
-  const coldStart =
-    context.querySampleSize < 20 || context.queryConfidence < 0.3;
-  const qualityInfluence = coldStart
-    ? 0
-    : Math.min(context.queryQualityScore * context.queryConfidence, 0.2);
-  const fastClickWeight = context.hadFastClick ? 0.08 : 0;
-  const refinementWeight = context.hadRefinement ? 0.06 : 0;
-  const ownershipWeight = context.isAuthenticated ? 0.2 : 0.05;
-  // Match strength dominates when we have a parsed intent: strongest weight
-  // in the formula so the most relevant cards clearly bubble to the top.
-  const matchWeight = context.intent ? 0.6 : 0;
-
-  const scored = cards.map((card) => {
-    const pop = popularityScore(card);
-    const match = matchStrengthScore(card, context.intent);
-    const own = ownershipScore(card, context.ownedCards);
-    const mismatchPenalty = intentMismatchPenalty(card, context.intent);
-    const score =
-      matchWeight * match +
-      0.45 * pop +
-      ownershipWeight * own +
-      qualityInfluence * pop +
-      fastClickWeight +
-      refinementWeight -
-      mismatchPenalty;
-    return { card, score };
+  const denominator = Math.max(cards.length - 1, 1);
+  const scored: ScoredCard[] = cards.map((card, index) => {
+    const semantic = semanticCoverage(card, context.intent);
+    const structural = structuralCoverage(card, context.intent);
+    const popularity = popularityScore(card);
+    const provenance = 1 - index / denominator;
+    const constraintPenalty = hasStructuralIntent(context.intent)
+      ? (semantic > 0 ? 0.15 : 0.3) * (1 - structural)
+      : 0;
+    return {
+      card,
+      semanticCoverage: semantic,
+      structuralCoverage: structural,
+      popularity,
+      provenancePrior: provenance,
+      score:
+        0.55 * semantic +
+        0.2 * structural +
+        0.15 * popularity +
+        0.1 * provenance -
+        constraintPenalty,
+    };
   });
 
-  return scored.sort((a, b) => b.score - a.score).map((entry) => entry.card);
+  return scored
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        right.semanticCoverage - left.semanticCoverage ||
+        right.structuralCoverage - left.structuralCoverage ||
+        right.provenancePrior - left.provenancePrior ||
+        left.card.name.localeCompare(right.card.name),
+    )
+    .map((entry) => entry.card);
 }

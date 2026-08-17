@@ -12,6 +12,10 @@ import {
   type TranslationResult,
 } from '@/hooks/useSearchQuery';
 import { buildClientFallbackQuery } from '@/lib/search/fallback';
+import {
+  detectAlternativesIntent,
+  resolveAlternativesQuery,
+} from '@/lib/search/alternatives';
 import { estimateQueryComplexity } from '@/lib/search/complexity';
 import { CLIENT_CONFIG } from '@/lib/config';
 import { generateRequestId } from '@/lib/search/search-state';
@@ -148,9 +152,14 @@ export function useSearchHandler({
 
       // Estimate query complexity and auto-simplify if very complex
       const complexity = estimateQueryComplexity(sanitizedQuery);
+      const recommendationIntent = detectAlternativesIntent(sanitizedQuery);
       let queryToSearch = sanitizedQuery;
 
-      if (complexity.shouldSimplify && complexity.simplifiedQuery) {
+      if (
+        !recommendationIntent &&
+        complexity.shouldSimplify &&
+        complexity.simplifiedQuery
+      ) {
         queryToSearch = complexity.simplifiedQuery;
         logger.info('[SearchDiag] Query auto-simplified', {
           original: sanitizedQuery,
@@ -228,14 +237,45 @@ export function useSearchHandler({
 
       try {
         markSearchPhase(traceId, 'translation:start');
-        const translationPromise = translateQueryWithDedup({
-          query: queryToSearch,
-          filters: filters || undefined,
-          cacheSalt: cacheSalt || undefined,
-          bypassCache: options?.bypassCache,
-          locale,
-          requestId,
-        });
+        const translationPromise: Promise<TranslationResult> =
+          recommendationIntent
+            ? resolveAlternativesQuery(queryToSearch).then((resolved) => {
+                if (!resolved) {
+                  return translateQueryWithDedup({
+                    query: queryToSearch,
+                    filters: filters || undefined,
+                    cacheSalt: cacheSalt || undefined,
+                    bypassCache: options?.bypassCache,
+                    locale,
+                    requestId,
+                  });
+                }
+                return {
+                  scryfallQuery: resolved.scryfallQuery,
+                  source: 'recommendation_v2',
+                  edgeSource: 'recommendation_v2',
+                  explanation: {
+                    readable: resolved.budget
+                      ? `Budget alternatives to ${resolved.cardName}`
+                      : `Cards similar to ${resolved.cardName}`,
+                    assumptions: [
+                      `Resolved ${resolved.cardName} before general translation`,
+                      ...(resolved.maxPrice
+                        ? [`Enforced a $${resolved.maxPrice} price ceiling`]
+                        : []),
+                    ],
+                    confidence: 0.9,
+                  },
+                };
+              })
+            : translateQueryWithDedup({
+                query: queryToSearch,
+                filters: filters || undefined,
+                cacheSalt: cacheSalt || undefined,
+                bypassCache: options?.bypassCache,
+                locale,
+                requestId,
+              });
 
         const result: TranslationResult = await Promise.race([
           translationPromise,
@@ -359,7 +399,6 @@ export function useSearchHandler({
           /rate limit/i.test(errorMessage) ||
           /too many (requests|searches)/i.test(errorMessage)
         ) {
-
           logger.warn('[SearchDiag] Rate limited', {
             query: queryToSearch,
             error: errorMessage,

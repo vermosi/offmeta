@@ -5,6 +5,24 @@ interface SimilarityRequest {
   cmc?: number;
   prices?: { usd?: string | null };
   keywords?: string[];
+  explicitMaxPrice?: number;
+}
+
+export type QueryPlanStrategy =
+  | 'exact-functional'
+  | 'functional-expansion'
+  | 'oracle-mechanic'
+  | 'structural'
+  | 'fallback';
+
+export interface QueryPlan {
+  id: string;
+  strategy: QueryPlanStrategy;
+  query: string;
+  signal: string;
+  confidence: number;
+  weight: number;
+  priceCeiling?: number;
 }
 
 const PRIMARY_TYPES = new Set([
@@ -20,11 +38,6 @@ const PRIMARY_TYPES = new Set([
 ]);
 
 /** Colour-identity clause, or null for colourless cards. */
-function identityClause(card: SimilarityRequest): string | null {
-  if (!card.colorIdentity?.length) return null;
-  return `id<=${card.colorIdentity.join('').toUpperCase()}`;
-}
-
 /** Base type clause(s) from the primary type line. */
 function baseTypeClauses(card: SimilarityRequest): string[] {
   const primaryTypes = card.typeLine
@@ -39,8 +52,135 @@ function baseTypeClauses(card: SimilarityRequest): string[] {
 
 /** Price ceiling for budget alternatives. */
 export function budgetCeiling(card: SimilarityRequest): number {
-  const cardPrice = parseFloat(card.prices?.usd || '0');
-  return cardPrice > 0 ? Math.max(2, Math.floor(cardPrice * 0.5)) : 5;
+  if (
+    typeof card.explicitMaxPrice === 'number' &&
+    Number.isFinite(card.explicitMaxPrice) &&
+    card.explicitMaxPrice > 0
+  ) {
+    return Math.round(card.explicitMaxPrice * 100) / 100;
+  }
+  const cardPrice = Number(card.prices?.usd);
+  if (!Number.isFinite(cardPrice) || cardPrice < 2) return 0;
+  return (
+    Math.round(Math.max(0.5, Math.min(cardPrice - 1, cardPrice * 0.7)) * 100) /
+    100
+  );
+}
+
+function orderByPopularity(parts: string[]): string {
+  return [...parts, 'order:edhrec', 'dir:asc'].join(' ');
+}
+
+function excludeSelf(card: SimilarityRequest): string {
+  return `-!"${card.cardName.replace(/["()]/g, '').trim()}"`;
+}
+
+function mechanicClause(mechanic: string): string {
+  if (mechanic === 'ETB') return 'o:"enters the battlefield"';
+  if (mechanic === 'death trigger') return '(o:"when" o:"dies")';
+  if (mechanic === 'tutor') return 'o:"search your library"';
+  if (mechanic === 'mana production') return '(o:"add" o:"{")';
+  return `o:"${mechanic.replace(/"/g, '')}"`;
+}
+
+/**
+ * Produces a bounded, complementary retrieval plan. Source colour identity is
+ * deliberately omitted: it is a soft ranking feature unless the user asked
+ * for a colour or legality constraint explicitly.
+ */
+export function buildQueryPlans(
+  card: SimilarityRequest,
+  functionalTags: string[],
+  mechanics: string[],
+  functionalConfidence: number,
+): { plans: QueryPlan[]; recoveryPlan: QueryPlan } {
+  const plans: QueryPlan[] = [];
+  const self = excludeSelf(card);
+  const ceiling = budgetCeiling(card) || undefined;
+  const specificTags = functionalTags.slice(0, 2);
+
+  if (specificTags.length > 1) {
+    plans.push({
+      id: 'functional-combined',
+      strategy: 'exact-functional',
+      query: orderByPopularity([
+        ...specificTags.map((tag) => `otag:${tag}`),
+        self,
+        'game:paper',
+      ]),
+      signal: specificTags.join('+'),
+      confidence: functionalConfidence,
+      weight: 1,
+      priceCeiling: ceiling,
+    });
+  }
+
+  for (const [index, tag] of specificTags.entries()) {
+    if (plans.length >= 3) break;
+    plans.push({
+      id: `functional-${index + 1}`,
+      strategy: 'functional-expansion',
+      query: orderByPopularity([`otag:${tag}`, self, 'game:paper']),
+      signal: tag,
+      confidence: functionalConfidence,
+      weight: 0.85,
+      priceCeiling: ceiling,
+    });
+  }
+
+  if (plans.length < 3 && mechanics.length > 0) {
+    const clauses = mechanics.slice(0, 3).map(mechanicClause);
+    plans.push({
+      id: 'oracle-mechanic',
+      strategy: 'oracle-mechanic',
+      query: orderByPopularity([
+        clauses.length > 1 ? `(${clauses.join(' OR ')})` : clauses[0],
+        self,
+        'game:paper',
+      ]),
+      signal: mechanics.slice(0, 3).join('+'),
+      confidence: mechanics.length > 1 ? 0.75 : 0.6,
+      weight: 0.7,
+      priceCeiling: ceiling,
+    });
+  }
+
+  const types = baseTypeClauses(card);
+  const structuralTypes =
+    types.length > 1 ? `(${types.join(' OR ')})` : types[0];
+  const structuralParts = [structuralTypes, self, 'game:paper'].filter(
+    (value): value is string => Boolean(value),
+  );
+  if (card.cmc !== undefined) {
+    structuralParts.splice(
+      structuralParts.length - 2,
+      0,
+      `mv>=${Math.max(0, card.cmc - 2)}`,
+      `mv<=${card.cmc + 2}`,
+    );
+  }
+  plans.push({
+    id: 'structural',
+    strategy: 'structural',
+    query: orderByPopularity(structuralParts),
+    signal: types.join('+') || 'paper-card',
+    confidence: 0.5,
+    weight: 0.4,
+    priceCeiling: ceiling,
+  });
+
+  return {
+    plans: plans.slice(0, 4),
+    recoveryPlan: {
+      id: 'broad-recovery',
+      strategy: 'fallback',
+      query: orderByPopularity([self, 'game:paper']),
+      signal: 'broad-recovery',
+      confidence: 0.3,
+      weight: 0.25,
+      priceCeiling: ceiling,
+    },
+  };
 }
 
 export function buildSimilarQuery(
@@ -51,9 +191,6 @@ export function buildSimilarQuery(
 
   const baseTypes = baseTypeClauses(card);
   if (baseTypes.length > 0) parts.push(...baseTypes);
-
-  const identity = identityClause(card);
-  if (identity) parts.push(identity);
 
   if (card.cmc !== undefined) {
     const lo = Math.max(0, card.cmc - 1);
@@ -100,9 +237,6 @@ export function buildBudgetQuery(
   const baseTypes = baseTypeClauses(card);
   if (baseTypes.length > 0) parts.push(...baseTypes);
 
-  const identity = identityClause(card);
-  if (identity) parts.push(identity);
-
   if (mechanics.length > 0) {
     const mech = mechanics[0];
     if (mech === 'mana production') {
@@ -117,7 +251,8 @@ export function buildBudgetQuery(
   }
 
   parts.push(`-!"${card.cardName}"`);
-  parts.push(`usd<${budgetCeiling(card)}`);
+  const ceiling = budgetCeiling(card);
+  if (ceiling > 0) parts.push(`usd<=${ceiling}`);
   parts.push('order:usd', 'dir:asc');
 
   return parts.join(' ');

@@ -150,6 +150,11 @@ export function SearchResultsArea({
   // Only the explicit "relevance" sort defers ordering to the intelligence reranker.
   // Every other sort (including name-asc) is an explicit user ordering.
   const hasCustomSort = !!activeSort && activeSort !== 'relevance-desc';
+  /** Fall back to intent parsed from the executed query on fast/cached paths. */
+  const effectiveIntent = useMemo(
+    () => intent ?? intentFromScryfallQuery(searchQuery),
+    [intent, searchQuery],
+  );
   const rankedCards = useMemo(
     () =>
       hasCustomSort
@@ -162,7 +167,7 @@ export function SearchResultsArea({
             hadFastClick,
             hadRefinement,
             isAuthenticated: !!user,
-            intent,
+            intent: effectiveIntent,
           }),
     [
       displayCards,
@@ -174,17 +179,12 @@ export function SearchResultsArea({
       hadFastClick,
       hadRefinement,
       user,
-      intent,
+      effectiveIntent,
     ],
   );
   const topSourceCard = hasCustomSort
     ? (cards[0] ?? null)
     : (rankedCards[0] ?? cards[0] ?? null);
-  /** Fall back to intent parsed from the executed query on fast/cached paths. */
-  const effectiveIntent = useMemo(
-    () => intent ?? intentFromScryfallQuery(searchQuery),
-    [intent, searchQuery],
-  );
   const whyReportsByCardId = useMemo(() => {
     if (
       viewMode === 'grid' &&
@@ -393,7 +393,7 @@ export function SearchResultsArea({
             query={originalQuery}
             active={activeTab === 'similar'}
             onCardClick={handleCardClick}
-            fallbackCard={cards[0] ?? null}
+            fallbackCard={topSourceCard}
           />
         </Suspense>
       )}

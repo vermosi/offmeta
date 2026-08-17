@@ -454,6 +454,14 @@ interface CardClickEventData {
   set_code: string;
   rarity: string;
   position_in_results?: number;
+  query?: string;
+  executed_query?: string;
+  request_id?: string;
+  result_set_id?: string;
+  surface?: string;
+  ranker_version?: string;
+  score?: number;
+  time_to_click_ms?: number;
 }
 
 interface CardModalViewEventData {

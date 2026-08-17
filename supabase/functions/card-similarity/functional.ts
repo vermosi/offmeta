@@ -68,7 +68,7 @@ const SIGNATURES: readonly Signature[] = [
   },
   {
     tag: 'impulsive-draw',
-    test: /exile the top\s+.*card of (?:that|target|the) (?:player's|opponent's|their) library.*you may (?:play|cast) that card/i,
+    test: /exile the top\s+.*card of (?:that|target|the) (?:player's|opponent's|their) library.*you may (?:look at (?:it|and)\s+)?(?:play|cast) that card/i,
   },
 
   // Card advantage / selection
@@ -82,7 +82,6 @@ const SIGNATURES: readonly Signature[] = [
     test: /whenever\s+.*\bdraw\s+a\s+card\b|at the beginning of your\s+\w+\s+step,\s+draw/i,
   },
   { tag: 'draw', test: /\bdraws?\s+(?:a|two|three|\w+)\s+cards?\b/i },
-  { tag: 'impulsive-draw', test: /exile the top\s+.*card.*you may play/i },
 
   // Tutors
   {

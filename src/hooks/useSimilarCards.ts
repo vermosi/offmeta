@@ -12,6 +12,18 @@ import type { ScryfallCard, SearchResult } from '@/types/card';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { logger } from '@/lib/core/logger';
 import {
+  provenancePrior,
+  rankSimilarityCandidates,
+  type CandidateWithProvenance,
+  type RankedRecommendation,
+} from '@/lib/recommendations/ranking';
+import type {
+  CandidateProvenance,
+  QueryPlan,
+  RecommendationIntent,
+} from '@/types/recommendations';
+import { RECOMMENDATION_VERSION } from '@/types/recommendations';
+import {
   recordSimilarError,
   recordSimilarNoSource,
   friendlySimilarErrorMessage,
@@ -21,6 +33,8 @@ export interface SimilarityData {
   sourceCard: ScryfallCard;
   similarResults: SearchResult | null;
   budgetResults: SearchResult | null;
+  rankedSimilar?: RankedRecommendation[];
+  rankedBudget?: RankedRecommendation[];
 }
 
 /**
@@ -38,29 +52,112 @@ const SIMILAR_DEBOUNCE_MS = 350;
  * unmounts. Bounded to keep memory flat across long sessions.
  */
 const SIMILAR_CACHE_MAX = 50;
-const similarityCache = new Map<string, SimilarityData | null>();
+const POSITIVE_CACHE_TTL_MS = 10 * 60 * 1000;
+const EMPTY_CACHE_TTL_MS = 60 * 1000;
+
+interface SimilarityCacheEntry {
+  value: SimilarityData | null;
+  expiresAt: number;
+}
+
+const similarityCache = new Map<string, SimilarityCacheEntry>();
 
 function cacheKey(query: string, fallbackId: string | null): string {
-  return `${query.trim().toLowerCase()}::${fallbackId ?? ''}`;
+  return `${RECOMMENDATION_VERSION}::${query.trim().toLowerCase()}::${fallbackId ?? ''}`;
 }
 
 function readCache(key: string): SimilarityData | null | undefined {
   if (!similarityCache.has(key)) return undefined;
+  const entry = similarityCache.get(key);
+  if (!entry || entry.expiresAt <= Date.now()) {
+    similarityCache.delete(key);
+    return undefined;
+  }
   // Refresh LRU position.
-  const value = similarityCache.get(key);
   similarityCache.delete(key);
-  similarityCache.set(key, value as SimilarityData | null);
-  return value;
+  similarityCache.set(key, entry);
+  return entry.value;
 }
 
 function writeCache(key: string, value: SimilarityData | null): void {
   if (similarityCache.has(key)) similarityCache.delete(key);
-  similarityCache.set(key, value);
+  similarityCache.set(key, {
+    value,
+    expiresAt:
+      Date.now() +
+      (value === null ? EMPTY_CACHE_TTL_MS : POSITIVE_CACHE_TTL_MS),
+  });
   while (similarityCache.size > SIMILAR_CACHE_MAX) {
     const oldest = similarityCache.keys().next().value;
     if (oldest === undefined) break;
     similarityCache.delete(oldest);
   }
+}
+
+function toSearchResult(cards: ScryfallCard[]): SearchResult {
+  return {
+    object: 'list',
+    total_cards: cards.length,
+    has_more: false,
+    data: cards,
+  };
+}
+
+function mergePlanResults(
+  plans: QueryPlan[],
+  results: SearchResult[],
+): CandidateWithProvenance[] {
+  const candidates = new Map<string, CandidateWithProvenance>();
+  for (const [planIndex, plan] of plans.entries()) {
+    const result = results[planIndex];
+    for (const [index, card] of (result?.data ?? []).entries()) {
+      const identity = card.oracle_id ?? card.id;
+      const provenance: CandidateProvenance = {
+        planId: plan.id,
+        strategy: plan.strategy,
+        sourceRank: index + 1,
+        planWeight: plan.weight,
+        signal: plan.signal,
+      };
+      const existing = candidates.get(identity);
+      if (existing) {
+        existing.provenance.push(provenance);
+      } else {
+        candidates.set(identity, { card, provenance: [provenance] });
+      }
+    }
+  }
+  return [...candidates.values()]
+    .sort(
+      (left, right) =>
+        provenancePrior(right.provenance, plans) -
+          provenancePrior(left.provenance, plans) ||
+        left.card.name.localeCompare(right.card.name),
+    )
+    .slice(0, 500);
+}
+
+function defaultIntent(
+  sourceCard: ScryfallCard,
+  plans: QueryPlan[],
+): RecommendationIntent {
+  return {
+    version: RECOMMENDATION_VERSION,
+    mode: 'similarity',
+    sourceCardId: sourceCard.id,
+    sourceCardName: sourceCard.name,
+    hardConstraints: {},
+    functionalSignals: plans
+      .filter((plan) => plan.strategy !== 'structural')
+      .map((plan) => ({ signal: plan.signal, confidence: plan.confidence })),
+    structuralSignals: {
+      types: [],
+      manaValue: sourceCard.cmc,
+      colorIdentity: sourceCard.color_identity ?? [],
+    },
+    exclusions: [sourceCard.name],
+    confidence: Math.max(0.4, ...plans.map((plan) => plan.confidence)),
+  };
 }
 
 /** Exposed for tests. */
@@ -135,10 +232,12 @@ export function useSimilarCards(
         {
           body: {
             cardName: sourceCard.name,
+            cardId: sourceCard.id,
             typeLine: sourceCard.type_line,
             oracleText: sourceCard.oracle_text,
             colorIdentity: sourceCard.color_identity,
-            keywords: ((sourceCard as unknown) as { keywords?: string[] }).keywords ?? [],
+            keywords:
+              (sourceCard as unknown as { keywords?: string[] }).keywords ?? [],
             cmc: sourceCard.cmc,
             prices: sourceCard.prices,
           },
@@ -151,23 +250,79 @@ export function useSimilarCards(
           (typeof data?.error === 'string' ? data.error : null) ||
           'Similarity edge function returned an error';
         logger.warn('Card similarity fetch failed', fnError || data?.error);
-        recordSimilarError(debouncedQuery, fallbackId, reason, fnError || data?.error);
+        recordSimilarError(
+          debouncedQuery,
+          fallbackId,
+          reason,
+          fnError || data?.error,
+        );
         // Throw so react-query surfaces `error` to the UI. We deliberately
         // don't cache transient failures — retry on next activation.
         throw new Error(reason);
       }
 
-      // Fetch similar and budget results from Scryfall
-      const [similarResults, budgetResults] = await Promise.allSettled([
-        data.similarQuery ? searchCards(data.similarQuery, 1) : Promise.resolve(null),
-        data.budgetQuery ? searchCards(data.budgetQuery, 1) : Promise.resolve(null),
-      ]);
-
-      const result: SimilarityData = {
-        sourceCard,
-        similarResults: similarResults.status === 'fulfilled' ? similarResults.value : null,
-        budgetResults: budgetResults.status === 'fulfilled' ? budgetResults.value : null,
-      };
+      let result: SimilarityData;
+      const queryPlans = Array.isArray(data.queryPlans)
+        ? (data.queryPlans as QueryPlan[]).slice(0, 4)
+        : [];
+      if (queryPlans.length > 0) {
+        const planResults = await Promise.all(
+          queryPlans.map((plan) => searchCards(plan.query, 1)),
+        );
+        let activePlans = queryPlans;
+        let candidates = mergePlanResults(activePlans, planResults);
+        const intent =
+          data.intent && data.intent.version === RECOMMENDATION_VERSION
+            ? (data.intent as RecommendationIntent)
+            : defaultIntent(sourceCard, activePlans);
+        let ranked = rankSimilarityCandidates(
+          sourceCard,
+          candidates,
+          activePlans,
+          intent,
+        );
+        const needsRecovery =
+          candidates.length < 20 ||
+          (ranked.similar[0]?.breakdown.confidence ?? 0) < 0.5;
+        if (needsRecovery && data.recoveryPlan) {
+          const recoveryPlan = data.recoveryPlan as QueryPlan;
+          const recoveryResult = await searchCards(recoveryPlan.query, 1);
+          activePlans = [...activePlans, recoveryPlan];
+          candidates = mergePlanResults(activePlans, [
+            ...planResults,
+            recoveryResult,
+          ]);
+          ranked = rankSimilarityCandidates(
+            sourceCard,
+            candidates,
+            activePlans,
+            intent,
+          );
+        }
+        result = {
+          sourceCard,
+          similarResults: toSearchResult(
+            ranked.similar.map((entry) => entry.card),
+          ),
+          budgetResults:
+            ranked.budget.length > 0
+              ? toSearchResult(ranked.budget.map((entry) => entry.card))
+              : null,
+          rankedSimilar: ranked.similar,
+          rankedBudget: ranked.budget,
+        };
+      } else {
+        // Compatibility path for an older deployed edge function.
+        const [similarResults, budgetResults] = await Promise.all([
+          data.similarQuery
+            ? searchCards(data.similarQuery, 1)
+            : Promise.resolve(null),
+          data.budgetQuery
+            ? searchCards(data.budgetQuery, 1)
+            : Promise.resolve(null),
+        ]);
+        result = { sourceCard, similarResults, budgetResults };
+      }
       writeCache(key, result);
       return result;
     },

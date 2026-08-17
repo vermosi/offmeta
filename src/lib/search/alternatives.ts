@@ -37,6 +37,8 @@ export interface AlternativesIntent {
   cardName: string;
   /** True when the user asked for a cheaper option ("budget", "cheaper"). */
   budget: boolean;
+  /** Explicit user price ceiling, when present. */
+  maxPrice?: number;
   /** The wrapper phrasing that matched. */
   kind: AlternativesIntentKind;
   /**
@@ -52,12 +54,16 @@ export interface ResolvedAlternatives {
   /** Canonical name of the reference card, or the category phrase. */
   cardName: string;
   budget: boolean;
+  maxPrice?: number;
   kind: AlternativesIntentKind;
   /** Present when resolution came from the category table. */
   category?: string;
 }
 
-const BUDGET_WORDS = /\b(budget|cheap|cheaper|affordable|inexpensive|poor\s+man'?s)\b/i;
+const BUDGET_WORDS =
+  /\b(budget|cheap|cheaper|affordable|inexpensive|poor\s+man'?s)\b/i;
+const PRICE_CEILING =
+  /\s+(?:under|below|less\s+than|max(?:imum)?|up\s+to)\s*\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:usd|dollars?)?\s*$/i;
 
 /**
  * Wrapper phrases that mean "cards like X". Group 1 is always the card name.
@@ -98,7 +104,8 @@ const TRAILING_NOISE =
   /\s+\b(?:in|for)\s+(?:commander|edh|modern|legacy|pioneer|standard|pauper|vintage|brawl)\b.*$/i;
 
 /** Leading budget adjectives ("budget fetch land alternatives"). */
-const LEADING_BUDGET = /^(?:budget|cheap|cheaper|affordable|inexpensive|poor\s+man'?s)\s+/i;
+const LEADING_BUDGET =
+  /^(?:budget|cheap|cheaper|affordable|inexpensive|poor\s+man'?s)\s+/i;
 
 /**
  * Card *categories* people ask for alternatives to. These are not card names,
@@ -151,6 +158,7 @@ function normalizeCategoryTerm(term: string): string {
 export function resolveCategoryQuery(
   term: string,
   budget: boolean,
+  maxPrice?: number,
 ): string | null {
   const normalized = normalizeCategoryTerm(term);
   const base =
@@ -158,9 +166,12 @@ export function resolveCategoryQuery(
     CATEGORY_QUERIES[normalized.replace(/\s+/g, '')] ??
     null;
   if (!base) return null;
-  return [base, budget ? BUDGET_CEILING : null, 'game:paper']
-    .filter(Boolean)
-    .join(' ');
+  const priceClause = maxPrice
+    ? `usd<=${maxPrice}`
+    : budget
+      ? BUDGET_CEILING
+      : null;
+  return [base, priceClause, 'game:paper'].filter(Boolean).join(' ');
 }
 
 function cleanCardName(raw: string): string {
@@ -185,8 +196,14 @@ export function detectAlternativesIntent(
   // Scryfall operators mean the user already wrote syntax — leave it alone.
   if (/[():!<>=]/.test(trimmed)) return null;
 
+  const priceMatch = trimmed.match(PRICE_CEILING);
+  const maxPrice = priceMatch ? Number(priceMatch[1]) : undefined;
+  const queryWithoutPrice = priceMatch
+    ? trimmed.replace(PRICE_CEILING, '').trim()
+    : trimmed;
+
   for (const { kind, pattern } of ALTERNATIVES_PATTERNS) {
-    const match = trimmed.match(pattern);
+    const match = queryWithoutPrice.match(pattern);
     if (!match) continue;
 
     const cardName = cleanCardName(match[1] ?? '');
@@ -195,27 +212,25 @@ export function detectAlternativesIntent(
     if (words.length < 1 || words.length > 6) continue;
     if (cardName.length < 3) continue;
 
-    const budget = BUDGET_WORDS.test(trimmed);
+    const budget = BUDGET_WORDS.test(trimmed) || maxPrice !== undefined;
 
     // "budget fetch land alternatives" names a category, not a card. Strip the
     // leading budget adjective and check the category table before rejecting.
     const stripped = cardName.replace(LEADING_BUDGET, '').trim();
-    const category = resolveCategoryQuery(stripped, budget)
+    const category = resolveCategoryQuery(stripped, budget, maxPrice)
       ? normalizeCategoryTerm(stripped)
       : null;
     if (category) {
-      return { cardName: stripped, budget, kind, category };
+      return { cardName: stripped, budget, kind, category, maxPrice };
     }
 
     if (BUDGET_WORDS.test(cardName)) continue;
 
-    return { cardName, budget, kind };
+    return { cardName, budget, kind, maxPrice };
   }
 
   return null;
 }
-
-
 
 /** Excludes the reference card from its own alternatives list. */
 function excludeSelf(query: string, cardName: string): string {
@@ -239,18 +254,21 @@ export async function resolveAlternativesQuery(
   // Category phrases resolve without touching Scryfall or the similarity
   // function — there is no single reference card to look up.
   if (intent.category) {
-    const categoryQuery = resolveCategoryQuery(intent.category, intent.budget);
+    const categoryQuery = resolveCategoryQuery(
+      intent.category,
+      intent.budget,
+      intent.maxPrice,
+    );
     if (!categoryQuery) return null;
     return {
       scryfallQuery: categoryQuery,
       cardName: intent.cardName,
       budget: intent.budget,
+      maxPrice: intent.maxPrice,
       kind: intent.kind,
       category: intent.category,
     };
   }
-
-
 
   let card: ScryfallCard;
   try {
@@ -267,10 +285,10 @@ export async function resolveAlternativesQuery(
         typeLine: card.type_line,
         oracleText: card.oracle_text,
         colorIdentity: card.color_identity,
-        keywords:
-          (card as unknown as { keywords?: string[] }).keywords ?? [],
+        keywords: (card as unknown as { keywords?: string[] }).keywords ?? [],
         cmc: card.cmc,
         prices: card.prices,
+        explicitMaxPrice: intent.maxPrice,
       },
     });
 
@@ -280,7 +298,7 @@ export async function resolveAlternativesQuery(
     }
 
     const chosen: string | undefined = intent.budget
-      ? data.budgetQuery || data.similarQuery
+      ? data.budgetQuery
       : data.similarQuery || data.budgetQuery;
     if (!chosen) return null;
 
@@ -288,9 +306,9 @@ export async function resolveAlternativesQuery(
       scryfallQuery: excludeSelf(chosen, card.name),
       cardName: card.name,
       budget: intent.budget,
+      maxPrice: intent.maxPrice,
       kind: intent.kind,
     };
-
   } catch (err) {
     logger.warn('Alternatives resolution threw', err);
     return null;

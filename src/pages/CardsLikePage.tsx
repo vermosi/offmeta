@@ -36,9 +36,9 @@ function readAttribution(): Attribution {
 function isPaidSearch(attribution: Attribution): boolean {
   return Boolean(
     attribution.gclid ||
-      ['cpc', 'ppc', 'paidsearch', 'paid_search'].includes(
-        (attribution.utm_medium || '').toLowerCase(),
-      ),
+    ['cpc', 'ppc', 'paidsearch', 'paid_search'].includes(
+      (attribution.utm_medium || '').toLowerCase(),
+    ),
   );
 }
 
@@ -192,7 +192,12 @@ export default function CardsLikePage() {
       setSubmittedQuery(nextQuery);
       navigate(`/cards-like/${cardNameToSlug(card.name)}`, { replace: true });
     } catch {
-      setSearchError(t('search.cardsLike.notFound', 'We could not find that card. Try the exact card name.'));
+      setSearchError(
+        t(
+          'search.cardsLike.notFound',
+          'We could not find that card. Try the exact card name.',
+        ),
+      );
     } finally {
       setIsResolving(false);
     }
@@ -205,19 +210,34 @@ export default function CardsLikePage() {
         <div className="mx-auto w-full max-w-3xl space-y-6">
           <header className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-              <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+              <Sparkles
+                className="h-3.5 w-3.5 text-primary"
+                aria-hidden="true"
+              />
               {t('search.cardsLike.badge', 'Find Cards Like Any MTG Card')}
             </div>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
-              {t('search.cardsLike.heading', 'Search a card, see similar cards, and move on.')}
+              {t(
+                'search.cardsLike.heading',
+                'Search a card, see similar cards, and move on.',
+              )}
             </h1>
             <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-              {t('search.cardsLike.subheading', 'Type a Magic card name to find close matches and alternatives. This is the fastest way to see what else plays the same role.')}
+              {t(
+                'search.cardsLike.subheading',
+                'Type a Magic card name to find close matches and alternatives. This is the fastest way to see what else plays the same role.',
+              )}
             </p>
           </header>
 
-          <form onSubmit={handleSubmit} className="space-y-3 rounded-3xl border border-border/60 bg-card/70 p-4 shadow-sm sm:p-5">
-            <label htmlFor="cards-like-input" className="text-sm font-medium text-foreground">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-3 rounded-3xl border border-border/60 bg-card/70 p-4 shadow-sm sm:p-5"
+          >
+            <label
+              htmlFor="cards-like-input"
+              className="text-sm font-medium text-foreground"
+            >
               {t('search.cardsLike.inputLabel', 'Search for a Magic card')}
             </label>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -230,13 +250,20 @@ export default function CardsLikePage() {
                 autoComplete="off"
                 spellCheck="false"
               />
-              <Button type="submit" className="h-12 rounded-2xl px-5" disabled={isResolving || !inputValue.trim()}>
+              <Button
+                type="submit"
+                className="h-12 rounded-2xl px-5"
+                disabled={isResolving || !inputValue.trim()}
+              >
                 <Search className="h-4 w-4" aria-hidden="true" />
                 {t('search.cardsLike.submitButton', 'Find similar cards')}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              {t('search.cardsLike.hint', 'Try a card name like Sol Ring or Rhystic Study.')}
+              {t(
+                'search.cardsLike.hint',
+                'Try a card name like Sol Ring or Rhystic Study.',
+              )}
             </p>
           </form>
 
@@ -260,7 +287,11 @@ export default function CardsLikePage() {
                     {t('search.cardsLike.resultsLabel', 'Results')}
                   </p>
                   <h2 className="text-lg font-semibold text-foreground">
-                    {t('search.cardsLike.resultsHeading', 'Cards like {query}', { query })}
+                    {t(
+                      'search.cardsLike.resultsHeading',
+                      'Cards like {query}',
+                      { query },
+                    )}
                   </h2>
                 </div>
                 <a
@@ -275,7 +306,19 @@ export default function CardsLikePage() {
                 <SimilarCardsPanel
                   data={similarityData}
                   isLoading={isLoading || isResolving}
-                  onCardClick={() => undefined}
+                  onCardClick={(card, index) => {
+                    trackEvent('card_click', {
+                      card_id: card.id,
+                      card_name: card.name,
+                      set_code: card.set,
+                      rarity: card.rarity,
+                      position_in_results: index,
+                      query,
+                      surface: 'cards_like',
+                      ranker_version: 'v2',
+                    });
+                    navigate(`/cards/${cardNameToSlug(card.name)}`);
+                  }}
                 />
               </div>
             </section>

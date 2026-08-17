@@ -183,17 +183,10 @@ export function explainCardMatch(
     }
   }
 
-  // Tags (Scryfall function/oracle tags — surface as clickable concept refinements)
-  for (const tag of intent.tags) {
-    if (!tag) continue;
-    const clean = tag.replace(/^otag:|^oracletag:|^functionality:/i, '').trim();
-    if (clean) {
-      reasons.push({
-        label: `Matched concept: ${clean}`,
-        token: `otag:${quoteIfNeeded(clean.toLowerCase())}`,
-      });
-    }
-  }
+  // Scryfall cards do not include oracle-tag membership. Tag intent is only
+  // credited by the V2 recommendation ranker when retrieval provenance proves
+  // the candidate came from that tag query; asserting it here would give every
+  // candidate the same unverified direct-match reason.
 
   return reasons;
 }

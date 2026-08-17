@@ -12,7 +12,13 @@ import {
   isStrongFingerprint,
   scoreFunctionalTags,
 } from './functional.ts';
-import { budgetCeiling, buildBudgetQuery, buildSimilarQuery } from './query.ts';
+import {
+  budgetCeiling,
+  buildBudgetQuery,
+  buildQueryPlans,
+  buildSimilarQuery,
+  type QueryPlan,
+} from './query.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -39,6 +45,7 @@ interface SimilarityRequest {
   keywords?: string[];
   cmc?: number;
   prices?: { usd?: string | null };
+  explicitMaxPrice?: number;
 }
 
 interface SimilarityResponse {
@@ -47,6 +54,23 @@ interface SimilarityResponse {
   budgetQuery?: string;
   /** Scryfall oracle tags describing what the reference card does. */
   functionalTags?: string[];
+  queryPlans?: QueryPlan[];
+  recoveryPlan?: QueryPlan;
+  intent?: {
+    version: 'v2';
+    mode: 'similarity' | 'budget';
+    sourceCardId?: string;
+    sourceCardName: string;
+    hardConstraints: { maxPrice?: number };
+    functionalSignals: Array<{ signal: string; confidence: number }>;
+    structuralSignals: {
+      types: string[];
+      manaValue?: number;
+      colorIdentity: string[];
+    };
+    exclusions: string[];
+    confidence: number;
+  };
   cached?: boolean;
   error?: string;
 }
@@ -243,11 +267,29 @@ serve(
           : null;
 
       const mechanics = await getMechanicsForCard(body);
+      const { plans: queryPlans, recoveryPlan } = buildQueryPlans(
+        body,
+        functionalTags,
+        mechanics,
+        functionalConfidence,
+      );
       const similarQuery =
         functionalQuery ?? buildSimilarQuery(body, mechanics);
-      const budgetQuery = functionalQuery
-        ? `${functionalQuery} usd<${budgetCeiling(body)} order:usd dir:asc`
-        : buildBudgetQuery(body, mechanics);
+      const ceiling = budgetCeiling(body);
+      const budgetQuery =
+        ceiling <= 0
+          ? undefined
+          : functionalQuery
+            ? `${functionalQuery} usd<=${ceiling} order:usd dir:asc`
+            : buildBudgetQuery(body, mechanics);
+      const intentConfidence = Math.max(
+        functionalConfidence,
+        mechanics.length > 1 ? 0.75 : mechanics.length === 1 ? 0.6 : 0.4,
+      );
+      const primaryTypes = body.typeLine
+        .replace(/—.*/u, '')
+        .split(/\s+/)
+        .filter((value) => value && value.toLowerCase() !== 'legendary');
 
       return new Response(
         JSON.stringify({
@@ -255,6 +297,30 @@ serve(
           similarQuery,
           budgetQuery,
           functionalTags,
+          queryPlans,
+          recoveryPlan,
+          intent: {
+            version: 'v2',
+            mode: body.explicitMaxPrice ? 'budget' : 'similarity',
+            sourceCardId: body.cardId,
+            sourceCardName: body.cardName,
+            hardConstraints: {
+              ...(body.explicitMaxPrice
+                ? { maxPrice: body.explicitMaxPrice }
+                : {}),
+            },
+            functionalSignals: functionalTags.map((signal) => ({
+              signal,
+              confidence: functionalConfidence,
+            })),
+            structuralSignals: {
+              types: primaryTypes,
+              manaValue: body.cmc,
+              colorIdentity: body.colorIdentity ?? [],
+            },
+            exclusions: [body.cardName],
+            confidence: intentConfidence,
+          },
           cached: false,
         } satisfies SimilarityResponse),
         { status: 200, headers },

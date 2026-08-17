@@ -247,6 +247,7 @@ export function intentFromScryfallQuery(
   const oraclePatterns: string[] = [];
   const tags: string[] = [];
   const types: string[] = [];
+  let colors: SearchIntent['colors'] = null;
   let cmc: SearchIntent['cmc'] = null;
 
   const oracleQuoted = /\bo(?:racle)?:"([^"]+)"/gi;
@@ -265,7 +266,18 @@ export function intentFromScryfallQuery(
   for (const match of query.matchAll(typeToken)) {
     types.push(match[1].replace(/["-]/g, ' ').trim());
   }
-  const cmcToken = /\b(?:mv|cmc):(<=|>=|<|>|=)?(\d+)/i.exec(query);
+  const colorToken = /\b(ci|id|c|color)(?::|=)([wubrgc]+)/i.exec(query);
+  if (colorToken) {
+    colors = {
+      values: colorToken[2].toUpperCase().split(''),
+      isIdentity: /^(?:ci|id)$/i.test(colorToken[1]),
+      isExact: false,
+      isOr: false,
+    };
+  }
+  const cmcToken = /\b(?:mv|cmc)\s*(?::)?\s*(<=|>=|<|>|=)?\s*(\d+)/i.exec(
+    query,
+  );
   if (cmcToken) {
     cmc = { op: cmcToken[1] || '=', value: Number(cmcToken[2]) };
   }
@@ -274,13 +286,14 @@ export function intentFromScryfallQuery(
     oraclePatterns.length === 0 &&
     tags.length === 0 &&
     types.length === 0 &&
-    !cmc
+    !cmc &&
+    !colors
   ) {
     return null;
   }
 
   return {
-    colors: null,
+    colors,
     types,
     cmc,
     power: null,
