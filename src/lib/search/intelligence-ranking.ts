@@ -31,8 +31,15 @@ function ownershipScore(
   return ownedCards.has(card.name) ? 1 : 0;
 }
 
-/** Max signals we count toward match-strength before capping. */
-const MATCH_SATURATION = 5;
+function isDirectReason(reason: { label: string; token?: string }): boolean {
+  const token = reason.token?.toLowerCase() ?? '';
+  const label = reason.label.toLowerCase();
+  return (
+    token.startsWith('o:') ||
+    token.startsWith('otag:') ||
+    label.startsWith('oracle text:')
+  );
+}
 
 /** Normalized match-strength score in [0, 1] from parsed intent. */
 function matchStrengthScore(
@@ -42,7 +49,24 @@ function matchStrengthScore(
   if (!intent) return 0;
   const reasons = explainCardMatch(card, intent);
   if (reasons.length === 0) return 0;
-  return Math.min(reasons.length, MATCH_SATURATION) / MATCH_SATURATION;
+  let directReasons = 0;
+  let structuralReasons = 0;
+
+  for (const reason of reasons) {
+    if (isDirectReason(reason)) {
+      directReasons += 1;
+    } else {
+      structuralReasons += 1;
+    }
+  }
+
+  if (directReasons > 0) {
+    const directScore = 0.75 + directReasons * 0.1;
+    const structuralBonus = structuralReasons * 0.03;
+    return Math.min(1, directScore + structuralBonus);
+  }
+
+  return Math.min(0.15, structuralReasons * 0.05);
 }
 
 function intentMismatchPenalty(

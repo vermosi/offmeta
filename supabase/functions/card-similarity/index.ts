@@ -8,6 +8,7 @@ import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
 import { withLogging } from '../_shared/logger.ts';
 import { deriveFunctionalTags, isStrongFingerprint } from './functional.ts';
+import { budgetCeiling, buildBudgetQuery, buildSimilarQuery } from './query.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -64,7 +65,6 @@ function extractMechanics(oracleText: string): string[] {
     [/\btrample\b/i, 'trample'],
     [/\bhaste\b/i, 'haste'],
     [/\bflash\b/i, 'flash'],
-    // Handle both "{T}: Add" and "tap: add" patterns for mana production
     [/(?:\{T\}|tap).*add\b/i, 'mana production'],
     [/\badd\s+\{[WUBRGC]\}/i, 'mana production'],
     [/\bmill\b/i, 'mill'],
@@ -88,7 +88,6 @@ function extractMechanics(oracleText: string): string[] {
       mechanics.push(label);
     }
   }
-  // Deduplicate
   return [...new Set(mechanics)].slice(0, 6);
 }
 
@@ -122,132 +121,7 @@ async function getMechanicsForCard(card: SimilarityRequest): Promise<string[]> {
   return mechanics;
 }
 
-/** Colour-identity clause, or null for colourless cards. */
-function identityClause(card: SimilarityRequest): string | null {
-  if (!card.colorIdentity?.length) return null;
-  return `id<=${card.colorIdentity.join('').toUpperCase()}`;
-}
-
-/** Base type clause ("Legendary Creature — Elf Druid" → t:creature). */
-function baseTypeClause(card: SimilarityRequest): string | null {
-  const baseType = card.typeLine
-    .replace(/Legendary\s*/i, '')
-    .replace(/—.*/i, '')
-    .trim()
-    .split(/\s+/)[0];
-  return baseType ? `t:${baseType.toLowerCase()}` : null;
-}
-
-/**
- * Functional similarity query: what the card *does*, expressed with Scryfall
- * oracle tags. Type and mana value are deliberately omitted — a self-mill
- * enchantment is a better "card like Hermit Druid" than a random 2-mana green
- * creature.
- */
-function buildFunctionalQuery(
-  card: SimilarityRequest,
-  tags: string[],
-): string {
-  const parts = tags.map((tag) => `otag:${tag}`);
-  const identity = identityClause(card);
-  if (identity) parts.push(identity);
-  parts.push(`-!"${card.cardName}"`, 'game:paper');
-  return parts.join(' ');
-}
-
-/** Build a Scryfall query for similar cards */
-function buildSimilarQuery(
-  card: SimilarityRequest,
-  mechanics: string[],
-): string {
-  const parts: string[] = [];
-
-  const baseType = baseTypeClause(card);
-  if (baseType) parts.push(baseType);
-
-  const identity = identityClause(card);
-  if (identity) parts.push(identity);
-
-  // Match by similar mana value (±1)
-  if (card.cmc !== undefined) {
-    const lo = Math.max(0, card.cmc - 1);
-    const hi = card.cmc + 1;
-    parts.push(`mv>=${lo}`, `mv<=${hi}`);
-  }
-
-  // Exclude the card itself
-  parts.push(`-!"${card.cardName}"`);
-
-  // Also use Scryfall keywords if provided
-  const kwParts: string[] = [];
-  for (const kw of (card.keywords || []).slice(0, 2)) {
-    const normalized = kw.toLowerCase().replace(/\s+/g, '-');
-    kwParts.push(`kw:${normalized}`);
-  }
-
-  for (const mech of mechanics.slice(0, 2)) {
-    if (mech === 'ETB') {
-      parts.push('o:"enters the battlefield"');
-    } else if (mech === 'death trigger') {
-      parts.push('o:"when" o:"dies"');
-    } else if (mech === 'tutor') {
-      parts.push('o:"search your library"');
-    } else if (mech === 'mana production') {
-      parts.push('o:"add" o:"{"');
-    } else {
-      parts.push(`o:"${mech}"`);
-    }
-  }
-
-  // Add keyword matches if no mechanics were found from oracle text
-  if (mechanics.length === 0 && kwParts.length > 0) {
-    parts.push(...kwParts);
-  }
-
-  return parts.join(' ');
-}
-
-/** Price ceiling for budget alternatives. */
-function budgetCeiling(card: SimilarityRequest): number {
-  const cardPrice = parseFloat(card.prices?.usd || '0');
-  return cardPrice > 0 ? Math.max(2, Math.floor(cardPrice * 0.5)) : 5;
-}
-
-/** Build a Scryfall query for budget alternatives */
-function buildBudgetQuery(
-  card: SimilarityRequest,
-  mechanics: string[],
-): string {
-  const parts: string[] = [];
-
-  const baseType = baseTypeClause(card);
-  if (baseType) parts.push(baseType);
-
-  const identity = identityClause(card);
-  if (identity) parts.push(identity);
-
-  // Key mechanic matching
-  if (mechanics.length > 0) {
-    const mech = mechanics[0];
-    if (mech === 'mana production') {
-      parts.push('o:"add" o:"{"');
-    } else if (mech === 'ETB') {
-      parts.push('o:"enters the battlefield"');
-    } else if (mech === 'tutor') {
-      parts.push('o:"search your library"');
-    } else {
-      parts.push(`o:"${mech}"`);
-    }
-  }
-
-  parts.push(`-!"${card.cardName}"`);
-  parts.push(`usd<${budgetCeiling(card)}`);
-
-  return parts.join(' ');
-}
-
-/**
- * Scryfall result count for a query. Returns 0 for empty results (404) and
+/** Scryfall result count for a query. Returns 0 for empty results (404) and
  * null when the lookup itself fails, so callers can distinguish "too narrow"
  * from "couldn't check".
  */
@@ -277,100 +151,114 @@ async function resolveFunctionalQuery(
   card: SimilarityRequest,
   tags: string[],
 ): Promise<string | null> {
-  const candidates = tags.length > 1
-    ? [buildFunctionalQuery(card, tags), buildFunctionalQuery(card, [tags[0]])]
-    : [buildFunctionalQuery(card, tags)];
+  const candidates =
+    tags.length > 1
+      ? [
+          buildFunctionalQuery(card, tags),
+          buildFunctionalQuery(card, [tags[0]]),
+        ]
+      : [buildFunctionalQuery(card, tags)];
 
   for (const candidate of candidates) {
     const count = await countResults(candidate);
-    // A failed lookup shouldn't discard a valid query — accept it optimistically.
     if (count === null || count >= MIN_FUNCTIONAL_RESULTS) return candidate;
   }
   return null;
 }
 
-
-serve(withLogging('card-similarity', async (req: Request): Promise<Response> => {
-  const corsHeaders = getCorsHeaders(req);
-  const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
-
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+/** Functional similarity query: what the card *does*, expressed with Scryfall
+ * oracle tags. Type and mana value are deliberately omitted.
+ */
+function buildFunctionalQuery(card: SimilarityRequest, tags: string[]): string {
+  const parts = tags.map((tag) => `otag:${tag}`);
+  if (card.colorIdentity?.length) {
+    parts.push(`id<=${card.colorIdentity.join('').toUpperCase()}`);
   }
+  parts.push(`-!"${card.cardName}"`, 'game:paper');
+  return parts.join(' ');
+}
 
-  if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ success: false, error: 'Method not allowed' }),
-      { status: 405, headers },
-    );
-  }
+serve(
+  withLogging('card-similarity', async (req: Request): Promise<Response> => {
+    const corsHeaders = getCorsHeaders(req);
+    const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 
-  const auth = await validateAuth(req);
-  if (!auth.authorized) {
-    return new Response(
-      JSON.stringify({ success: false, error: 'Unauthorized' }),
-      { status: 401, headers },
-    );
-  }
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
 
-  maybeCleanup();
-  const ip =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const rateCheck = await checkRateLimit(ip, undefined, 15, 500);
-  if (!rateCheck.allowed) {
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'Rate limited',
-        retryAfter: rateCheck.retryAfter,
-      }),
-      { status: 429, headers },
-    );
-  }
-
-  try {
-    const body: SimilarityRequest = await req.json();
-    const { cardName, typeLine } = body;
-
-    if (!cardName || !typeLine) {
+    if (req.method !== 'POST') {
       return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'cardName and typeLine are required',
-        }),
-        { status: 400, headers },
+        JSON.stringify({ success: false, error: 'Method not allowed' }),
+        { status: 405, headers },
       );
     }
 
-    // Functional tags first: they describe what the card does. Type/mana-value
-    // heuristics are only a fallback when nothing functional matches.
-    const functionalTags = deriveFunctionalTags(body);
-    const functionalQuery = isStrongFingerprint(functionalTags)
-      ? await resolveFunctionalQuery(body, functionalTags)
-      : null;
+    const auth = await validateAuth(req);
+    if (!auth.authorized) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { status: 401, headers },
+      );
+    }
 
-    const mechanics = await getMechanicsForCard(body);
-    const similarQuery = functionalQuery ?? buildSimilarQuery(body, mechanics);
-    const budgetQuery = functionalQuery
-      ? `${functionalQuery} usd<${budgetCeiling(body)}`
-      : buildBudgetQuery(body, mechanics);
+    maybeCleanup();
+    const ip =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateCheck = await checkRateLimit(ip, undefined, 15, 500);
+    if (!rateCheck.allowed) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Rate limited',
+          retryAfter: rateCheck.retryAfter,
+        }),
+        { status: 429, headers },
+      );
+    }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        similarQuery,
-        budgetQuery,
-        functionalTags,
-        cached: false,
-      } satisfies SimilarityResponse),
-      { status: 200, headers },
-    );
+    try {
+      const body: SimilarityRequest = await req.json();
+      const { cardName, typeLine } = body;
 
-  } catch (e) {
-    console.error('card-similarity error:', e);
-    return new Response(
-      JSON.stringify({ success: false, error: 'Internal error' }),
-      { status: 500, headers },
-    );
-  }
-}));
+      if (!cardName || !typeLine) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'cardName and typeLine are required',
+          }),
+          { status: 400, headers },
+        );
+      }
+
+      const functionalTags = deriveFunctionalTags(body);
+      const functionalQuery = isStrongFingerprint(functionalTags)
+        ? await resolveFunctionalQuery(body, functionalTags)
+        : null;
+
+      const mechanics = await getMechanicsForCard(body);
+      const similarQuery =
+        functionalQuery ?? buildSimilarQuery(body, mechanics);
+      const budgetQuery = functionalQuery
+        ? `${functionalQuery} usd<${budgetCeiling(body)} order:usd dir:asc`
+        : buildBudgetQuery(body, mechanics);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          similarQuery,
+          budgetQuery,
+          functionalTags,
+          cached: false,
+        } satisfies SimilarityResponse),
+        { status: 200, headers },
+      );
+    } catch (e) {
+      console.error('card-similarity error:', e);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Internal error' }),
+        { status: 500, headers },
+      );
+    }
+  }),
+);

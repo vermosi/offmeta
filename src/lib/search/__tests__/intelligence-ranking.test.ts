@@ -106,4 +106,54 @@ describe('rerankCardsWithIntelligence', () => {
 
     expect(ranked[0].name).toBe('Arcane Signet');
   });
+
+  it('prefers a direct oracle hit over three incidental structural matches', () => {
+    const intent: SearchIntent = {
+      colors: {
+        values: ['U'],
+        isIdentity: true,
+        isExact: false,
+        isOr: false,
+      },
+      types: ['instant'],
+      cmc: { op: '<=', value: 2 },
+      power: null,
+      toughness: null,
+      tags: [],
+      oraclePatterns: ['treasure'],
+      warnings: [],
+    };
+
+    const structuralCard = makeCard({
+      name: 'Cheap Interaction',
+      type_line: 'Instant',
+      color_identity: ['U'],
+      colors: ['U'],
+      cmc: 2,
+      oracle_text: 'Counter target spell.',
+      edhrec_rank: 1000,
+    });
+    const directMatch = makeCard({
+      name: 'Treasure Insight',
+      type_line: 'Artifact',
+      color_identity: [],
+      colors: [],
+      cmc: 5,
+      oracle_text: 'Create a Treasure token.',
+      edhrec_rank: 1000,
+    });
+
+    const ranked = rerankCardsWithIntelligence([structuralCard, directMatch], {
+      queryQualityScore: 0.1,
+      queryConfidence: 0.9,
+      querySampleSize: 40,
+      ownedCards,
+      hadFastClick: false,
+      hadRefinement: false,
+      isAuthenticated: false,
+      intent,
+    });
+
+    expect(ranked[0].name).toBe('Treasure Insight');
+  });
 });

@@ -130,8 +130,6 @@ export function SearchResultsArea({
   onClearAllFilters,
   intent,
 }: SearchResultsAreaProps) {
-  const topSourceCard = cards[0] ?? null;
-
   // Batch-fetch sparkline data only when the current view can render it.
   const shouldFetchSparklineData =
     viewMode !== 'grid' ||
@@ -179,6 +177,9 @@ export function SearchResultsArea({
       intent,
     ],
   );
+  const topSourceCard = hasCustomSort
+    ? (cards[0] ?? null)
+    : (rankedCards[0] ?? cards[0] ?? null);
   /** Fall back to intent parsed from the executed query on fast/cached paths. */
   const effectiveIntent = useMemo(
     () => intent ?? intentFromScryfallQuery(searchQuery),
