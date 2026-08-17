@@ -40,7 +40,12 @@ export interface TranslationResult {
   validationIssues?: string[];
   intent?: SearchIntent;
   source?: string;
+  /** Pre-resolved recommendation cards (alternatives intent only). */
+  recommendationCards?: unknown[];
+  /** Ranker variant used to produce recommendationCards. */
+  rankerVersion?: string;
 }
+
 
 interface TranslationParams {
   query: string;
