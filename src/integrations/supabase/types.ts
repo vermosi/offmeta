@@ -982,7 +982,12 @@ export type Database = {
           original_query: string
           processed_at: string | null
           processing_status: string | null
+          ranker_version: string | null
+          rejected_card_id: string | null
+          request_id: string | null
+          result_rank: number | null
           scryfall_validation_count: number | null
+          surface: string | null
           translated_query: string | null
         }
         Insert: {
@@ -993,7 +998,12 @@ export type Database = {
           original_query: string
           processed_at?: string | null
           processing_status?: string | null
+          ranker_version?: string | null
+          rejected_card_id?: string | null
+          request_id?: string | null
+          result_rank?: number | null
           scryfall_validation_count?: number | null
+          surface?: string | null
           translated_query?: string | null
         }
         Update: {
@@ -1004,7 +1014,12 @@ export type Database = {
           original_query?: string
           processed_at?: string | null
           processing_status?: string | null
+          ranker_version?: string | null
+          rejected_card_id?: string | null
+          request_id?: string | null
+          result_rank?: number | null
           scryfall_validation_count?: number | null
+          surface?: string | null
           translated_query?: string | null
         }
         Relationships: [
