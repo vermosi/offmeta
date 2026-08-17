@@ -80,7 +80,7 @@ function ExternalAnchor({ href, children }: { href: string; children: React.Reac
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={(e) => handleExternalClick(e, href)}
+      onClick={() => handleExternalClick(href)}
       className={`${LINK_CLASS} inline-flex items-center gap-1`}
     >
       {children}
