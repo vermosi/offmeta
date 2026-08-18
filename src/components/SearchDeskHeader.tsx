@@ -74,21 +74,26 @@ export function SearchDeskHeader({
     if (mvMatch && !constraints.some((c) => c.kind === 'mana value')) {
       constraints.unshift({
         kind: 'mana value',
+        kindKey: 'manaValue',
         value: `${mvMatch[1] === ':' ? '=' : mvMatch[1]} ${mvMatch[2]}`,
       });
     }
     const colorMatch = query.match(/\b(c|ci|id|color|identity)[:=]([wubrgc]+)\b/i);
     if (colorMatch) {
-      const names = colorMatch[2]
+      const colorKeys = colorMatch[2]
         .toUpperCase()
         .split('')
-        .map((c) => COLOR_NAMES[c] ?? c.toLowerCase())
-        .join(' + ');
+        .map((c) => COLOR_NAMES[c] ?? c.toLowerCase());
+      const isIdentity = /^(ci|id|identity)$/i.test(colorMatch[1]);
       constraints.unshift({
-        kind: /^(ci|id|identity)$/i.test(colorMatch[1]) ? 'color identity' : 'colors',
-        value: names,
+        kind: isIdentity ? 'color identity' : 'colors',
+        kindKey: isIdentity ? 'colorIdentity' : 'colors',
+        value: colorKeys.join(' + '),
+        colorKeys,
+        colorJoin: ' + ',
       });
     }
+
   }
   const activeWarnings = (warnings ?? []).filter(Boolean);
 
