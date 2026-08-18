@@ -2016,5 +2016,7 @@
   "whyItMatches.roleValue.removal": "除去",
   "whyItMatches.roleValue.tutor": "サーチ",
   "whyItMatches.structural": "構造的",
-  "whyItMatches.title": "一致する理由"
+  "whyItMatches.title": "一致する理由",
+  "card.foilPrice": "Foil ${price}",
+  "card.loadingDetails": "ルール・使用可否・印刷情報を読み込み中…"
 }

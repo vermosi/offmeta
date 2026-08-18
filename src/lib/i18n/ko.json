@@ -2065,5 +2065,7 @@
   "whyItMatches.roleValue.removal": "제거",
   "whyItMatches.roleValue.tutor": "서치",
   "whyItMatches.structural": "구조적",
-  "whyItMatches.title": "일치하는 이유"
+  "whyItMatches.title": "일치하는 이유",
+  "card.foilPrice": "포일 ${price}",
+  "card.loadingDetails": "룰링, 사용 가능 포맷, 발매 정보를 불러오는 중…"
 }

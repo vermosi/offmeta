@@ -2016,5 +2016,7 @@
   "whyItMatches.roleValue.removal": "Entfernung",
   "whyItMatches.roleValue.tutor": "Tutor",
   "whyItMatches.structural": "Strukturell",
-  "whyItMatches.title": "Warum es passt"
+  "whyItMatches.title": "Warum es passt",
+  "card.foilPrice": "Foil ${price}",
+  "card.loadingDetails": "Regelungen, Legalität und Drucke werden geladen…"
 }

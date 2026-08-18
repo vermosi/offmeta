@@ -189,6 +189,62 @@ async function fetchTopCards(limit) {
     );
 }
 
+// ── Prices ────────────────────────────────────────────────────────────────────
+
+/**
+ * Latest USD price per card name from the daily price snapshots.
+ * Without a price a card page can only emit a CreativeWork; with one it emits a
+ * valid Product with real offers (which is what Google/Semrush expect).
+ * Returns a Map<lowercased card name, { usd, foil, scryfall_id }>.
+ */
+async function fetchLatestPrices() {
+  const prices = new Map();
+  const since = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+  const PAGE = 1000;
+  const MAX_PAGES = 200; // hard bound so a bad query can never stall the build
+
+  for (let page = 0; page < MAX_PAGES; page += 1) {
+    const rows = await pgrest(
+      `price_snapshots?select=card_name,price_usd,price_usd_foil,scryfall_id,recorded_at` +
+        `&recorded_at=gte.${since}&order=recorded_at.desc&limit=${PAGE}&offset=${page * PAGE}`,
+    );
+    if (!Array.isArray(rows) || rows.length === 0) break;
+    for (const row of rows) {
+      if (!row?.card_name) continue;
+      const key = row.card_name.toLowerCase();
+      // Rows arrive newest-first, so the first entry per name wins.
+      if (prices.has(key)) continue;
+      const usd = row.price_usd == null ? null : Number(row.price_usd);
+      const foil = row.price_usd_foil == null ? null : Number(row.price_usd_foil);
+      if (usd == null && foil == null) continue;
+      prices.set(key, {
+        usd: Number.isFinite(usd) && usd > 0 ? usd.toFixed(2) : null,
+        foil: Number.isFinite(foil) && foil > 0 ? foil.toFixed(2) : null,
+        scryfall_id: row.scryfall_id ?? null,
+      });
+    }
+    if (rows.length < PAGE) break;
+  }
+
+  return prices;
+}
+
+/** Attaches price fields to card rows in place and reports coverage. */
+function attachPrices(cards, prices) {
+  let priced = 0;
+  for (const card of cards) {
+    const match = prices.get(String(card.name).toLowerCase());
+    if (!match) continue;
+    card.price_usd = match.usd;
+    card.price_usd_foil = match.foil;
+    if (match.scryfall_id) card.scryfall_id = match.scryfall_id;
+    priced += 1;
+  }
+  return priced;
+}
+
+
+
 function buildTitle(name) {
   const long = `Cards Like ${name} — Similar MTG Picks (2026) | OffMeta`;
   const mid = `Cards Like ${name} — Similar MTG Picks | OffMeta`;
@@ -205,11 +261,11 @@ function buildDescription(card) {
   return truncate(base, 160);
 }
 
-// Build-time card data has no price, and a schema.org Product without
-// offers/review/aggregateRating is reported as invalid structured data by
-// Google and Semrush. Prerendered pages therefore describe the card as a
-// CreativeWork (valid with no required properties); the client swaps in a
-// Product with real offers once Scryfall prices load.
+// Cards carry a real USD price from the daily price snapshots, so a priced
+// card is emitted as a Product with genuine offers (valid structured data).
+// A schema.org Product without offers/review/aggregateRating is reported as
+// invalid by Google and Semrush, so cards with no price on record stay a
+// CreativeWork, which carries the same facts and validates cleanly.
 function buildCardJsonLd(card, canonicalUrl, image) {
   const additionalProperty = [];
   if (card.rarity) additionalProperty.push({ '@type': 'PropertyValue', name: 'Rarity', value: card.rarity });
@@ -220,21 +276,74 @@ function buildCardJsonLd(card, canonicalUrl, image) {
     ? `${card.name} is a ${card.type_line ?? 'Magic: The Gathering card'}. ${oracleSnippet}`
     : `${card.name} — ${card.type_line ?? 'Magic: The Gathering card'}`;
 
-  return {
+  const base = {
     '@context': 'https://schema.org',
-    '@type': 'CreativeWork',
     name: card.name,
-    headline: card.name,
     description: richDesc,
     image,
     url: canonicalUrl,
-    genre: 'Trading card game',
     inLanguage: 'en',
-    isPartOf: { '@type': 'CreativeWorkSeries', name: 'Magic: The Gathering' },
-    ...(card.type_line && { about: card.type_line }),
     ...(additionalProperty.length > 0 && { additionalProperty }),
   };
+
+  const offers = buildOffers(card, canonicalUrl);
+  if (offers.length === 0) {
+    return {
+      ...base,
+      '@type': 'CreativeWork',
+      headline: card.name,
+      genre: 'Trading card game',
+      isPartOf: { '@type': 'CreativeWorkSeries', name: 'Magic: The Gathering' },
+      ...(card.type_line && { about: card.type_line }),
+    };
+  }
+
+  return {
+    ...base,
+    '@type': 'Product',
+    brand: { '@type': 'Brand', name: 'Magic: The Gathering' },
+    ...(card.type_line && { category: card.type_line }),
+    ...(card.scryfall_id && { sku: card.scryfall_id }),
+    ...(offers.length === 1
+      ? { offers: offers[0] }
+      : {
+          offers: {
+            '@type': 'AggregateOffer',
+            priceCurrency: 'USD',
+            lowPrice: card.price_usd ?? card.price_usd_foil,
+            highPrice: card.price_usd_foil ?? card.price_usd,
+            offerCount: offers.length,
+            offers,
+          },
+        }),
+  };
 }
+
+/** Regular + foil offers built from the latest recorded snapshot prices. */
+function buildOffers(card, canonicalUrl) {
+  // Prices move daily; a short validity window keeps the offer honest.
+  const priceValidUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  const variants = [
+    ['Regular', card.price_usd],
+    ['Foil', card.price_usd_foil],
+  ];
+  return variants
+    .filter(([, price]) => price != null && Number(price) > 0)
+    .map(([label, price]) => ({
+      '@type': 'Offer',
+      name: `${card.name} (${label})`,
+      price: String(price),
+      priceCurrency: 'USD',
+      priceValidUntil,
+      availability: 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      url: canonicalUrl,
+      seller: { '@type': 'Organization', name: 'OffMeta' },
+    }));
+}
+
 
 // Rewrites the built index.html <head> for a specific card and swaps the
 // generic shell's #seo-content block for the card's own heading and copy.
@@ -283,6 +392,7 @@ function customizeHtmlForCard(templateHtml, card, slug) {
 
   const seoBlock = `
     <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+    ${card.image_url ? `<link rel="preload" as="image" href="${escapeHtml(card.image_url)}" fetchpriority="high" />` : ''}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="OffMeta" />
     <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
@@ -296,6 +406,7 @@ function customizeHtmlForCard(templateHtml, card, slug) {
     <script type="application/ld+json">${jsonLd}</script>
   `;
   html = html.replace(/<\/head>/i, `${seoBlock}\n  </head>`);
+
 
   // The static shell ships a generic homepage <h1> inside #seo-content. Strip
   // it (and its explanatory comment) so a prerendered card page has exactly one
@@ -324,6 +435,7 @@ function customizeHtmlForCard(templateHtml, card, slug) {
         ${card.type_line ? `<p><strong>Type:</strong> ${escapeHtml(card.type_line)}</p>` : ''}
         ${card.mana_cost ? `<p><strong>Mana Cost:</strong> ${escapeHtml(card.mana_cost)}</p>` : ''}
         ${card.rarity ? `<p><strong>Rarity:</strong> ${escapeHtml(card.rarity)}</p>` : ''}
+        ${card.price_usd ? `<p><strong>Price (USD):</strong> $${escapeHtml(card.price_usd)}${card.price_usd_foil ? ` · foil $${escapeHtml(card.price_usd_foil)}` : ''}</p>` : ''}
         ${oracleParagraphs}
         ${legalFormats.length > 0 ? `<p><strong>Legal in:</strong> ${escapeHtml(legalFormats.join(', '))}</p>` : ''}
         <p>${escapeHtml(description)}</p>
@@ -341,10 +453,28 @@ function customizeHtmlForCard(templateHtml, card, slug) {
   `;
   html = html.replace(/<body([^>]*)>/i, `<body$1>${seoContent}`);
 
-
+  // Build-time card payload, read by CardPage to paint the hero (art, name,
+  // type, oracle text, price) immediately instead of waiting on the Scryfall
+  // round-trip. JSON is inert to the parser and `</script>` is escaped.
+  const preload = JSON.stringify({
+    slug,
+    name: card.name,
+    type_line: card.type_line ?? null,
+    mana_cost: card.mana_cost ?? null,
+    oracle_text: card.oracle_text ?? null,
+    rarity: card.rarity ?? null,
+    image_url: card.image_url ?? null,
+    price_usd: card.price_usd ?? null,
+    price_usd_foil: card.price_usd_foil ?? null,
+  }).replace(/</g, '\\u003c');
+  html = html.replace(
+    /<\/body>/i,
+    `<script id="offmeta-card-preload" type="application/json">${preload}</script>\n</body>`,
+  );
 
   return html;
 }
+
 
 async function readSnapshot() {
   try {
@@ -397,16 +527,26 @@ async function main() {
   const hasCredentials = Boolean(SUPABASE_URL && SUPABASE_KEY);
   let cards = hasCredentials ? await fetchTopCards(MAX_CARDS) : [];
   let source = 'live';
+  let priced = 0;
 
   if (cards.length > 0) {
+    // Attach real prices before snapshotting so an offline build still emits
+    // Product schema (with slightly older, clearly time-boxed prices).
+    try {
+      priced = attachPrices(cards, await fetchLatestPrices());
+    } catch (err) {
+      console.warn('[prerender-cards] Price lookup failed:', err.message);
+    }
     await writeSnapshot(cards);
   } else {
     cards = await readSnapshot();
     source = 'snapshot';
+    priced = cards.filter((c) => c?.price_usd || c?.price_usd_foil).length;
     console.warn(
       `[prerender-cards] No live data (credentials: ${hasCredentials}); using committed snapshot (${cards.length} cards).`,
     );
   }
+
 
   if (cards.length === 0) {
     console.warn('[prerender-cards] No card data available; skipping.');
@@ -436,11 +576,17 @@ async function main() {
     written += 1;
   }
 
-  await writeBuildInfo({ prerendered_cards: written, source, has_credentials: hasCredentials });
+  await writeBuildInfo({
+    prerendered_cards: written,
+    priced_cards: priced,
+    source,
+    has_credentials: hasCredentials,
+  });
 
   console.log(
-    `[prerender-cards] Wrote ${written} card HTML files (source: ${source}) to ${OUTPUT_DIR}/<slug>{.html,/index.html}`,
+    `[prerender-cards] Wrote ${written} card HTML files (${priced} with Product offers, source: ${source}) to ${OUTPUT_DIR}/<slug>{.html,/index.html}`,
   );
+
 }
 
 main().catch((err) => {

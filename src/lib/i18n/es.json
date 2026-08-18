@@ -2024,5 +2024,7 @@
   "whyItMatches.roleValue.removal": "remoción",
   "whyItMatches.roleValue.tutor": "tutor",
   "whyItMatches.structural": "Estructural",
-  "whyItMatches.title": "Por qué coincide"
+  "whyItMatches.title": "Por qué coincide",
+  "card.foilPrice": "Foil ${price}",
+  "card.loadingDetails": "Cargando reglas, legalidad e impresiones…"
 }
