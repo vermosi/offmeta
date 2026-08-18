@@ -392,6 +392,7 @@ function customizeHtmlForCard(templateHtml, card, slug) {
 
   const seoBlock = `
     <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+    ${card.image_url ? `<link rel="preload" as="image" href="${escapeHtml(card.image_url)}" fetchpriority="high" />` : ''}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="OffMeta" />
     <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
@@ -405,6 +406,7 @@ function customizeHtmlForCard(templateHtml, card, slug) {
     <script type="application/ld+json">${jsonLd}</script>
   `;
   html = html.replace(/<\/head>/i, `${seoBlock}\n  </head>`);
+
 
   // The static shell ships a generic homepage <h1> inside #seo-content. Strip
   // it (and its explanatory comment) so a prerendered card page has exactly one
