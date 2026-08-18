@@ -219,8 +219,69 @@ const FRAME_PATTERNS: Array<[RegExp, string]> = [
 const CARD_NOUN_NOISE =
   /(?<!\p{L})(?:cards?|cartas?|cartes?|karten?|carte|magic|mtg|карт\p{L}*)(?!\p{L})|カード|カード類|カードの|카드|卡牌|卡片|卡|[のはをがでとな々]|的/giu;
 
+/** Canonical English print-treatment words used for misspelling repair. */
+const FRAME_VOCAB = [
+  'borderless',
+  'textless',
+  'showcase',
+  'extended',
+  'retro',
+  'frame',
+  'frames',
+  'border',
+  'borders',
+  'vintage',
+] as const;
+
+function levenshtein(a: string, b: string): number {
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let diag = prev[0];
+    prev[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = prev[j];
+      prev[j] = Math.min(
+        prev[j] + 1,
+        prev[j - 1] + 1,
+        diag + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+      diag = tmp;
+    }
+  }
+  return prev[b.length];
+}
+
+/**
+ * Repairs common misspellings and glued compounds so typos like "borderles",
+ * "bordeless", or "retroframe" still resolve to print-treatment syntax.
+ * Only touches ASCII-letter tokens, so localized vocabulary is untouched.
+ */
+export function normalizeFrameTypos(query: string): string {
+  let out = query
+    .replace(/\b(retro|old|new|modern|future|showcase|extended)(frames?|borders?)\b/gi, '$1 $2')
+    .replace(/\bfull\s*-?\s*art\b/gi, 'full-art')
+    .replace(/\bfullart\b/gi, 'full-art');
+
+  return out.replace(/[a-z]{4,}/gi, (word) => {
+    const lower = word.toLowerCase();
+    if ((FRAME_VOCAB as readonly string[]).includes(lower)) return word;
+    let best: string | null = null;
+    let bestScore = Infinity;
+    for (const candidate of FRAME_VOCAB) {
+      if (Math.abs(candidate.length - lower.length) > 2) continue;
+      const budget = candidate.length >= 8 ? 2 : 1;
+      const distance = levenshtein(lower, candidate);
+      if (distance <= budget && distance < bestScore) {
+        best = candidate;
+        bestScore = distance;
+      }
+    }
+    return best ?? word;
+  });
+}
+
 export function parseFramePatterns(query: string, ir: SearchIR): string {
-  let remaining = query;
+  let remaining = normalizeFrameTypos(query);
   for (const [pattern, token] of FRAME_PATTERNS) {
     pattern.lastIndex = 0;
     if (pattern.test(remaining)) {
@@ -231,6 +292,7 @@ export function parseFramePatterns(query: string, ir: SearchIR): string {
   }
   return remaining;
 }
+
 
 /**
  * Whole-query print-treatment match ("retro frame", "レトロフレーム", "sin bordes").
