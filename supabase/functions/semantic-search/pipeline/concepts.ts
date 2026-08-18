@@ -246,6 +246,12 @@ async function classifyConceptsWithLLM(
       }),
     },
   );
+  } catch {
+    // Timed out or network error: fall back to the non-LLM concept matches.
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!response.ok) return [];
 
