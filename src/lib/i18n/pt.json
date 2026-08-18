@@ -295,10 +295,12 @@
   "card.edhrecRank": "Ranking EDHREC",
   "card.firstPrinting": "Primeira Impressão",
   "card.foil": "Foil",
+  "card.foilPrice": "Foil ${price}",
   "card.formatLegality": "Legalidade de Formato",
   "card.illustratedBy": "Ilustrado por",
   "card.legalIn": "Legal Em",
   "card.loadingAriaLabel": "Carregando detalhes da carta",
+  "card.loadingDetails": "Carregando regras, legalidade e impressões…",
   "card.loadingSrText": "Carregando detalhes da carta…",
   "card.manaValue": "Valor de Mana",
   "card.metaError": "Não foi possível carregar o contexto",
@@ -1591,6 +1593,9 @@
   "onboarding.step3Title": "Tudo pronto!",
   "onboarding.title": "Bem-vindo ao OffMeta",
   "owned": "1",
+  "pageSearch.label": "Buscar cartas de Magic",
+  "pageSearch.placeholder": "Busque cartas de Magic em linguagem natural…",
+  "pageSearch.submit": "Buscar",
   "priceHistory.latest": "Último: ",
   "priceHistory.stillUploading": "Ainda carregando dados de preço — volte logo.",
   "priceHistory.title": "Histórico de Preços",
@@ -2016,7 +2021,5 @@
   "whyItMatches.roleValue.removal": "remoção",
   "whyItMatches.roleValue.tutor": "tutor",
   "whyItMatches.structural": "Estrutural",
-  "whyItMatches.title": "Por que corresponde",
-  "card.foilPrice": "Foil ${price}",
-  "card.loadingDetails": "Carregando regras, legalidade e impressões…"
+  "whyItMatches.title": "Por que corresponde"
 }

@@ -295,10 +295,12 @@
   "card.edhrecRank": "EDHREC 排名",
   "card.firstPrinting": "首次印刷",
   "card.foil": "闪卡",
+  "card.foilPrice": "闪卡 ${price}",
   "card.formatLegality": "赛制合法性",
   "card.illustratedBy": "插画：",
   "card.legalIn": "合法于",
   "card.loadingAriaLabel": "正在加载卡牌详情",
+  "card.loadingDetails": "正在加载裁定、合法性与印刷版本…",
   "card.loadingSrText": "正在加载卡牌详情…",
   "card.manaValue": "法术力值",
   "card.metaError": "无法加载元数据",
@@ -1620,6 +1622,9 @@
   "onboarding.step3Title": "一切就绪！",
   "onboarding.title": "欢迎来到 OffMeta",
   "owned": "1",
+  "pageSearch.label": "搜索万智牌卡牌",
+  "pageSearch.placeholder": "用自然语言搜索万智牌卡牌…",
+  "pageSearch.submit": "搜索",
   "priceHistory.latest": "最新：",
   "priceHistory.stillUploading": "价格数据仍在上传中 — 请稍后查看。",
   "priceHistory.title": "价格历史",
@@ -2065,7 +2070,5 @@
   "whyItMatches.roleValue.removal": "去除",
   "whyItMatches.roleValue.tutor": "检索",
   "whyItMatches.structural": "结构性",
-  "whyItMatches.title": "匹配原因",
-  "card.foilPrice": "闪卡 ${price}",
-  "card.loadingDetails": "正在加载裁定、合法性与印刷版本…"
+  "whyItMatches.title": "匹配原因"
 }

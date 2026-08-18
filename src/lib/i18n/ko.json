@@ -295,10 +295,12 @@
   "card.edhrecRank": "EDHREC 순위",
   "card.firstPrinting": "첫 번째 인쇄",
   "card.foil": "포일",
+  "card.foilPrice": "포일 ${price}",
   "card.formatLegality": "형식 합법성",
   "card.illustratedBy": "일러스트：",
   "card.legalIn": "합법 형식",
   "card.loadingAriaLabel": "카드 상세 정보 로딩 중",
+  "card.loadingDetails": "룰링, 사용 가능 포맷, 발매 정보를 불러오는 중…",
   "card.loadingSrText": "카드 상세 정보를 불러오는 중입니다…",
   "card.manaValue": "마나 값",
   "card.metaError": "메타 컨텍스트를 로드할 수 없습니다",
@@ -1620,6 +1622,9 @@
   "onboarding.step3Title": "준비 완료!",
   "onboarding.title": "OffMeta에 오신 것을 환영합니다",
   "owned": "1",
+  "pageSearch.label": "매직 카드 검색",
+  "pageSearch.placeholder": "일상적인 표현으로 매직 카드 검색…",
+  "pageSearch.submit": "검색",
   "priceHistory.latest": "최근: ",
   "priceHistory.stillUploading": "가격 데이터를 업로드 중입니다. 잠시 후 다시 확인해 주세요.",
   "priceHistory.title": "가격 기록",
@@ -2065,7 +2070,5 @@
   "whyItMatches.roleValue.removal": "제거",
   "whyItMatches.roleValue.tutor": "서치",
   "whyItMatches.structural": "구조적",
-  "whyItMatches.title": "일치하는 이유",
-  "card.foilPrice": "포일 ${price}",
-  "card.loadingDetails": "룰링, 사용 가능 포맷, 발매 정보를 불러오는 중…"
+  "whyItMatches.title": "일치하는 이유"
 }
