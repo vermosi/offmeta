@@ -31,6 +31,9 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CardDetailView } from '@/components/card-detail/CardDetailView';
 import { CardNextSteps } from '@/components/card-detail/CardNextSteps';
+import { CardPreloadHero } from '@/components/card-detail/CardPreloadHero';
+import { getCardPreload } from '@/lib/card-preload';
+
 import { PageSearchBar } from '@/components/PageSearchBar';
 import { ArrowLeft } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
