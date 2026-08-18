@@ -28,6 +28,20 @@ interface SeoManagerProps {
   totalCards: number;
 }
 
+const OG_LOCALES: Record<string, string> = {
+  en: 'en_US',
+  es: 'es_ES',
+  pt: 'pt_BR',
+  fr: 'fr_FR',
+  de: 'de_DE',
+  it: 'it_IT',
+  ru: 'ru_RU',
+  ja: 'ja_JP',
+  ko: 'ko_KR',
+  zhs: 'zh_CN',
+  zht: 'zh_TW',
+};
+
 export function SeoManager({
   hasSearched,
   isSearching,
@@ -39,6 +53,7 @@ export function SeoManager({
 }: SeoManagerProps) {
   const jsonLdCleanup = useRef<(() => void) | null>(null);
   const { t, locale } = useTranslation();
+  const ogLocale = OG_LOCALES[locale] ?? 'en_US';
 
   useEffect(() => {
     jsonLdCleanup.current?.();
@@ -60,6 +75,8 @@ export function SeoManager({
         type: 'website',
         image: 'https://offmeta.app/og-image.png',
         twitterCard: 'summary_large_image',
+      locale: ogLocale,
+        locale: ogLocale,
       });
       return;
     }
@@ -78,6 +95,8 @@ export function SeoManager({
         type: 'website',
         image: 'https://offmeta.app/og-image.png',
         twitterCard: 'summary_large_image',
+      locale: ogLocale,
+        locale: ogLocale,
         extraMeta: {
           'twitter:label1': t('searchSeo.labelResults'),
           'twitter:data1': t('searchSeo.dataCards', { count: 0 }),
@@ -123,6 +142,7 @@ export function SeoManager({
       type: 'website',
       image: firstArt ?? 'https://offmeta.app/og-image.png',
       twitterCard: 'summary_large_image',
+      locale: ogLocale,
       extraMeta: {
         'twitter:label1': t('searchSeo.labelResults'),
         'twitter:data1': t('searchSeo.dataCards', { count: totalCards }),
@@ -135,7 +155,7 @@ export function SeoManager({
       jsonLdCleanup.current?.();
       jsonLdCleanup.current = null;
     };
-  }, [hasSearched, isSearching, displayCards, originalQuery, searchQuery, compiledQuery, totalCards, t, locale]);
+  }, [hasSearched, isSearching, displayCards, originalQuery, searchQuery, compiledQuery, totalCards, t, ogLocale]);
 
 
   return null;
