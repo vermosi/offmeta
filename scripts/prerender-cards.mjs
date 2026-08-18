@@ -205,7 +205,12 @@ function buildDescription(card) {
   return truncate(base, 160);
 }
 
-function buildProductJsonLd(card, canonicalUrl, image) {
+// Build-time card data has no price, and a schema.org Product without
+// offers/review/aggregateRating is reported as invalid structured data by
+// Google and Semrush. Prerendered pages therefore describe the card as a
+// CreativeWork (valid with no required properties); the client swaps in a
+// Product with real offers once Scryfall prices load.
+function buildCardJsonLd(card, canonicalUrl, image) {
   const additionalProperty = [];
   if (card.rarity) additionalProperty.push({ '@type': 'PropertyValue', name: 'Rarity', value: card.rarity });
   if (card.mana_cost) additionalProperty.push({ '@type': 'PropertyValue', name: 'Mana Cost', value: card.mana_cost });
@@ -217,25 +222,29 @@ function buildProductJsonLd(card, canonicalUrl, image) {
 
   return {
     '@context': 'https://schema.org',
-    '@type': 'Product',
+    '@type': 'CreativeWork',
     name: card.name,
+    headline: card.name,
     description: richDesc,
     image,
     url: canonicalUrl,
-    brand: { '@type': 'Brand', name: 'Magic: The Gathering' },
-    category: card.type_line ?? '',
+    genre: 'Trading card game',
+    inLanguage: 'en',
+    isPartOf: { '@type': 'CreativeWorkSeries', name: 'Magic: The Gathering' },
+    ...(card.type_line && { about: card.type_line }),
     ...(additionalProperty.length > 0 && { additionalProperty }),
   };
 }
 
-// Rewrites the built index.html <head> for a specific card and injects a
-// <noscript> block with the h1/oracle text right after <body>.
+// Rewrites the built index.html <head> for a specific card and swaps the
+// generic shell's #seo-content block for the card's own heading and copy.
 function customizeHtmlForCard(templateHtml, card, slug) {
   const canonicalUrl = `${SITE_URL}/cards/${slug}`;
   const title = buildTitle(card.name);
   const description = buildDescription(card);
   const image = card.image_url || `${SITE_URL}/og-image.png`;
-  const jsonLd = JSON.stringify(buildProductJsonLd(card, canonicalUrl, image));
+  const jsonLd = JSON.stringify(buildCardJsonLd(card, canonicalUrl, image));
+
 
   const legalFormats = card.legalities && typeof card.legalities === 'object'
     ? Object.entries(card.legalities)
