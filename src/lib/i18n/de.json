@@ -295,10 +295,12 @@
   "card.edhrecRank": "EDHREC-Rang",
   "card.firstPrinting": "Erstdruck",
   "card.foil": "Foil",
+  "card.foilPrice": "Foil ${price}",
   "card.formatLegality": "Format-Legalität",
   "card.illustratedBy": "Illustriert von",
   "card.legalIn": "Legal in",
   "card.loadingAriaLabel": "Kartendetails werden geladen",
+  "card.loadingDetails": "Regelungen, Legalität und Drucke werden geladen…",
   "card.loadingSrText": "Kartendetails werden geladen…",
   "card.manaValue": "Manabetrag",
   "card.metaError": "Metakontext konnte nicht geladen werden",
@@ -1591,6 +1593,9 @@
   "onboarding.step3Title": "Alles bereit!",
   "onboarding.title": "Willkommen bei OffMeta",
   "owned": "1",
+  "pageSearch.label": "Magic-Karten suchen",
+  "pageSearch.placeholder": "Magic-Karten in natürlicher Sprache suchen…",
+  "pageSearch.submit": "Suchen",
   "priceHistory.latest": "Aktuell: ",
   "priceHistory.stillUploading": "Preisdaten werden noch hochgeladen — schau bald wieder vorbei.",
   "priceHistory.title": "Preishistorie",
@@ -2016,7 +2021,5 @@
   "whyItMatches.roleValue.removal": "Entfernung",
   "whyItMatches.roleValue.tutor": "Tutor",
   "whyItMatches.structural": "Strukturell",
-  "whyItMatches.title": "Warum es passt",
-  "card.foilPrice": "Foil ${price}",
-  "card.loadingDetails": "Regelungen, Legalität und Drucke werden geladen…"
+  "whyItMatches.title": "Warum es passt"
 }

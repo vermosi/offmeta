@@ -295,10 +295,12 @@
   "card.edhrecRank": "Рейтинг EDHREC",
   "card.firstPrinting": "Первое издание",
   "card.foil": "Фольгированная",
+  "card.foilPrice": "Фойл ${price}",
   "card.formatLegality": "Легальность Формата",
   "card.illustratedBy": "Художник:",
   "card.legalIn": "Легален В",
   "card.loadingAriaLabel": "Загрузка данных карты",
+  "card.loadingDetails": "Загрузка правил, легальности и изданий…",
   "card.loadingSrText": "Загрузка данных карты…",
   "card.manaValue": "Мана-стоимость",
   "card.metaError": "Не удалось загрузить контекст",
@@ -1620,6 +1622,9 @@
   "onboarding.step3Title": "Всё готово!",
   "onboarding.title": "Добро пожаловать в OffMeta",
   "owned": "1",
+  "pageSearch.label": "Поиск карт Magic",
+  "pageSearch.placeholder": "Ищите карты Magic обычными словами…",
+  "pageSearch.submit": "Найти",
   "priceHistory.latest": "Последняя: ",
   "priceHistory.stillUploading": "Данные о ценах все еще загружаются — загляните позже.",
   "priceHistory.title": "История цен",
@@ -2065,7 +2070,5 @@
   "whyItMatches.roleValue.removal": "удаление",
   "whyItMatches.roleValue.tutor": "поиск карт",
   "whyItMatches.structural": "Структурное",
-  "whyItMatches.title": "Почему подходит",
-  "card.foilPrice": "Фойл ${price}",
-  "card.loadingDetails": "Загрузка правил, легальности и изданий…"
+  "whyItMatches.title": "Почему подходит"
 }

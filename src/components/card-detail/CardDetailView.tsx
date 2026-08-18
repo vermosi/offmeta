@@ -235,7 +235,17 @@ export function CardDetailView({ card }: CardDetailViewProps) {
   const displayImageUrl =
     selectedPrinting?.image_uris?.large ??
     getCardImage(card, 'large', currentFace);
-  const localizedCard = localizedFields ? { ...card, ...localizedFields } : card;
+  // Merge only the fields the localized printing actually provides so an
+  // English value is never replaced by `undefined`.
+  const localizedCard = localizedFields
+    ? {
+        ...card,
+        ...Object.fromEntries(
+          Object.entries(localizedFields).filter(([, v]) => Boolean(v)),
+        ),
+      }
+    : card;
+
   const faceDetails = getCardFaceDetails(localizedCard, currentFace, locale);
 
   const displaySetName = selectedPrinting?.set_name || card.set_name;

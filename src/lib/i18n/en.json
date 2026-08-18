@@ -295,10 +295,12 @@
   "card.edhrecRank": "EDHREC Rank",
   "card.firstPrinting": "First Printing",
   "card.foil": "Foil",
+  "card.foilPrice": "Foil ${price}",
   "card.formatLegality": "Format Legality",
   "card.illustratedBy": "Illustrated by",
   "card.legalIn": "Legal In",
   "card.loadingAriaLabel": "Loading card details",
+  "card.loadingDetails": "Loading rulings, legality and printings…",
   "card.loadingSrText": "Loading card details…",
   "card.manaValue": "Mana Value",
   "card.metaError": "Could not load meta context",
@@ -1591,6 +1593,9 @@
   "onboarding.step3Title": "You're all set!",
   "onboarding.title": "Welcome to OffMeta",
   "owned": "1",
+  "pageSearch.label": "Search Magic cards",
+  "pageSearch.placeholder": "Search Magic cards in plain English…",
+  "pageSearch.submit": "Search",
   "priceHistory.latest": "Latest: ",
   "priceHistory.stillUploading": "Still uploading price data — check back soon.",
   "priceHistory.title": "Price History",
@@ -2016,7 +2021,5 @@
   "whyItMatches.roleValue.removal": "removal",
   "whyItMatches.roleValue.tutor": "tutor",
   "whyItMatches.structural": "Structural",
-  "whyItMatches.title": "Why it matches",
-  "card.foilPrice": "Foil ${price}",
-  "card.loadingDetails": "Loading rulings, legality and printings…"
+  "whyItMatches.title": "Why it matches"
 }

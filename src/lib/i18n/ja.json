@@ -295,10 +295,12 @@
   "card.edhrecRank": "EDHRECランク",
   "card.firstPrinting": "初版",
   "card.foil": "フォイル",
+  "card.foilPrice": "Foil ${price}",
   "card.formatLegality": "フォーマット適法性",
   "card.illustratedBy": "イラスト：",
   "card.legalIn": "使用可能",
   "card.loadingAriaLabel": "カード詳細を読み込み中",
+  "card.loadingDetails": "ルール・使用可否・印刷情報を読み込み中…",
   "card.loadingSrText": "カード詳細を読み込み中…",
   "card.manaValue": "マナ価値",
   "card.metaError": "メタ情報を読み込めません",
@@ -1591,6 +1593,9 @@
   "onboarding.step3Title": "準備完了！",
   "onboarding.title": "OffMetaへようこそ",
   "owned": "所持",
+  "pageSearch.label": "マジックのカードを検索",
+  "pageSearch.placeholder": "自然な言葉でマジックのカードを検索…",
+  "pageSearch.submit": "検索",
   "priceHistory.latest": "最新: ",
   "priceHistory.stillUploading": "価格データをアップロード中です — しばらくしてからもう一度ご確認ください。",
   "priceHistory.title": "価格履歴",
@@ -2016,7 +2021,5 @@
   "whyItMatches.roleValue.removal": "除去",
   "whyItMatches.roleValue.tutor": "サーチ",
   "whyItMatches.structural": "構造的",
-  "whyItMatches.title": "一致する理由",
-  "card.foilPrice": "Foil ${price}",
-  "card.loadingDetails": "ルール・使用可否・印刷情報を読み込み中…"
+  "whyItMatches.title": "一致する理由"
 }

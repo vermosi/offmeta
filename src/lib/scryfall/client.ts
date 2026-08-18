@@ -299,7 +299,10 @@ export interface LocalizedPrintedFields {
   printed_name?: string;
   printed_type_line?: string;
   printed_text?: string;
+  /** Flavor text of the localized printing, when present. */
+  flavor_text?: string;
 }
+
 
 const localizedPrintingCache = new Map<string, LocalizedPrintedFields | null>();
 const LOCALIZED_PRINTING_CACHE_MAX = 300;
@@ -329,15 +332,25 @@ export async function getLocalizedPrintedFields(
     );
     if (response.ok) {
       const json = (await response.json()) as { data?: ScryfallCard[] };
-      const printing = json.data?.find(
-        (c) => c.printed_name || c.printed_type_line || c.printed_text,
-      );
+      const printings = json.data ?? [];
+      // Prefer a printing that carries the full set of printed fields — some
+      // localized printings only include the oracle text.
+      const printing =
+        printings.find(
+          (c) => c.printed_name && c.printed_type_line && c.printed_text,
+        ) ??
+        printings.find(
+          (c) => c.printed_name || c.printed_type_line || c.printed_text,
+        );
+
       if (printing) {
         result = {
           printed_name: printing.printed_name,
           printed_type_line: printing.printed_type_line,
           printed_text: printing.printed_text,
+          flavor_text: printing.flavor_text,
         };
+
       }
     }
   } catch {

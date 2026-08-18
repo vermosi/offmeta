@@ -295,10 +295,12 @@
   "card.edhrecRank": "EDHREC 排名",
   "card.firstPrinting": "首次印刷",
   "card.foil": "閃卡",
+  "card.foilPrice": "閃卡 ${price}",
   "card.formatLegality": "賽制合法性",
   "card.illustratedBy": "插畫：",
   "card.legalIn": "合法於",
   "card.loadingAriaLabel": "正在載入卡牌詳情",
+  "card.loadingDetails": "正在載入裁定、合法性與印刷版本…",
   "card.loadingSrText": "正在載入卡牌詳情…",
   "card.manaValue": "魔法力值",
   "card.metaError": "無法載入元數據",
@@ -1620,6 +1622,9 @@
   "onboarding.step3Title": "一切就緒！",
   "onboarding.title": "歡迎來到 OffMeta",
   "owned": "持有數",
+  "pageSearch.label": "搜尋魔法風雲會牌張",
+  "pageSearch.placeholder": "用自然語言搜尋魔法風雲會牌張…",
+  "pageSearch.submit": "搜尋",
   "priceHistory.latest": "最新價格：",
   "priceHistory.stillUploading": "價格數據上傳中 — 請稍後再試。",
   "priceHistory.title": "價格紀錄",
@@ -2065,7 +2070,5 @@
   "whyItMatches.roleValue.removal": "去除",
   "whyItMatches.roleValue.tutor": "檢索",
   "whyItMatches.structural": "結構性",
-  "whyItMatches.title": "相符原因",
-  "card.foilPrice": "閃卡 ${price}",
-  "card.loadingDetails": "正在載入裁定、合法性與印刷版本…"
+  "whyItMatches.title": "相符原因"
 }

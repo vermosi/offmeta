@@ -8,8 +8,10 @@ import { useState, useId, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, ArrowRight } from 'lucide-react';
 import { queryToSlug } from '@/lib/search-slug';
+import { useTranslation } from '@/lib/i18n';
 
 interface PageSearchBarProps {
+  /** Localized placeholder; defaults to a translated string. */
   placeholder?: string;
   /** Optional pre-filled query suggestion */
   initialValue?: string;
@@ -19,11 +21,12 @@ interface PageSearchBarProps {
 }
 
 export function PageSearchBar({
-  placeholder = 'Search Magic cards in plain English…',
+  placeholder,
   initialValue = '',
   className,
   size = 'default',
 }: PageSearchBarProps) {
+  const { t } = useTranslation();
   const [value, setValue] = useState(initialValue);
   const navigate = useNavigate();
   const inputId = useId();
@@ -56,14 +59,17 @@ export function PageSearchBar({
         aria-hidden="true"
       />
       <label htmlFor={inputId} className="sr-only">
-        Search Magic cards
+        {t('pageSearch.label', 'Search Magic cards')}
       </label>
       <input
         id={inputId}
         type="search"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder={placeholder}
+        placeholder={
+          placeholder ??
+          t('pageSearch.placeholder', 'Search Magic cards in plain English…')
+        }
         className={
           'flex-1 min-w-0 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground ' +
           (size === 'lg' ? 'text-base sm:text-lg' : 'text-sm')
@@ -76,7 +82,7 @@ export function PageSearchBar({
           (size === 'lg' ? 'px-5 py-3' : 'px-4 py-2')
         }
       >
-        Search
+        {t('pageSearch.submit', 'Search')}
         <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
     </form>
