@@ -904,38 +904,11 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
     };
 
     // 7. Pre-translate non-English queries to English for better AI accuracy
-    const remainingQuery = deterministicResult.intent.remainingQuery || '';
+    // (language signals computed in step 6a).
     let queryForAI = remainingQuery;
     let preTranslationAttempted = false;
     let preTranslationSkippedReason: string | null = null;
-    const normalizedLocale = locale?.toLowerCase();
-    const localePrefersTranslation =
-      normalizedLocale !== undefined && normalizedLocale !== 'en';
 
-    // Detect non-Latin scripts or common non-English patterns
-    const hasNonLatin =
-      /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u.test(
-        remainingQuery,
-      );
-    const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
-      remainingQuery,
-    );
-    const deterministicConfidence =
-      ((deterministicResult.intent as unknown as Record<string, unknown>)
-        .confidence as number) ?? 0;
-    const shouldPreTranslateAccentedLatin =
-      hasAccentedLatin &&
-      !hasNonLatin &&
-      deterministicConfidence >= ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD;
-    // Plain-ASCII non-English queries ("las mejores cartas para sephiroth")
-    // carry no accent or script signal and are often typed with an English UI
-    // locale, so fall back to function-word detection on the raw query.
-    const stopwordSignal = detectNonEnglishQuery(remainingQuery || query);
-    const looksNonEnglish =
-      hasNonLatin ||
-      shouldPreTranslateAccentedLatin ||
-      stopwordSignal.isNonEnglish ||
-      localePrefersTranslation;
 
     if (looksNonEnglish && remainingQuery.trim().length > 0) {
       const remainingBudgetMs = requestBudget.deadlineMs - Date.now();
