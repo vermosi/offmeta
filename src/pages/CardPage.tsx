@@ -82,6 +82,11 @@ const CardPage = () => {
   const slug = rawSlug ? normalizeCardSlug(rawSlug) : '';
   const needsSlugNormalization = Boolean(rawSlug && slug && slug !== rawSlug);
   const guessedName = slug ? slugToCardName(slug) : '';
+  // Build-time payload embedded in the prerendered document for this slug (if
+  // any) — lets the hero paint before the Scryfall request resolves.
+  const preload = getCardPreload(slug);
+
+
 
   // Fetch card from Scryfall
   const {
