@@ -9,6 +9,14 @@ import type { SearchIntent } from '@/types/search';
 export interface Constraint {
   kind: string;
   value: string;
+  /** i18n key suffix for `kind` (e.g. `manaValue` → `search.constraint.manaValue`). */
+  kindKey: string;
+  /** Colour identifiers (`white`, `blue`, …) so the UI can localize the value. */
+  colorKeys?: string[];
+  /** Separator used between colour names. */
+  colorJoin?: string;
+  /** Whether the colour set is an exact match. */
+  colorExact?: boolean;
 }
 
 const COLOR_NAMES: Record<string, string> = {
@@ -26,14 +34,21 @@ export function buildInterpretation(intent?: SearchIntent | null): Constraint[] 
   const out: Constraint[] = [];
 
   if (intent.colors?.values?.length) {
-    const names = intent.colors.values
-      .map((c) => COLOR_NAMES[c.toUpperCase()] ?? c.toLowerCase())
-      .join(intent.colors.isOr ? ' or ' : ' + ');
+    const colorKeys = intent.colors.values.map(
+      (c) => COLOR_NAMES[c.toUpperCase()] ?? c.toLowerCase(),
+    );
+    const join = intent.colors.isOr ? ' or ' : ' + ';
+    const names = colorKeys.join(join);
     out.push({
       kind: intent.colors.isIdentity ? 'color identity' : 'colors',
+      kindKey: intent.colors.isIdentity ? 'colorIdentity' : 'colors',
       value: intent.colors.isExact ? `exactly ${names}` : names,
+      colorKeys,
+      colorJoin: join,
+      colorExact: intent.colors.isExact,
     });
   }
+
 
   for (const type of intent.types ?? []) {
     out.push({ kind: 'type', value: type.toLowerCase() });
