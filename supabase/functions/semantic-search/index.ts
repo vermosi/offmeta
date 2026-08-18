@@ -788,10 +788,8 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
     const normalizedLocale = locale?.toLowerCase();
     const localePrefersTranslation =
       normalizedLocale !== undefined && normalizedLocale !== 'en';
-    const hasNonLatin =
-      /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u.test(
-        remainingQuery,
-      );
+    const hasNonLatin = hasNonLatinScript(remainingQuery);
+
     const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
       remainingQuery,
     );
