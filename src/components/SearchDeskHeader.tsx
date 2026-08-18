@@ -147,9 +147,12 @@ export function SearchDeskHeader({
                     className="flex items-baseline gap-4 py-1.5"
                   >
                     <dt className="w-32 shrink-0 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                      {c.kind}
+                      {t(`search.constraint.${c.kindKey}`, c.kind)}
                     </dt>
-                    <dd className="min-w-0 flex-1 text-sm text-foreground">{c.value}</dd>
+                    <dd className="min-w-0 flex-1 text-sm text-foreground">
+                      {localizeConstraintValue(c, t)}
+                    </dd>
+
                   </div>
                 ))}
               </dl>
