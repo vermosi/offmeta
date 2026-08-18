@@ -527,16 +527,26 @@ async function main() {
   const hasCredentials = Boolean(SUPABASE_URL && SUPABASE_KEY);
   let cards = hasCredentials ? await fetchTopCards(MAX_CARDS) : [];
   let source = 'live';
+  let priced = 0;
 
   if (cards.length > 0) {
+    // Attach real prices before snapshotting so an offline build still emits
+    // Product schema (with slightly older, clearly time-boxed prices).
+    try {
+      priced = attachPrices(cards, await fetchLatestPrices());
+    } catch (err) {
+      console.warn('[prerender-cards] Price lookup failed:', err.message);
+    }
     await writeSnapshot(cards);
   } else {
     cards = await readSnapshot();
     source = 'snapshot';
+    priced = cards.filter((c) => c?.price_usd || c?.price_usd_foil).length;
     console.warn(
       `[prerender-cards] No live data (credentials: ${hasCredentials}); using committed snapshot (${cards.length} cards).`,
     );
   }
+
 
   if (cards.length === 0) {
     console.warn('[prerender-cards] No card data available; skipping.');
