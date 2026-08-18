@@ -8,7 +8,6 @@ import {
   Head,
   Hr,
   Html,
-  Img,
   Link,
   Preview,
   Section,
@@ -16,7 +15,6 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 
 const SITE_URL = 'https://offmeta.app'
-const LOGO_URL = `${SITE_URL}/offmeta-logo.png`
 
 export const colors = {
   ink: '#130F24',
@@ -27,6 +25,7 @@ export const colors = {
   surface: '#ffffff',
   page: '#f6f5fa',
 }
+
 
 export const styles = {
   main: {
@@ -43,8 +42,8 @@ export const styles = {
     margin: '0 auto',
     padding: '32px',
   },
-  logo: { display: 'block', margin: '0 0 28px' },
   heading: {
+
     fontSize: '18px',
     fontWeight: 'bold' as const,
     color: colors.ink,
@@ -106,7 +105,7 @@ interface EmailLayoutProps {
 
 /**
  * Shared shell for every auth email:
- * logo -> content -> divider -> minimal footer.
+ * content -> divider -> minimal footer.
  */
 export const EmailLayout = ({ preview, children }: EmailLayoutProps) => (
   <Html lang="en" dir="ltr">
@@ -114,13 +113,6 @@ export const EmailLayout = ({ preview, children }: EmailLayoutProps) => (
     <Preview>{preview}</Preview>
     <Body style={styles.main}>
       <Container style={styles.container}>
-        <Img
-          src={LOGO_URL}
-          width="112"
-          height="28"
-          alt="OffMeta"
-          style={styles.logo}
-        />
         <Section>{children}</Section>
         <Hr style={styles.hr} />
         <Text style={styles.footer}>
@@ -135,3 +127,4 @@ export const EmailLayout = ({ preview, children }: EmailLayoutProps) => (
 )
 
 export default EmailLayout
+
