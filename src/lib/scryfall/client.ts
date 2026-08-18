@@ -332,9 +332,17 @@ export async function getLocalizedPrintedFields(
     );
     if (response.ok) {
       const json = (await response.json()) as { data?: ScryfallCard[] };
-      const printing = json.data?.find(
-        (c) => c.printed_name || c.printed_type_line || c.printed_text,
-      );
+      const printings = json.data ?? [];
+      // Prefer a printing that carries the full set of printed fields — some
+      // localized printings only include the oracle text.
+      const printing =
+        printings.find(
+          (c) => c.printed_name && c.printed_type_line && c.printed_text,
+        ) ??
+        printings.find(
+          (c) => c.printed_name || c.printed_type_line || c.printed_text,
+        );
+
       if (printing) {
         result = {
           printed_name: printing.printed_name,
