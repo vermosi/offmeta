@@ -261,11 +261,11 @@ function buildDescription(card) {
   return truncate(base, 160);
 }
 
-// Build-time card data has no price, and a schema.org Product without
-// offers/review/aggregateRating is reported as invalid structured data by
-// Google and Semrush. Prerendered pages therefore describe the card as a
-// CreativeWork (valid with no required properties); the client swaps in a
-// Product with real offers once Scryfall prices load.
+// Cards carry a real USD price from the daily price snapshots, so a priced
+// card is emitted as a Product with genuine offers (valid structured data).
+// A schema.org Product without offers/review/aggregateRating is reported as
+// invalid by Google and Semrush, so cards with no price on record stay a
+// CreativeWork, which carries the same facts and validates cleanly.
 function buildCardJsonLd(card, canonicalUrl, image) {
   const additionalProperty = [];
   if (card.rarity) additionalProperty.push({ '@type': 'PropertyValue', name: 'Rarity', value: card.rarity });
@@ -276,21 +276,74 @@ function buildCardJsonLd(card, canonicalUrl, image) {
     ? `${card.name} is a ${card.type_line ?? 'Magic: The Gathering card'}. ${oracleSnippet}`
     : `${card.name} — ${card.type_line ?? 'Magic: The Gathering card'}`;
 
-  return {
+  const base = {
     '@context': 'https://schema.org',
-    '@type': 'CreativeWork',
     name: card.name,
-    headline: card.name,
     description: richDesc,
     image,
     url: canonicalUrl,
-    genre: 'Trading card game',
     inLanguage: 'en',
-    isPartOf: { '@type': 'CreativeWorkSeries', name: 'Magic: The Gathering' },
-    ...(card.type_line && { about: card.type_line }),
     ...(additionalProperty.length > 0 && { additionalProperty }),
   };
+
+  const offers = buildOffers(card, canonicalUrl);
+  if (offers.length === 0) {
+    return {
+      ...base,
+      '@type': 'CreativeWork',
+      headline: card.name,
+      genre: 'Trading card game',
+      isPartOf: { '@type': 'CreativeWorkSeries', name: 'Magic: The Gathering' },
+      ...(card.type_line && { about: card.type_line }),
+    };
+  }
+
+  return {
+    ...base,
+    '@type': 'Product',
+    brand: { '@type': 'Brand', name: 'Magic: The Gathering' },
+    ...(card.type_line && { category: card.type_line }),
+    ...(card.scryfall_id && { sku: card.scryfall_id }),
+    ...(offers.length === 1
+      ? { offers: offers[0] }
+      : {
+          offers: {
+            '@type': 'AggregateOffer',
+            priceCurrency: 'USD',
+            lowPrice: card.price_usd ?? card.price_usd_foil,
+            highPrice: card.price_usd_foil ?? card.price_usd,
+            offerCount: offers.length,
+            offers,
+          },
+        }),
+  };
 }
+
+/** Regular + foil offers built from the latest recorded snapshot prices. */
+function buildOffers(card, canonicalUrl) {
+  // Prices move daily; a short validity window keeps the offer honest.
+  const priceValidUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  const variants = [
+    ['Regular', card.price_usd],
+    ['Foil', card.price_usd_foil],
+  ];
+  return variants
+    .filter(([, price]) => price != null && Number(price) > 0)
+    .map(([label, price]) => ({
+      '@type': 'Offer',
+      name: `${card.name} (${label})`,
+      price: String(price),
+      priceCurrency: 'USD',
+      priceValidUntil,
+      availability: 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      url: canonicalUrl,
+      seller: { '@type': 'Organization', name: 'OffMeta' },
+    }));
+}
+
 
 // Rewrites the built index.html <head> for a specific card and swaps the
 // generic shell's #seo-content block for the card's own heading and copy.
