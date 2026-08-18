@@ -8,7 +8,6 @@ import {
   Head,
   Hr,
   Html,
-  Img,
   Link,
   Preview,
   Section,
@@ -16,7 +15,6 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 
 const SITE_URL = 'https://offmeta.app'
-const LOGO_URL = `${SITE_URL}/offmeta-logo.png`
 
 export const colors = {
   ink: '#130F24',
@@ -27,6 +25,7 @@ export const colors = {
   surface: '#ffffff',
   page: '#f6f5fa',
 }
+
 
 export const styles = {
   main: {
