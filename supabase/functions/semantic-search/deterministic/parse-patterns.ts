@@ -174,7 +174,7 @@ const FRAME_PATTERNS: Array<[RegExp, string]> = [
   [/(?<!\p{L})(?:без\s*рам\p{L}*|безрамочн\p{L}*)(?!\p{L})/giu, 'border:borderless'],
   [/(?<!\p{L})sin\s+bordes?(?!\p{L})/giu, 'border:borderless'],
   [/(?<!\p{L})sans\s+bordures?(?!\p{L})/giu, 'border:borderless'],
-  [/(?<!\p{L})(?:randlos|ohne\s+rand)(?!\p{L})/giu, 'border:borderless'],
+  [/(?<!\p{L})(?:randlos\p{L}*|ohne\s+rand)(?!\p{L})/giu, 'border:borderless'],
   [/(?<!\p{L})senza\s+bordi?(?!\p{L})/giu, 'border:borderless'],
   [/(?<!\p{L})sem\s+bordas?(?!\p{L})/giu, 'border:borderless'],
   // Full art
@@ -217,7 +217,7 @@ const FRAME_PATTERNS: Array<[RegExp, string]> = [
  * whether a query is purely about print treatment.
  */
 const CARD_NOUN_NOISE =
-  /\b(?:cards?|cartas?|cartes?|karten?|carte|magic|mtg)\b|カード|카드|卡牌|卡片|卡|карт\w*/gi;
+  /(?<!\p{L})(?:cards?|cartas?|cartes?|karten?|carte|magic|mtg|карт\p{L}*)(?!\p{L})|カード|カード類|カードの|카드|卡牌|卡片|卡|[のはをがでとな々]|的/giu;
 
 export function parseFramePatterns(query: string, ir: SearchIR): string {
   let remaining = query;
