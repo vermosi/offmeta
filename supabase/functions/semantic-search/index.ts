@@ -980,6 +980,8 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       /\b(?:synergy|synergies|synergize)\s+(?:with|for)\s+(.+?)$/i,
       /\b(?:build around|built around|around)\s+(.+?)$/i,
       /\b(?:goes? well with|pairs? with|combos? with)\s+(.+?)$/i,
+      // "best cards for sephiroth" / "good cards for a sephiroth deck"
+      /\b(?:best|good|top|great)?\s*(?:cards?|spells?|permanents?)\s+for\s+(?:a\s+|an\s+|the\s+|my\s+)?(.+?)(?:'s)?(?:\s+(?:deck|commander|edh|list))?$/i,
     ];
 
     let cardSynergyContext = '';
@@ -993,10 +995,10 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           .replace(/\s+/g, ' ')
           .trim();
 
-        // Skip if too short or looks like a generic type
+        // Skip if too short or looks like a generic type/format
         if (
           candidateName.length >= 3 &&
-          !/^(creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|spells?|planeswalkers?)$/i.test(
+          !/^(creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|spells?|planeswalkers?|commander|edh|modern|standard|pauper|legacy|vintage|decks?|beginners?)$/i.test(
             candidateName,
           )
         ) {
