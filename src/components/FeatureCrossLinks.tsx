@@ -5,6 +5,7 @@
 
 import { Link } from 'react-router-dom';
 import { Zap, BookOpen, Search } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface FeatureCrossLinksProps {
   /** Optional card name to contextualize links */
@@ -17,34 +18,44 @@ const FEATURES = [
   {
     to: '/',
     icon: Search,
-    label: 'Search Cards',
-    description: 'Type plain English — get the perfect card',
+    labelKey: 'crossLinks.search.label',
+    labelFallback: 'Search cards',
+    descriptionKey: 'crossLinks.search.description',
+    descriptionFallback: 'Describe what you need — get the card',
   },
   {
     to: '/combos',
     icon: Zap,
-    label: 'Find Combos',
-    description: 'Discover card combos and packages',
+    labelKey: 'crossLinks.combos.label',
+    labelFallback: 'Find combos',
+    descriptionKey: 'crossLinks.combos.description',
+    descriptionFallback: 'Discover card combos and packages',
   },
   {
     to: '/guides',
     icon: BookOpen,
-    label: 'Search Guides',
-    description: 'Master MTG card search techniques',
+    labelKey: 'crossLinks.guides.label',
+    labelFallback: 'Search guides',
+    descriptionKey: 'crossLinks.guides.description',
+    descriptionFallback: 'Master MTG card search techniques',
   },
 ] as const;
 
 export function FeatureCrossLinks({ compact }: FeatureCrossLinksProps) {
+  const { t } = useTranslation();
+  const title = t('crossLinks.title', 'Explore more OffMeta tools');
+
   return (
     <nav
-      aria-label="Explore more tools"
+      aria-label={title}
       className={`rounded-2xl border border-border/60 bg-card/50 ${compact ? 'p-3' : 'p-4 sm:p-5'}`}
     >
       <p className={`font-semibold text-foreground mb-3 ${compact ? 'text-xs' : 'text-sm'}`}>
-        Explore more OffMeta tools
+        {title}
       </p>
       <div className={`grid gap-2 ${compact ? 'grid-cols-1 sm:grid-cols-3' : 'sm:grid-cols-3'}`}>
-        {FEATURES.map(({ to, icon: Icon, label, description }) => (
+        {FEATURES.map(({ to, icon: Icon, labelKey, labelFallback, descriptionKey, descriptionFallback }) => (
+
           <Link
             key={to}
             to={to}
@@ -56,11 +67,12 @@ export function FeatureCrossLinks({ compact }: FeatureCrossLinksProps) {
             />
             <div className="min-w-0">
               <span className={`font-medium text-foreground group-hover:text-accent transition-colors ${compact ? 'text-xs' : 'text-sm'}`}>
-                {label}
+                {t(labelKey, labelFallback)}
               </span>
               {!compact && (
                 <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                  {description}
+                  {t(descriptionKey, descriptionFallback)}
+
                 </p>
               )}
             </div>

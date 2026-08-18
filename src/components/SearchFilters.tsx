@@ -260,14 +260,15 @@ export function SearchFilters({
           )}
         >
           <Shield className="h-3.5 w-3.5 mr-1 opacity-50 shrink-0" />
-          <SelectValue placeholder="Format" />
+          <SelectValue placeholder={t('filters.format', 'Format')} />
         </SelectTrigger>
         <SelectContent className="z-50 bg-popover border border-border shadow-lg">
           <SelectItem
             value="__none__"
             className="text-xs sm:text-sm text-muted-foreground"
           >
-            All Formats
+            {t('browse.allFormats', 'All Formats')}
+
           </SelectItem>
           {FORMAT_OPTIONS.map((fmt) => (
             <SelectItem
