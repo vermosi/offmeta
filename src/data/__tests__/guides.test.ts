@@ -5,13 +5,24 @@ import { GUIDE_SUMMARIES } from '@/data/guide-summaries';
 
 describe('guides data', () => {
   describe('GUIDES array structure', () => {
-    it('contains exactly 11 guides', () => {
-      expect(GUIDES).toHaveLength(11);
+    it('contains exactly 12 guides', () => {
+      expect(GUIDES).toHaveLength(12);
     });
 
-    it('has levels from 1 to 11 with no gaps', () => {
+    it('has levels from 1 to 12 with no gaps', () => {
       const levels = GUIDES.map((g) => g.level).sort((a, b) => a - b);
-      expect(levels).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+      expect(levels).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    });
+
+    it('exposes print-treatment filters on the frames guide', () => {
+      const frames = getGuideBySlug('frames-and-print-treatments');
+      expect(frames).toBeDefined();
+      expect(frames!.filters?.map((f) => f.label)).toEqual([
+        'Retro frame',
+        'Borderless',
+        'Full art',
+        'Textless',
+      ]);
     });
 
     it('has unique slugs for every guide', () => {
