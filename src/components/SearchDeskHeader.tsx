@@ -117,8 +117,9 @@ export function SearchDeskHeader({
         {/* Left — the ask */}
         <div className="min-w-0">
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-            OFFMETA / SEARCH
+            OFFMETA / {t('search.desk.breadcrumb', 'Search')}
           </p>
+
           <h1
             id="search-desk-heading"
             className="mt-3 font-display text-2xl font-extrabold uppercase leading-[1.05] tracking-tight text-foreground sm:text-3xl lg:text-4xl"
