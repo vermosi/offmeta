@@ -36,6 +36,8 @@ import {
   parseManaProduction,
   parseEquipmentPatterns,
   parseFramePatterns,
+  matchFrameOnlyQuery,
+
 } from './parse-patterns.ts';
 import { renderIR } from './render.ts';
 
