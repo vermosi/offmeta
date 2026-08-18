@@ -4,6 +4,7 @@ import { lookupCardName } from './card-name-lookup.ts';
 import { buildAiRepairCandidates } from './ai-repair-candidates.ts';
 import { buildSystemPrompt, type QueryTier } from './prompts.ts';
 import { getCorsHeaders } from '../_shared/auth.ts';
+import { detectNonEnglishQuery } from '../_shared/languageDetect.ts';
 import { LOVABLE_API_KEY, supabase } from './client.ts';
 import {
   getCachedResult,
@@ -779,6 +780,37 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       );
     }
 
+    // 6a. Language detection (needed before concept matching: concept lookup on
+    // foreign-language text never matches and burns the whole request budget,
+    // which is what made queries like "las mejores cartas para sephiroth"
+    // return nothing).
+    const remainingQuery = deterministicResult.intent.remainingQuery || '';
+    const normalizedLocale = locale?.toLowerCase();
+    const localePrefersTranslation =
+      normalizedLocale !== undefined && normalizedLocale !== 'en';
+    const hasNonLatin =
+      /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u.test(
+        remainingQuery,
+      );
+    const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
+      remainingQuery,
+    );
+    const deterministicConfidence =
+      ((deterministicResult.intent as unknown as Record<string, unknown>)
+        .confidence as number) ?? 0;
+    const shouldPreTranslateAccentedLatin =
+      hasAccentedLatin &&
+      !hasNonLatin &&
+      deterministicConfidence >= ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD;
+    // Plain-ASCII non-English queries carry no accent or script signal and are
+    // often typed with an English UI locale, so use function-word detection.
+    const stopwordSignal = detectNonEnglishQuery(remainingQuery || query);
+    const looksNonEnglish =
+      hasNonLatin ||
+      shouldPreTranslateAccentedLatin ||
+      stopwordSignal.isNonEnglish ||
+      localePrefersTranslation;
+
     // 6b. Concept Matching (known MTG concepts — skip AI if high-confidence match)
     const residualForConcepts =
       deterministicResult.intent.remainingQuery || query;
@@ -794,7 +826,16 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         .filter((w) => w.length >= 3),
     );
 
-    const conceptResponse = await tryConceptStage({
+    if (looksNonEnglish) {
+      logInfo('concept_stage_skipped_non_english', {
+        language: stopwordSignal.language,
+        matches: stopwordSignal.matches,
+      });
+    }
+
+    const conceptResponse = looksNonEnglish
+      ? null
+      : await tryConceptStage({
       query,
       filters,
       cacheSalt,
@@ -863,33 +904,11 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
     };
 
     // 7. Pre-translate non-English queries to English for better AI accuracy
-    const remainingQuery = deterministicResult.intent.remainingQuery || '';
+    // (language signals computed in step 6a).
     let queryForAI = remainingQuery;
     let preTranslationAttempted = false;
     let preTranslationSkippedReason: string | null = null;
-    const normalizedLocale = locale?.toLowerCase();
-    const localePrefersTranslation =
-      normalizedLocale !== undefined && normalizedLocale !== 'en';
 
-    // Detect non-Latin scripts or common non-English patterns
-    const hasNonLatin =
-      /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u.test(
-        remainingQuery,
-      );
-    const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
-      remainingQuery,
-    );
-    const deterministicConfidence =
-      ((deterministicResult.intent as unknown as Record<string, unknown>)
-        .confidence as number) ?? 0;
-    const shouldPreTranslateAccentedLatin =
-      hasAccentedLatin &&
-      !hasNonLatin &&
-      deterministicConfidence >= ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD;
-    const looksNonEnglish =
-      hasNonLatin ||
-      shouldPreTranslateAccentedLatin ||
-      localePrefersTranslation;
 
     if (looksNonEnglish && remainingQuery.trim().length > 0) {
       const remainingBudgetMs = requestBudget.deadlineMs - Date.now();
@@ -974,6 +993,8 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       /\b(?:synergy|synergies|synergize)\s+(?:with|for)\s+(.+?)$/i,
       /\b(?:build around|built around|around)\s+(.+?)$/i,
       /\b(?:goes? well with|pairs? with|combos? with)\s+(.+?)$/i,
+      // "best cards for sephiroth" / "good cards for a sephiroth deck"
+      /\b(?:best|good|top|great)?\s*(?:cards?|spells?|permanents?)\s+for\s+(?:a\s+|an\s+|the\s+|my\s+)?(.+?)(?:'s)?(?:\s+(?:deck|commander|edh|list))?$/i,
     ];
 
     let cardSynergyContext = '';
@@ -987,10 +1008,10 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           .replace(/\s+/g, ' ')
           .trim();
 
-        // Skip if too short or looks like a generic type
+        // Skip if too short or looks like a generic type/format
         if (
           candidateName.length >= 3 &&
-          !/^(creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|spells?|planeswalkers?)$/i.test(
+          !/^(creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|spells?|planeswalkers?|commander|edh|modern|standard|pauper|legacy|vintage|decks?|beginners?)$/i.test(
             candidateName,
           )
         ) {
