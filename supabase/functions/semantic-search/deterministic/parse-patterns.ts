@@ -153,8 +153,6 @@ const FRAME_PATTERNS: Array<[RegExp, string]> = [
   [/\bfull[- ]art\b/gi, 'is:fullart'],
   [/\btextless\b/gi, 'is:textless'],
   [/\bshowcase(?:\s+frames?)?\b/gi, 'is:showcase'],
-  // Bare "retro" — must stay last so "retro frame" matches the compound rule first
-  [/\bretro\b/gi, 'is:retro'],
 
 
   // --- Localized print-treatment vocabulary (all 11 supported locales) ---
@@ -212,6 +210,9 @@ const FRAME_PATTERNS: Array<[RegExp, string]> = [
   [/展示框|展示邊框/gu, 'is:showcase'],
   [/(?<!\p{L})витринн\p{L}*(?!\p{L})/giu, 'is:showcase'],
   [/(?<!\p{L})(?:escaparate|vitrine|vetrina)(?!\p{L})/giu, 'is:showcase'],
+
+  // Bare "retro" — last so compound and localized rules match first
+  [/(?<!\p{L})retro(?!\p{L})/giu, 'is:retro'],
 ];
 
 
@@ -264,7 +265,7 @@ export function normalizeFrameTypos(query: string): string {
     // Explicit short-word typos (fuzzy matching is unsafe at this length)
     .replace(/\b(?:fram|framme|frme|frane)\b/gi, 'frame')
     .replace(/\b(?:frams|frammes|franes)\b/gi, 'frames')
-    .replace(/\b(?:retr|retor|rerto|rertro)\b/gi, 'retro')
+    .replace(/(?<!\p{L})(?:retor|rerto|rertro)(?!\p{L})/giu, 'retro')
     .replace(/\b(?:boarder|bordr)\b/gi, 'border');
 
   return out.replace(/\b[a-z]{7,12}\b/gi, (word) => {
