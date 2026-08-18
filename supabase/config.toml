@@ -1,22 +1,14 @@
 project_id = "chojxtvzspqqzsmwcbul"
 
 [functions]
-verify_jwt = true
-
-# Public SEO/document endpoints are intentionally open so crawlers and
-# unauthenticated clients can fetch them directly.
-[functions.get-affiliate-config]
-verify_jwt = false
-
-# Public HTML prerender endpoint used by social/SEO bots.
-[functions.prerender]
-verify_jwt = false
-
-# Public XML sitemap endpoint consumed by search engines.
-[functions.sitemap]
-verify_jwt = false
-
-# Discord Interactions webhook. Discord cannot send a Supabase JWT; every
-# request is instead verified in-code with the app's Ed25519 public key.
-[functions.discord-bot]
-verify_jwt = false
+  verify_jwt = true
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.discord-bot]
+    verify_jwt = false
+  [functions.get-affiliate-config]
+    verify_jwt = false
+  [functions.prerender]
+    verify_jwt = false
+  [functions.sitemap]
+    verify_jwt = false
