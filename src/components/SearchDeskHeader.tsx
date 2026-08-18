@@ -18,7 +18,7 @@ import { SaveSearchButton } from '@/components/SaveSearchButton';
 import { cn } from '@/lib/core/utils';
 import { intentFromScryfallQuery } from '@/lib/search/whyItMatches';
 import type { SearchIntent } from '@/types/search';
-import { buildInterpretation } from '@/lib/search/interpretation';
+import { buildInterpretation, localizeConstraintValue } from '@/lib/search/interpretation';
 
 const COLOR_NAMES: Record<string, string> = {
   W: 'white',
@@ -74,21 +74,26 @@ export function SearchDeskHeader({
     if (mvMatch && !constraints.some((c) => c.kind === 'mana value')) {
       constraints.unshift({
         kind: 'mana value',
+        kindKey: 'manaValue',
         value: `${mvMatch[1] === ':' ? '=' : mvMatch[1]} ${mvMatch[2]}`,
       });
     }
     const colorMatch = query.match(/\b(c|ci|id|color|identity)[:=]([wubrgc]+)\b/i);
     if (colorMatch) {
-      const names = colorMatch[2]
+      const colorKeys = colorMatch[2]
         .toUpperCase()
         .split('')
-        .map((c) => COLOR_NAMES[c] ?? c.toLowerCase())
-        .join(' + ');
+        .map((c) => COLOR_NAMES[c] ?? c.toLowerCase());
+      const isIdentity = /^(ci|id|identity)$/i.test(colorMatch[1]);
       constraints.unshift({
-        kind: /^(ci|id|identity)$/i.test(colorMatch[1]) ? 'color identity' : 'colors',
-        value: names,
+        kind: isIdentity ? 'color identity' : 'colors',
+        kindKey: isIdentity ? 'colorIdentity' : 'colors',
+        value: colorKeys.join(' + '),
+        colorKeys,
+        colorJoin: ' + ',
       });
     }
+
   }
   const activeWarnings = (warnings ?? []).filter(Boolean);
 
@@ -112,8 +117,9 @@ export function SearchDeskHeader({
         {/* Left — the ask */}
         <div className="min-w-0">
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
-            OFFMETA / SEARCH
+            OFFMETA / {t('search.desk.breadcrumb', 'Search')}
           </p>
+
           <h1
             id="search-desk-heading"
             className="mt-3 font-display text-2xl font-extrabold uppercase leading-[1.05] tracking-tight text-foreground sm:text-3xl lg:text-4xl"
@@ -141,9 +147,12 @@ export function SearchDeskHeader({
                     className="flex items-baseline gap-4 py-1.5"
                   >
                     <dt className="w-32 shrink-0 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                      {c.kind}
+                      {t(`search.constraint.${c.kindKey}`, c.kind)}
                     </dt>
-                    <dd className="min-w-0 flex-1 text-sm text-foreground">{c.value}</dd>
+                    <dd className="min-w-0 flex-1 text-sm text-foreground">
+                      {localizeConstraintValue(c, t)}
+                    </dd>
+
                   </div>
                 ))}
               </dl>
