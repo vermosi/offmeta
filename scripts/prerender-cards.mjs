@@ -205,7 +205,12 @@ function buildDescription(card) {
   return truncate(base, 160);
 }
 
-function buildProductJsonLd(card, canonicalUrl, image) {
+// Build-time card data has no price, and a schema.org Product without
+// offers/review/aggregateRating is reported as invalid structured data by
+// Google and Semrush. Prerendered pages therefore describe the card as a
+// CreativeWork (valid with no required properties); the client swaps in a
+// Product with real offers once Scryfall prices load.
+function buildCardJsonLd(card, canonicalUrl, image) {
   const additionalProperty = [];
   if (card.rarity) additionalProperty.push({ '@type': 'PropertyValue', name: 'Rarity', value: card.rarity });
   if (card.mana_cost) additionalProperty.push({ '@type': 'PropertyValue', name: 'Mana Cost', value: card.mana_cost });
@@ -217,25 +222,29 @@ function buildProductJsonLd(card, canonicalUrl, image) {
 
   return {
     '@context': 'https://schema.org',
-    '@type': 'Product',
+    '@type': 'CreativeWork',
     name: card.name,
+    headline: card.name,
     description: richDesc,
     image,
     url: canonicalUrl,
-    brand: { '@type': 'Brand', name: 'Magic: The Gathering' },
-    category: card.type_line ?? '',
+    genre: 'Trading card game',
+    inLanguage: 'en',
+    isPartOf: { '@type': 'CreativeWorkSeries', name: 'Magic: The Gathering' },
+    ...(card.type_line && { about: card.type_line }),
     ...(additionalProperty.length > 0 && { additionalProperty }),
   };
 }
 
-// Rewrites the built index.html <head> for a specific card and injects a
-// <noscript> block with the h1/oracle text right after <body>.
+// Rewrites the built index.html <head> for a specific card and swaps the
+// generic shell's #seo-content block for the card's own heading and copy.
 function customizeHtmlForCard(templateHtml, card, slug) {
   const canonicalUrl = `${SITE_URL}/cards/${slug}`;
   const title = buildTitle(card.name);
   const description = buildDescription(card);
   const image = card.image_url || `${SITE_URL}/og-image.png`;
-  const jsonLd = JSON.stringify(buildProductJsonLd(card, canonicalUrl, image));
+  const jsonLd = JSON.stringify(buildCardJsonLd(card, canonicalUrl, image));
+
 
   const legalFormats = card.legalities && typeof card.legalities === 'object'
     ? Object.entries(card.legalities)
@@ -297,9 +306,19 @@ function customizeHtmlForCard(templateHtml, card, slug) {
   );
   html = html.replace(/<aside\b[^>]*id=["']seo-content["'][\s\S]*?<\/aside>\s*/i, '');
 
-  // Inject noscript with the card body — right after <body ...>
-  const noscript = `
-    <noscript>
+  // Inject the card's own indexable copy using the same #seo-content contract
+  // as the shell: it is present in the raw HTML for crawlers (text, heading,
+  // internal links) and removed by src/main.tsx once React mounts, so the
+  // rendered page still has exactly one <h1>. A <noscript> block was used here
+  // before, but crawlers that render JS counted its <h1> on top of the React
+  // one and discounted its text, which showed up as "more than one H1 tag" and
+  // "low text-HTML ratio".
+  const seoContent = `
+    <aside
+      id="seo-content"
+      aria-label="${escapeHtml(card.name)}"
+      style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"
+    >
       <article>
         <h1>${escapeHtml(card.name)}</h1>
         ${card.type_line ? `<p><strong>Type:</strong> ${escapeHtml(card.type_line)}</p>` : ''}
@@ -307,11 +326,21 @@ function customizeHtmlForCard(templateHtml, card, slug) {
         ${card.rarity ? `<p><strong>Rarity:</strong> ${escapeHtml(card.rarity)}</p>` : ''}
         ${oracleParagraphs}
         ${legalFormats.length > 0 ? `<p><strong>Legal in:</strong> ${escapeHtml(legalFormats.join(', '))}</p>` : ''}
-        <p><a href="${escapeHtml(canonicalUrl)}">Open ${escapeHtml(card.name)} on OffMeta</a></p>
+        <p>${escapeHtml(description)}</p>
+        <nav aria-label="Related searches">
+          <ul>
+            <li><a href="/cards-like/${escapeHtml(slug)}">Cards like ${escapeHtml(card.name)}</a></li>
+            <li><a href="/search/cheaper-alternatives-to-${escapeHtml(slug)}">Cheaper alternatives to ${escapeHtml(card.name)}</a></li>
+            <li><a href="/guides">MTG search guides</a></li>
+            <li><a href="/docs/syntax">Scryfall syntax cheat sheet</a></li>
+            <li><a href="/combos">Commander combo finder</a></li>
+          </ul>
+        </nav>
       </article>
-    </noscript>
+    </aside>
   `;
-  html = html.replace(/<body([^>]*)>/i, `<body$1>${noscript}`);
+  html = html.replace(/<body([^>]*)>/i, `<body$1>${seoContent}`);
+
 
 
   return html;
