@@ -75,7 +75,6 @@ export function SeoManager({
         type: 'website',
         image: 'https://offmeta.app/og-image.png',
         twitterCard: 'summary_large_image',
-      locale: ogLocale,
         locale: ogLocale,
       });
       return;
@@ -95,7 +94,6 @@ export function SeoManager({
         type: 'website',
         image: 'https://offmeta.app/og-image.png',
         twitterCard: 'summary_large_image',
-      locale: ogLocale,
         locale: ogLocale,
         extraMeta: {
           'twitter:label1': t('searchSeo.labelResults'),
