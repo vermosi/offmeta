@@ -2016,5 +2016,7 @@
   "whyItMatches.roleValue.removal": "retrait",
   "whyItMatches.roleValue.tutor": "tuteur",
   "whyItMatches.structural": "Structurel",
-  "whyItMatches.title": "Pourquoi ça correspond"
+  "whyItMatches.title": "Pourquoi ça correspond",
+  "card.foilPrice": "Foil ${price}",
+  "card.loadingDetails": "Chargement des règles, de la légalité et des éditions…"
 }

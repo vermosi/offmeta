@@ -2016,5 +2016,7 @@
   "whyItMatches.roleValue.removal": "rimozione",
   "whyItMatches.roleValue.tutor": "tutore",
   "whyItMatches.structural": "Strutturale",
-  "whyItMatches.title": "Perché corrisponde"
+  "whyItMatches.title": "Perché corrisponde",
+  "card.foilPrice": "Foil ${price}",
+  "card.loadingDetails": "Caricamento di regole, legalità e stampe…"
 }

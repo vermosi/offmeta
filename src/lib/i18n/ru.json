@@ -2065,5 +2065,7 @@
   "whyItMatches.roleValue.removal": "удаление",
   "whyItMatches.roleValue.tutor": "поиск карт",
   "whyItMatches.structural": "Структурное",
-  "whyItMatches.title": "Почему подходит"
+  "whyItMatches.title": "Почему подходит",
+  "card.foilPrice": "Фойл ${price}",
+  "card.loadingDetails": "Загрузка правил, легальности и изданий…"
 }

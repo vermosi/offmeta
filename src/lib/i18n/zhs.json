@@ -2065,5 +2065,7 @@
   "whyItMatches.roleValue.removal": "去除",
   "whyItMatches.roleValue.tutor": "检索",
   "whyItMatches.structural": "结构性",
-  "whyItMatches.title": "匹配原因"
+  "whyItMatches.title": "匹配原因",
+  "card.foilPrice": "闪卡 ${price}",
+  "card.loadingDetails": "正在加载裁定、合法性与印刷版本…"
 }
