@@ -435,6 +435,7 @@ function customizeHtmlForCard(templateHtml, card, slug) {
         ${card.type_line ? `<p><strong>Type:</strong> ${escapeHtml(card.type_line)}</p>` : ''}
         ${card.mana_cost ? `<p><strong>Mana Cost:</strong> ${escapeHtml(card.mana_cost)}</p>` : ''}
         ${card.rarity ? `<p><strong>Rarity:</strong> ${escapeHtml(card.rarity)}</p>` : ''}
+        ${card.price_usd ? `<p><strong>Price (USD):</strong> $${escapeHtml(card.price_usd)}${card.price_usd_foil ? ` · foil $${escapeHtml(card.price_usd_foil)}` : ''}</p>` : ''}
         ${oracleParagraphs}
         ${legalFormats.length > 0 ? `<p><strong>Legal in:</strong> ${escapeHtml(legalFormats.join(', '))}</p>` : ''}
         <p>${escapeHtml(description)}</p>
@@ -452,10 +453,28 @@ function customizeHtmlForCard(templateHtml, card, slug) {
   `;
   html = html.replace(/<body([^>]*)>/i, `<body$1>${seoContent}`);
 
-
+  // Build-time card payload, read by CardPage to paint the hero (art, name,
+  // type, oracle text, price) immediately instead of waiting on the Scryfall
+  // round-trip. JSON is inert to the parser and `</script>` is escaped.
+  const preload = JSON.stringify({
+    slug,
+    name: card.name,
+    type_line: card.type_line ?? null,
+    mana_cost: card.mana_cost ?? null,
+    oracle_text: card.oracle_text ?? null,
+    rarity: card.rarity ?? null,
+    image_url: card.image_url ?? null,
+    price_usd: card.price_usd ?? null,
+    price_usd_foil: card.price_usd_foil ?? null,
+  }).replace(/</g, '\\u003c');
+  html = html.replace(
+    /<\/body>/i,
+    `<script id="offmeta-card-preload" type="application/json">${preload}</script>\n</body>`,
+  );
 
   return html;
 }
+
 
 async function readSnapshot() {
   try {
