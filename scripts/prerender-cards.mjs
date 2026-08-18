@@ -189,6 +189,62 @@ async function fetchTopCards(limit) {
     );
 }
 
+// ── Prices ────────────────────────────────────────────────────────────────────
+
+/**
+ * Latest USD price per card name from the daily price snapshots.
+ * Without a price a card page can only emit a CreativeWork; with one it emits a
+ * valid Product with real offers (which is what Google/Semrush expect).
+ * Returns a Map<lowercased card name, { usd, foil, scryfall_id }>.
+ */
+async function fetchLatestPrices() {
+  const prices = new Map();
+  const since = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+  const PAGE = 1000;
+  const MAX_PAGES = 200; // hard bound so a bad query can never stall the build
+
+  for (let page = 0; page < MAX_PAGES; page += 1) {
+    const rows = await pgrest(
+      `price_snapshots?select=card_name,price_usd,price_usd_foil,scryfall_id,recorded_at` +
+        `&recorded_at=gte.${since}&order=recorded_at.desc&limit=${PAGE}&offset=${page * PAGE}`,
+    );
+    if (!Array.isArray(rows) || rows.length === 0) break;
+    for (const row of rows) {
+      if (!row?.card_name) continue;
+      const key = row.card_name.toLowerCase();
+      // Rows arrive newest-first, so the first entry per name wins.
+      if (prices.has(key)) continue;
+      const usd = row.price_usd == null ? null : Number(row.price_usd);
+      const foil = row.price_usd_foil == null ? null : Number(row.price_usd_foil);
+      if (usd == null && foil == null) continue;
+      prices.set(key, {
+        usd: Number.isFinite(usd) && usd > 0 ? usd.toFixed(2) : null,
+        foil: Number.isFinite(foil) && foil > 0 ? foil.toFixed(2) : null,
+        scryfall_id: row.scryfall_id ?? null,
+      });
+    }
+    if (rows.length < PAGE) break;
+  }
+
+  return prices;
+}
+
+/** Attaches price fields to card rows in place and reports coverage. */
+function attachPrices(cards, prices) {
+  let priced = 0;
+  for (const card of cards) {
+    const match = prices.get(String(card.name).toLowerCase());
+    if (!match) continue;
+    card.price_usd = match.usd;
+    card.price_usd_foil = match.foil;
+    if (match.scryfall_id) card.scryfall_id = match.scryfall_id;
+    priced += 1;
+  }
+  return priced;
+}
+
+
+
 function buildTitle(name) {
   const long = `Cards Like ${name} — Similar MTG Picks (2026) | OffMeta`;
   const mid = `Cards Like ${name} — Similar MTG Picks | OffMeta`;
