@@ -67,6 +67,25 @@
       hreflang can be emitted with a real localized href.
     -->
     <link rel="canonical" href="https://offmeta.app/" />
+    <!--
+      Self-reference the current route as early as possible. Without this the
+      SPA shell told every crawler that /cards/*, /search/*, /ai/* etc. were
+      all duplicates of the homepage until React mounted, which Semrush
+      reported as "incorrect pages found in sitemap.xml".
+    -->
+    <script>
+      (function () {
+        try {
+          var path = location.pathname.replace(/\/+$/, '') || '/';
+          if (/^\/(admin|profile|reset-password|user)(\/|$)/.test(path)) return;
+          var link = document.querySelector('link[rel="canonical"]');
+          if (link) link.setAttribute('href', 'https://offmeta.app' + path);
+        } catch (e) {
+          /* canonical stays at the static homepage value */
+        }
+      })();
+    </script>
+
 
 
     <!-- DNS prefetch for external APIs -->
