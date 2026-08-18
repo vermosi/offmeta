@@ -68,8 +68,16 @@ export async function applyJobRateLimit(
     windowMs?: number;
     failOpen?: boolean;
     label?: string;
+    /**
+     * Skip the IP-based limiter. Scheduled runs (pg_cron / service role) all
+     * originate from a single egress IP, so the shared bucket rejects them with
+     * 429 whenever two jobs fire in the same window. Trusted callers are
+     * already authenticated by the pipeline key, so they bypass it.
+     */
+    skip?: boolean;
   },
 ): Promise<{ allowed: true } | { allowed: false; response: Response }> {
+  if (options.skip) return { allowed: true };
   maybeCleanup();
   const clientIp =
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
