@@ -87,6 +87,13 @@ export const GUIDES_META: GuideMeta[] = [
       'Find cards like X in plain English: similar effects, close substitutes, and off-meta alternatives. Search staples like Rhystic Study and get functional replacements fast.',
     heading: 'Cards Like X',
   },
+  {
+    slug: 'frames-and-print-treatments',
+    title: 'MTG Frame Search - Retro, Borderless & Full Art | OffMeta',
+    description:
+      'Search MTG cards by print treatment: retro frame, borderless, full art and textless. Describe the look in plain English, no Scryfall syntax needed.',
+    heading: 'Frames & Print Treatments',
+  },
 ];
 
 export function getGuideMetaBySlug(slug: string): GuideMeta | undefined {

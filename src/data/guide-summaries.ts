@@ -22,4 +22,5 @@ export const GUIDE_SUMMARIES: GuideSummary[] = [
   { slug: 'etb-and-flicker-combos', title: 'ETB & Flicker Combos' },
   { slug: 'multi-constraint-complex-search', title: 'Multi-Constraint Complex Search' },
   { slug: 'cards-like-x', title: 'Cards Like X' },
+  { slug: 'frames-and-print-treatments', title: 'Frames & Print Treatments' },
 ];
