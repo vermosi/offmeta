@@ -340,7 +340,9 @@ export async function getLocalizedPrintedFields(
           printed_name: printing.printed_name,
           printed_type_line: printing.printed_type_line,
           printed_text: printing.printed_text,
+          flavor_text: printing.flavor_text,
         };
+
       }
     }
   } catch {
