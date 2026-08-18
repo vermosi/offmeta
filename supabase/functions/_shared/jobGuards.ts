@@ -14,17 +14,19 @@ import { checkRateLimit, maybeCleanup } from './rateLimit.ts';
 export async function requirePipelineOrAdminJob(
   req: Request,
 ): Promise<
-  | { authorized: true; corsHeaders: Record<string, string> }
+  | { authorized: true; corsHeaders: Record<string, string>; viaPipeline: boolean }
   | { authorized: false; response: Response }
 > {
   const corsHeaders = getCorsHeaders(req);
   const pipelineCheck = await requireServiceOrPipelineKey(req, corsHeaders);
-  if (pipelineCheck.authorized) return { authorized: true, corsHeaders };
+  if (pipelineCheck.authorized) {
+    return { authorized: true, corsHeaders, viaPipeline: true };
+  }
 
   const adminCheck = await requireAdmin(req, corsHeaders);
   if (!adminCheck.authorized) return adminCheck;
 
-  return { authorized: true, corsHeaders };
+  return { authorized: true, corsHeaders, viaPipeline: false };
 }
 
 
@@ -66,8 +68,16 @@ export async function applyJobRateLimit(
     windowMs?: number;
     failOpen?: boolean;
     label?: string;
+    /**
+     * Skip the IP-based limiter. Scheduled runs (pg_cron / service role) all
+     * originate from a single egress IP, so the shared bucket rejects them with
+     * 429 whenever two jobs fire in the same window. Trusted callers are
+     * already authenticated by the pipeline key, so they bypass it.
+     */
+    skip?: boolean;
   },
 ): Promise<{ allowed: true } | { allowed: false; response: Response }> {
+  if (options.skip) return { allowed: true };
   maybeCleanup();
   const clientIp =
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';

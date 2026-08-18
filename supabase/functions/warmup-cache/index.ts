@@ -342,6 +342,7 @@ serve(withLogging('warmup-cache', async (req) => {
   }
 
   const rateLimit = await applyJobRateLimit(req, corsHeaders, {
+    skip: adminCheck.viaPipeline,
     bucketSize: 1,
     globalLimit: 10,
     label: 'Cache warmup job',

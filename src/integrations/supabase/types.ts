@@ -1809,6 +1809,10 @@ export type Database = {
           type_line: string
         }[]
       }
+      trigger_pipeline_job: {
+        Args: { fn: string; timeout_ms?: number }
+        Returns: number
+      }
       try_acquire_job_lock: {
         Args: { p_holder: string; p_job: string; p_ttl_seconds?: number }
         Returns: boolean
