@@ -241,7 +241,8 @@ describe('useSearch', () => {
     expect(result.current.displayCards).toEqual(mockCards);
   });
 
-  it('sets document title when search is active', () => {
+  it('does not write document.title (owned by SeoManager)', () => {
+    document.title = 'untouched';
     const { result } = renderHook(() => useSearch(), {
       wrapper: createWrapper(),
     });
@@ -250,17 +251,9 @@ describe('useSearch', () => {
       result.current.handleSearch('t:creature', undefined, 'creatures');
     });
 
-    expect(document.title).toBe('creatures — OffMeta MTG Search');
+    expect(document.title).toBe('untouched');
   });
 
-  it('resets document title when no search', () => {
-    renderHook(() => useSearch(), {
-      wrapper: createWrapper(),
-    });
-
-    // Default title
-    expect(document.title).toBe('MTG Card Search in Plain English | OffMeta');
-  });
 
   it('handleRerunEditedQuery updates search query', () => {
     const { result } = renderHook(() => useSearch(), {
