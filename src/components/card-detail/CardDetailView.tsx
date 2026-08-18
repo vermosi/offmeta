@@ -13,7 +13,9 @@ import {
   isDoubleFacedCard,
   getCardFaceDetails,
   getCardRulings,
+  getLocalizedPrintedFields,
   type CardRuling,
+  type LocalizedPrintedFields,
 } from '@/lib/scryfall/client';
 import { getCardPrintings, type CardPrinting } from '@/lib/scryfall/printings';
 
@@ -22,7 +24,8 @@ import { ManaCost, OracleText } from '@/components/ManaSymbol';
 import { SaveCardButton } from '@/components/SaveCardButton';
 import { toSavedCardInput } from '@/lib/account';
 import { useAnalytics, useAffiliateConfig } from '@/hooks';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation, LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n';
+
 
 import { CardModalImage } from '@/components/CardModal/CardModalImage';
 import { CardModalDetails } from '@/components/CardModal/CardModalDetails';
