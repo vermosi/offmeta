@@ -42,8 +42,8 @@ export const styles = {
     margin: '0 auto',
     padding: '32px',
   },
-  logo: { display: 'block', margin: '0 0 28px' },
   heading: {
+
     fontSize: '18px',
     fontWeight: 'bold' as const,
     color: colors.ink,
