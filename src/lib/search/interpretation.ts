@@ -90,3 +90,20 @@ export function buildInterpretation(intent?: SearchIntent | null): Constraint[] 
 
   return out.slice(0, 12);
 }
+
+/** Translate function shape compatible with i18next's `t`. */
+type TranslateFn = (key: string, fallback?: string) => string;
+
+/**
+ * Render a constraint value in the active language. Only colour constraints
+ * carry translatable tokens; everything else is data (numbers, oracle text).
+ */
+export function localizeConstraintValue(c: Constraint, t: TranslateFn): string {
+  if (!c.colorKeys?.length) return c.value;
+  const names = c.colorKeys
+    .map((k) => t(`search.color.${k}`, k))
+    .join(c.colorJoin ?? ' + ');
+  return c.colorExact
+    ? t('search.constraint.exactly', 'exactly {{names}}').replace('{{names}}', names)
+    : names;
+}
