@@ -887,9 +887,14 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       hasAccentedLatin &&
       !hasNonLatin &&
       deterministicConfidence >= ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD;
+    // Plain-ASCII non-English queries ("las mejores cartas para sephiroth")
+    // carry no accent or script signal and are often typed with an English UI
+    // locale, so fall back to function-word detection on the raw query.
+    const stopwordSignal = detectNonEnglishQuery(remainingQuery || query);
     const looksNonEnglish =
       hasNonLatin ||
       shouldPreTranslateAccentedLatin ||
+      stopwordSignal.isNonEnglish ||
       localePrefersTranslation;
 
     if (looksNonEnglish && remainingQuery.trim().length > 0) {
