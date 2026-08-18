@@ -154,6 +154,7 @@ const FRAME_PATTERNS: Array<[RegExp, string]> = [
   [/\btextless\b/gi, 'is:textless'],
   [/\bshowcase(?:\s+frames?)?\b/gi, 'is:showcase'],
 
+
   // --- Localized print-treatment vocabulary (all 11 supported locales) ---
   // Non-Latin scripts and accented letters break `\b`, so these use explicit
   // letter lookarounds with the /u flag instead of word boundaries.
@@ -209,6 +210,9 @@ const FRAME_PATTERNS: Array<[RegExp, string]> = [
   [/展示框|展示邊框/gu, 'is:showcase'],
   [/(?<!\p{L})витринн\p{L}*(?!\p{L})/giu, 'is:showcase'],
   [/(?<!\p{L})(?:escaparate|vitrine|vetrina)(?!\p{L})/giu, 'is:showcase'],
+
+  // Bare "retro" — last so compound and localized rules match first
+  [/(?<!\p{L})retro(?!\p{L})/giu, 'is:retro'],
 ];
 
 
@@ -219,8 +223,72 @@ const FRAME_PATTERNS: Array<[RegExp, string]> = [
 const CARD_NOUN_NOISE =
   /(?<!\p{L})(?:cards?|cartas?|cartes?|karten?|carte|magic|mtg|карт\p{L}*)(?!\p{L})|カード|カード類|カードの|카드|卡牌|卡片|卡|[のはをがでとな々]|的/giu;
 
+/**
+ * Long, distinctive print-treatment words that are safe to fuzzy-match.
+ * Short words like "frame"/"retro" are excluded on purpose: they sit one edit
+ * away from common MTG words ("flame", "hero"), so they use explicit typo
+ * alternations below instead.
+ */
+const FUZZY_FRAME_VOCAB = ['borderless', 'textless', 'showcase'] as const;
+
+/** Real MTG words that must never be rewritten by the fuzzy pass. */
+const FUZZY_FRAME_DENYLIST = new Set(['bordering', 'boardless', 'shocase']);
+
+function levenshtein(a: string, b: string): number {
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let diag = prev[0];
+    prev[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = prev[j];
+      prev[j] = Math.min(
+        prev[j] + 1,
+        prev[j - 1] + 1,
+        diag + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+      diag = tmp;
+    }
+  }
+  return prev[b.length];
+}
+
+/**
+ * Repairs common misspellings and glued compounds so typos like "borderles",
+ * "bordeless", or "retroframe" still resolve to print-treatment syntax.
+ * Only touches ASCII-letter tokens, so localized vocabulary is untouched.
+ */
+export function normalizeFrameTypos(query: string): string {
+  const out = query
+    // Glued compounds: "retroframe", "oldborder", "showcaseframe"
+    .replace(/\b(retro|old|new|modern|future|showcase|extended)(frames?|borders?)\b/gi, '$1 $2')
+    .replace(/\bfullart\b/gi, 'full-art')
+    // Explicit short-word typos (fuzzy matching is unsafe at this length)
+    .replace(/\b(?:fram|framme|frme|frane)\b/gi, 'frame')
+    .replace(/\b(?:frams|frammes|franes)\b/gi, 'frames')
+    .replace(/(?<!\p{L})(?:retor|rerto|rertro)(?!\p{L})/giu, 'retro')
+    .replace(/\b(?:boarder|bordr)\b/gi, 'border');
+
+  return out.replace(/\b[a-z]{7,12}\b/gi, (word) => {
+    const lower = word.toLowerCase();
+    if (FUZZY_FRAME_DENYLIST.has(lower)) return word;
+    if ((FUZZY_FRAME_VOCAB as readonly string[]).includes(lower)) return word;
+    let best: string | null = null;
+    let bestScore = Infinity;
+    for (const candidate of FUZZY_FRAME_VOCAB) {
+      if (Math.abs(candidate.length - lower.length) > 2) continue;
+      const distance = levenshtein(lower, candidate);
+      if (distance <= 2 && distance < bestScore) {
+        best = candidate;
+        bestScore = distance;
+      }
+    }
+    return best ?? word;
+  });
+}
+
+
 export function parseFramePatterns(query: string, ir: SearchIR): string {
-  let remaining = query;
+  let remaining = normalizeFrameTypos(query);
   for (const [pattern, token] of FRAME_PATTERNS) {
     pattern.lastIndex = 0;
     if (pattern.test(remaining)) {
@@ -231,6 +299,7 @@ export function parseFramePatterns(query: string, ir: SearchIR): string {
   }
   return remaining;
 }
+
 
 /**
  * Whole-query print-treatment match ("retro frame", "レトロフレーム", "sin bordes").
