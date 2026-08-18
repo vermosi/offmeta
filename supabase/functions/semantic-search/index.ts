@@ -593,7 +593,7 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
     if (
       deterministicQuery &&
       deterministicRemaining.length < 3 &&
-      !isNonLatinNameGuess
+      !isForeignNameGuess
     ) {
       const validation = validateQuery(deterministicQuery || query);
       const responseTimeMs = Date.now() - requestStartTime;
