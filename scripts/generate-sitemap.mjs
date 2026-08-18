@@ -48,6 +48,7 @@ const GUIDE_SLUGS = [
   'etb-and-flicker-combos',
   'multi-constraint-complex-search',
   'cards-like-x',
+  'frames-and-print-treatments',
 ];
 
 // Editorial landing pages. This node script cannot import the TypeScript

@@ -22,6 +22,8 @@ export interface Guide {
   /** Step-by-step explanation of HOW OffMeta handled the query */
   howOffmetaHelps: string;
   tips: string[];
+  /** Optional one-click narrowing searches shown as chips under the example */
+  filters?: Array<{ label: string; query: string }>;
   relatedGuides: string[]; // slugs
   faq: Array<{ question: string; answer: string }>;
 }
@@ -420,6 +422,53 @@ export const GUIDES: Guide[] = [
       },
     ],
   },
+
+  // ───────── LEVEL 12: Frames & Print Treatments ─────────
+  {
+    slug: 'frames-and-print-treatments',
+    level: 12,
+    title: 'Frames & Print Treatments',
+    metaTitle: 'MTG Frame Search — Retro, Borderless & Full Art | OffMeta',
+    metaDescription: clampMetaDescription(
+      'Search MTG cards by print treatment: retro frame, borderless, full art and textless. Describe the look in plain English, no Scryfall syntax needed.',
+    ),
+    heading: 'Frames & Print Treatments',
+    subheading: 'Search by how a card looks, not just what it does',
+    intro: `Some searches are about the print, not the rules text. Retro frames, borderless art, full-art lands and textless promos are all separate print treatments in Scryfall, each with its own syntax. On OffMeta you can just describe the look: type "retro frame" or "borderless cards" and we translate it into the right print filter. Misspellings and glued words like "retroframe" or "borderles" still resolve correctly.`,
+    searchQuery: 'retro frame cards',
+    translatedQuery: 'is:retro',
+    howOffmetaHelps: `OffMeta keeps a dedicated print-treatment vocabulary, so "retro frame", "old border", "borderless", "full art" and "textless" are recognized before the card-name heuristic ever runs. That prevents the old failure mode where "retro frame" was searched as a card name. Each phrase maps to the correct Scryfall filter (is:retro, border:borderless, is:fullart, is:textless), and the vocabulary is localized across every language OffMeta supports.`,
+    tips: [
+      'Combine treatment with any normal search: "borderless dragons" or "full art lands".',
+      'Frame years work too: "1997 frame", "2015 frame", "future frame".',
+      '"Showcase" and "extended art" are separate treatments from borderless.',
+      'Typos are tolerated: "borderles", "bordeless" and "retroframe" all resolve.',
+    ],
+    filters: [
+      { label: 'Retro frame', query: 'retro frame cards' },
+      { label: 'Borderless', query: 'borderless cards' },
+      { label: 'Full art', query: 'full art cards' },
+      { label: 'Textless', query: 'textless cards' },
+    ],
+    relatedGuides: ['search-by-creature-type', 'cards-like-x'],
+    faq: [
+      {
+        question: 'What is a retro frame card?',
+        answer:
+          'A retro frame card uses the pre-2003 card frame. On Scryfall that is is:retro, and OffMeta produces it for phrases like "retro frame", "old frame" or "old border".',
+      },
+      {
+        question: 'Is borderless the same as full art?',
+        answer:
+          'No. Borderless removes the card border (border:borderless), while full art extends the artwork across the whole card (is:fullart). Some cards are both.',
+      },
+      {
+        question: 'Can I combine a print treatment with other filters?',
+        answer:
+          'Yes. Try "borderless commander legal lands under $10" — the treatment filter is combined with format, type and price constraints.',
+      },
+    ],
+  },
 ];
 
 export function getGuideBySlug(slug: string): Guide | undefined {
@@ -497,6 +546,12 @@ const GUIDE_RELATED_SEARCHES: Record<string, string[]> = {
     'budget alternatives to smothering tithe',
     'cards like cyclonic rift',
     'cheaper alternatives to mana crypt',
+  ],
+  'frames-and-print-treatments': [
+    'retro frame cards',
+    'borderless cards',
+    'full art lands',
+    'textless cards',
   ],
 };
 

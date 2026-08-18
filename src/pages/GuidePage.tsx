@@ -317,12 +317,33 @@ export default function GuidePage() {
               </div>
             )}
 
+            {guide.filters && guide.filters.length > 0 && (
+              <div className="mt-8">
+                <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                  {t('guide.narrowResults', 'Narrow results')}
+                </p>
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {guide.filters.map((filter) => (
+                    <li key={filter.query}>
+                      <Link
+                        to={`/search/${queryToSlug(filter.query)}`}
+                        className="inline-flex min-h-[36px] items-center rounded-full border border-border bg-background px-4 text-sm text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                      >
+                        {t(`guide.filter.${guide.slug}.${queryToSlug(filter.query)}`, filter.label)}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <div className="mt-8">
               <PageSearchBar
                 placeholder={t('guide.searchPlaceholder', 'Search: {query}', { query: guide.searchQuery })}
               />
             </div>
           </section>
+
 
           <section id="tips" className="border-t border-border/50 py-8">
             <h2 className="font-display text-lg font-extrabold uppercase tracking-tight text-foreground">

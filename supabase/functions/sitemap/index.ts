@@ -81,6 +81,7 @@ const GUIDE_SLUGS = [
   'etb-and-flicker-combos',
   'multi-constraint-complex-search',
   'cards-like-x',
+  'frames-and-print-treatments',
 ];
 
 function slugify(name: string): string {
