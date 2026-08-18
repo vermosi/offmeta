@@ -36,6 +36,8 @@ import {
   parseManaProduction,
   parseEquipmentPatterns,
   parseFramePatterns,
+  matchFrameOnlyQuery,
+
 } from './parse-patterns.ts';
 import { renderIR } from './render.ts';
 
@@ -344,6 +346,13 @@ export function buildDeterministicIntent(query: string, options?: { isKnownCardN
     };
   }
 
+  // Short-circuit: print treatment vocabulary ("retro frame", "レトロフレーム",
+  // "sin bordes"). Must run before the card-name heuristic.
+  const frameOnly = matchFrameOnlyQuery(query);
+  if (frameOnly) {
+    return { intent: emptyIntent(), deterministicQuery: frameOnly };
+  }
+
   // Short-circuit: if the query is a known card name (DB lookup) OR heuristic match, use name search
   if (options?.isKnownCardName || isLikelyCardName(query)) {
     const trimmed = query.trim();
@@ -357,12 +366,16 @@ export function buildDeterministicIntent(query: string, options?: { isKnownCardN
       .split(/[^\p{L}\p{N}'’]+/u)
       .map((token) => token.replace(/^['’]+|['’]+$/g, ''))
       .filter((token) => token.length > 0);
-    const exactQuery = nameTokens.length <= 1
-      ? `name:${safeName}`
-      : nameTokens.map((token) => `name:${/[^\p{L}\p{N}]/u.test(token) ? `"${token}"` : token}`).join(' ');
-    return { intent: emptyIntent(), deterministicQuery: exactQuery };
-
+    // Never emit a bare `name:` — an empty candidate means this is not a name
+    // search, so fall through to the regular IR pipeline.
+    if (nameTokens.length > 0) {
+      const exactQuery = nameTokens.length === 1
+        ? `name:${nameTokens[0]}`
+        : nameTokens.map((token) => `name:${/[^\p{L}\p{N}]/u.test(token) ? `"${token}"` : token}`).join(' ');
+      return { intent: emptyIntent(), deterministicQuery: exactQuery };
+    }
   }
+
 
   const ir = buildIR(query);
 

@@ -153,7 +153,71 @@ const FRAME_PATTERNS: Array<[RegExp, string]> = [
   [/\bfull[- ]art\b/gi, 'is:fullart'],
   [/\btextless\b/gi, 'is:textless'],
   [/\bshowcase(?:\s+frames?)?\b/gi, 'is:showcase'],
+
+  // --- Localized print-treatment vocabulary (all 11 supported locales) ---
+  // Non-Latin scripts and accented letters break `\b`, so these use explicit
+  // letter lookarounds with the /u flag instead of word boundaries.
+  // Retro / old frame
+  [/レトロ\s*フレーム|旧枠|オールドフレーム/gu, 'is:retro'],
+  [/레트로\s*(?:프레임|틀)|구\s*프레임/gu, 'is:retro'],
+  [/复古边框|复古框|旧框|舊框|復古邊框|復古框/gu, 'is:retro'],
+  [/(?<!\p{L})(?:ретро[-\s]?рамк\p{L}*|стар\p{L}+\s+рамк\p{L}*)(?!\p{L})/giu, 'is:retro'],
+  [/(?<!\p{L})(?:marcos?|bordes?)\s+(?:retro|antiguos?)(?!\p{L})/giu, 'is:retro'],
+  [/(?<!\p{L})(?:cadres?\s+r[ée]tro|ancien\s+cadre)(?!\p{L})/giu, 'is:retro'],
+  [/(?<!\p{L})(?:retro[-\s]?rahmen|alte[rns]?\s+rahmen)(?!\p{L})/giu, 'is:retro'],
+  [/(?<!\p{L})(?:cornice\s+retr[òo]|bordo\s+vecchio)(?!\p{L})/giu, 'is:retro'],
+  [/(?<!\p{L})moldura\s+(?:retr[ôo]|antiga)(?!\p{L})/giu, 'is:retro'],
+  // Borderless
+  [/ボーダーレス|枠なし/gu, 'border:borderless'],
+  [/보더리스|테두리\s*없\p{L}*/gu, 'border:borderless'],
+  [/无边框|無邊框|无框|無框/gu, 'border:borderless'],
+  [/(?<!\p{L})(?:без\s*рам\p{L}*|безрамочн\p{L}*)(?!\p{L})/giu, 'border:borderless'],
+  [/(?<!\p{L})sin\s+bordes?(?!\p{L})/giu, 'border:borderless'],
+  [/(?<!\p{L})sans\s+bordures?(?!\p{L})/giu, 'border:borderless'],
+  [/(?<!\p{L})(?:randlos\p{L}*|ohne\s+rand)(?!\p{L})/giu, 'border:borderless'],
+  [/(?<!\p{L})senza\s+bordi?(?!\p{L})/giu, 'border:borderless'],
+  [/(?<!\p{L})sem\s+bordas?(?!\p{L})/giu, 'border:borderless'],
+  // Full art
+  [/フルアート/gu, 'is:fullart'],
+  [/풀\s*아트/gu, 'is:fullart'],
+  [/全图|全圖|满图|滿圖/gu, 'is:fullart'],
+  [/(?<!\p{L})(?:фулл[-\s]?арт\p{L}*|полн\p{L}+\s+иллюстрац\p{L}*)(?!\p{L})/giu, 'is:fullart'],
+  [/(?<!\p{L})arte\s+complet[ao](?!\p{L})/giu, 'is:fullart'],
+  [/(?<!\p{L})pleine\s+(?:illustration|page)(?!\p{L})/giu, 'is:fullart'],
+  [/(?<!\p{L})(?:vollbild|ganzseitige[rs]?\s+illustration)(?!\p{L})/giu, 'is:fullart'],
+  // Textless
+  [/テキストレス|文章なし/gu, 'is:textless'],
+  [/텍스트\s*없\p{L}*/gu, 'is:textless'],
+  [/无文本|無文字|无字|無字/gu, 'is:textless'],
+  [/(?<!\p{L})без\s*текст\p{L}*(?!\p{L})/giu, 'is:textless'],
+  [/(?<!\p{L})sin\s+texto(?!\p{L})/giu, 'is:textless'],
+  [/(?<!\p{L})sans\s+texte(?!\p{L})/giu, 'is:textless'],
+  [/(?<!\p{L})ohne\s+text(?!\p{L})/giu, 'is:textless'],
+  [/(?<!\p{L})senza\s+testo(?!\p{L})/giu, 'is:textless'],
+  [/(?<!\p{L})sem\s+texto(?!\p{L})/giu, 'is:textless'],
+  // Extended art
+  [/拡張アート/gu, 'frame:extendedart'],
+  [/확장\s*아트/gu, 'frame:extendedart'],
+  [/扩展艺术|擴展藝術|延伸藝術/gu, 'frame:extendedart'],
+  [/(?<!\p{L})расширенн\p{L}*\s+(?:арт\p{L}*|иллюстрац\p{L}*)(?!\p{L})/giu, 'frame:extendedart'],
+  [/(?<!\p{L})arte\s+(?:extendid[ao]|estesa|estendida)(?!\p{L})/giu, 'frame:extendedart'],
+  [/(?<!\p{L})art\s+[ée]tendu(?!\p{L})/giu, 'frame:extendedart'],
+  [/(?<!\p{L})erweiterte[rsn]?\s+(?:kunst|artwork|rahmen)(?!\p{L})/giu, 'frame:extendedart'],
+  // Showcase
+  [/ショーケース/gu, 'is:showcase'],
+  [/쇼케이스/gu, 'is:showcase'],
+  [/展示框|展示邊框/gu, 'is:showcase'],
+  [/(?<!\p{L})витринн\p{L}*(?!\p{L})/giu, 'is:showcase'],
+  [/(?<!\p{L})(?:escaparate|vitrine|vetrina)(?!\p{L})/giu, 'is:showcase'],
 ];
+
+
+/**
+ * Generic "card(s)" nouns across supported locales — ignored when deciding
+ * whether a query is purely about print treatment.
+ */
+const CARD_NOUN_NOISE =
+  /(?<!\p{L})(?:cards?|cartas?|cartes?|karten?|carte|magic|mtg|карт\p{L}*)(?!\p{L})|カード|カード類|カードの|카드|卡牌|卡片|卡|[のはをがでとな々]|的/giu;
 
 export function parseFramePatterns(query: string, ir: SearchIR): string {
   let remaining = query;
@@ -167,6 +231,24 @@ export function parseFramePatterns(query: string, ir: SearchIR): string {
   }
   return remaining;
 }
+
+/**
+ * Whole-query print-treatment match ("retro frame", "レトロフレーム", "sin bordes").
+ * Runs before the card-name heuristic so localized frame terms never become
+ * `name:` tokens.
+ */
+export function matchFrameOnlyQuery(query: string): string | null {
+  const specials: string[] = [];
+  const remainder = parseFramePatterns(query, { specials } as unknown as SearchIR);
+  if (specials.length === 0) return null;
+  const leftover = remainder
+    .replace(CARD_NOUN_NOISE, ' ')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+  if (leftover.length > 0) return null;
+  return specials.join(' ');
+}
+
 
 export function parseSpecialPatterns(query: string, ir: SearchIR): string {
   let remaining = query;

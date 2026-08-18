@@ -238,8 +238,11 @@ export function validateQuery(query: string): {
   }
 
   // Remove potentially unsafe characters (keep common Scryfall syntax + regex for oracle/name searches)
+  // Unicode-aware: \w would strip Cyrillic/CJK/accented letters and leave
+  // empty tokens like `name:` for localized queries.
   // eslint-disable-next-line no-useless-escape
-  sanitized = sanitized.replace(/[^\w\s:="'()<>!=+\-\/*\\{}.,^$|?[\]]/g, '');
+  sanitized = sanitized.replace(/[^\p{L}\p{N}_\s:="'()<>!=+\-\/*\\{}.,^$|?[\]]/gu, '');
+
 
   // Fix invalid year set usage (e:2021 -> year=2021)
   const yearSetPattern = /\be:(\d{4})\b/gi;
