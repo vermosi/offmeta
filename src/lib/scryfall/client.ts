@@ -290,7 +290,70 @@ export async function getRandomCard(): Promise<ScryfallCard> {
  * @returns The matching ScryfallCard
  * @throws Error if card is not found
  */
+/**
+ * Localized printing fields for a card, when a printing exists in that language.
+ * Only the printed_* fields are returned — canonical (English) card data always
+ * stays authoritative for search, SEO, and structured data.
+ */
+export interface LocalizedPrintedFields {
+  printed_name?: string;
+  printed_type_line?: string;
+  printed_text?: string;
+}
+
+const localizedPrintingCache = new Map<string, LocalizedPrintedFields | null>();
+const LOCALIZED_PRINTING_CACHE_MAX = 300;
+
+/**
+ * Fetch the printed name/type line/oracle text of a card in the given Scryfall
+ * language. Returns null when no localized printing exists (fall back to English).
+ *
+ * @param name - Canonical English card name
+ * @param lang - Scryfall language code (e.g. "ko", "ja", "zhs")
+ */
+export async function getLocalizedPrintedFields(
+  name: string,
+  lang: string,
+): Promise<LocalizedPrintedFields | null> {
+  if (!name || !lang || lang === 'en') return null;
+
+  const key = `${lang}::${name.toLowerCase()}`;
+  const cached = localizedPrintingCache.get(key);
+  if (cached !== undefined) return cached;
+
+  let result: LocalizedPrintedFields | null = null;
+  try {
+    const query = encodeURIComponent(`!"${name}" lang:${lang} game:paper`);
+    const response = await rateLimitedFetch(
+      `${BASE_URL}/cards/search?q=${query}&unique=prints&order=released&dir=desc`,
+    );
+    if (response.ok) {
+      const json = (await response.json()) as { data?: ScryfallCard[] };
+      const printing = json.data?.find(
+        (c) => c.printed_name || c.printed_type_line || c.printed_text,
+      );
+      if (printing) {
+        result = {
+          printed_name: printing.printed_name,
+          printed_type_line: printing.printed_type_line,
+          printed_text: printing.printed_text,
+        };
+      }
+    }
+  } catch {
+    result = null;
+  }
+
+  if (localizedPrintingCache.size >= LOCALIZED_PRINTING_CACHE_MAX) {
+    const oldest = localizedPrintingCache.keys().next().value;
+    if (oldest !== undefined) localizedPrintingCache.delete(oldest);
+  }
+  localizedPrintingCache.set(key, result);
+  return result;
+}
+
 export async function getCardByName(name: string): Promise<ScryfallCard> {
+
   const encodedName = encodeURIComponent(name);
 
   // Card detail pages require a complete printing record: id, set, prices,

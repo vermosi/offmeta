@@ -13,7 +13,9 @@ import {
   isDoubleFacedCard,
   getCardFaceDetails,
   getCardRulings,
+  getLocalizedPrintedFields,
   type CardRuling,
+  type LocalizedPrintedFields,
 } from '@/lib/scryfall/client';
 import { getCardPrintings, type CardPrinting } from '@/lib/scryfall/printings';
 
@@ -23,6 +25,9 @@ import { SaveCardButton } from '@/components/SaveCardButton';
 import { toSavedCardInput } from '@/lib/account';
 import { useAnalytics, useAffiliateConfig } from '@/hooks';
 import { useTranslation } from '@/lib/i18n';
+import { LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n/constants';
+
+
 
 import { CardModalImage } from '@/components/CardModal/CardModalImage';
 import { CardModalDetails } from '@/components/CardModal/CardModalDetails';
@@ -106,6 +111,9 @@ export function CardDetailView({ card }: CardDetailViewProps) {
   const [isLoadingRulings, setIsLoadingRulings] = useState(true);
   const [showRulings, setShowRulings] = useState(true);
   const [comboCount, setComboCount] = useState(0);
+  const [localizedFields, setLocalizedFields] =
+    useState<LocalizedPrintedFields | null>(null);
+
 
   const isDoubleFaced = isDoubleFacedCard(card);
 
@@ -121,7 +129,27 @@ export function CardDetailView({ card }: CardDetailViewProps) {
     setIsLoadingRulings(true);
     setIsLoadingPrintings(true);
     setComboCount(0);
+    setLocalizedFields(null);
   }
+
+  // Localized printing (name / type line / oracle text) for non-English locales.
+  // Canonical English data stays authoritative for SEO and structured data.
+  useEffect(() => {
+    const lang = LOCALE_TO_SCRYFALL_LANG[locale] ?? 'en';
+    if (lang === 'en') {
+      setLocalizedFields(null);
+      return;
+    }
+    let cancelled = false;
+    getLocalizedPrintedFields(card.name, lang).then((fields) => {
+      if (!cancelled) setLocalizedFields(fields);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [card.name, locale]);
+
+
 
   useEffect(() => {
     let cancelled = false;
@@ -207,7 +235,9 @@ export function CardDetailView({ card }: CardDetailViewProps) {
   const displayImageUrl =
     selectedPrinting?.image_uris?.large ??
     getCardImage(card, 'large', currentFace);
-  const faceDetails = getCardFaceDetails(card, currentFace, locale);
+  const localizedCard = localizedFields ? { ...card, ...localizedFields } : card;
+  const faceDetails = getCardFaceDetails(localizedCard, currentFace, locale);
+
   const displaySetName = selectedPrinting?.set_name || card.set_name;
   const displayRarity = selectedPrinting?.rarity || card.rarity;
   const displayCollectorNumber =
