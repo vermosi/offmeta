@@ -51,6 +51,7 @@ serve(withLogging('generate-patterns', async (req) => {
   }
 
   const rateLimit = await applyJobRateLimit(req, corsHeaders, {
+    skip: adminCheck.viaPipeline,
     bucketSize: 1,
     globalLimit: 10,
     label: 'Pattern generation job',
