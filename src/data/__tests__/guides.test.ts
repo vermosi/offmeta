@@ -211,7 +211,7 @@ describe('guides data', () => {
     });
 
     it('translated queries contain valid Scryfall operators', () => {
-      const validOperators = ['t:', 'o:', 'c:', 'id', 'f:', 'kw:', 'usd', 'otag:', '-t:'];
+      const validOperators = ['t:', 'o:', 'c:', 'id', 'f:', 'kw:', 'usd', 'otag:', '-t:', 'is:', 'border:', 'frame:'];
       for (const guide of GUIDES) {
         const hasOperator = validOperators.some((op) =>
           guide.translatedQuery.includes(op),
