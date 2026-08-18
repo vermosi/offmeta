@@ -1180,7 +1180,7 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       // catalog — fall back to keyword search on the English text.
       let finalQuery = validation.sanitized.trim()
         ? validation.sanitized
-        : buildFallbackQuery(queryForAI || query, filters);
+        : buildFallbackQuery(queryForAI || query, filters).sanitized;
       let resultCount: number | null = null;
       let aiValidationNote: string | null = null;
       let scryfallStatus: number | null = null;
