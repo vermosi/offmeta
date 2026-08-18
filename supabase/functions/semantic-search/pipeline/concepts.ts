@@ -173,9 +173,19 @@ async function classifyConceptsWithLLM(
     .map(([id, c]) => `${id}: ${c.description} (${c.category})`)
     .join('\n');
 
-  const response = await fetch(
+  // Abort well inside the pipeline budget. Without a signal an upstream stall
+  // hangs until the gateway's 90s watchdog, which shows up as a 503 failure
+  // and wrecks the average latency metric even though the search already
+  // fell back to deterministic parsing.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 2500);
+
+  let response: Response;
+  try {
+    response = await fetch(
     'https://ai.gateway.lovable.dev/v1/chat/completions',
     {
+      signal: controller.signal,
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -236,6 +246,12 @@ async function classifyConceptsWithLLM(
       }),
     },
   );
+  } catch {
+    // Timed out or network error: fall back to the non-LLM concept matches.
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!response.ok) return [];
 
