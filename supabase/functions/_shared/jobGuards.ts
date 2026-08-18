@@ -14,17 +14,19 @@ import { checkRateLimit, maybeCleanup } from './rateLimit.ts';
 export async function requirePipelineOrAdminJob(
   req: Request,
 ): Promise<
-  | { authorized: true; corsHeaders: Record<string, string> }
+  | { authorized: true; corsHeaders: Record<string, string>; viaPipeline: boolean }
   | { authorized: false; response: Response }
 > {
   const corsHeaders = getCorsHeaders(req);
   const pipelineCheck = await requireServiceOrPipelineKey(req, corsHeaders);
-  if (pipelineCheck.authorized) return { authorized: true, corsHeaders };
+  if (pipelineCheck.authorized) {
+    return { authorized: true, corsHeaders, viaPipeline: true };
+  }
 
   const adminCheck = await requireAdmin(req, corsHeaders);
   if (!adminCheck.authorized) return adminCheck;
 
-  return { authorized: true, corsHeaders };
+  return { authorized: true, corsHeaders, viaPipeline: false };
 }
 
 
