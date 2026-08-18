@@ -14,14 +14,15 @@ const MAX_SLUG_LENGTH = 80;
 export function queryToSlug(query: string): string {
   return query
     .toLowerCase()
-    .replace(/['']/g, '')           // Remove apostrophes
-    .replace(/[^a-z0-9\s-]/g, '')   // Strip special chars
+    .replace(/['']/g, '')                 // Remove apostrophes
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')    // Strip special chars, keep any script
     .trim()
-    .replace(/\s+/g, '-')           // Spaces → hyphens
-    .replace(/-+/g, '-')            // Collapse multiple hyphens
-    .slice(0, MAX_SLUG_LENGTH)      // Truncate for URL sanity
-    .replace(/-$/, '');             // Remove trailing hyphen from truncation
+    .replace(/\s+/g, '-')                 // Spaces → hyphens
+    .replace(/-+/g, '-')                  // Collapse multiple hyphens
+    .slice(0, MAX_SLUG_LENGTH)            // Truncate for URL sanity
+    .replace(/-$/, '');                   // Remove trailing hyphen from truncation
 }
+
 
 /**
  * Convert a URL slug back to a natural language query string.
