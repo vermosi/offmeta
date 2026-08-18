@@ -305,12 +305,27 @@ for (const row of seoPages) {
   pushUnique(`/ai/${row.slug}`, toLastmodDate(row.updated_at));
 }
 
+// Only list card URLs that the postbuild prerenderer actually writes a static
+// document for. Everything beyond that cap ships as the bare SPA shell, and a
+// sitemap full of identical shells is what Semrush reports as "incorrect pages
+// found in sitemap.xml" (and Google as "duplicate without user-selected
+// canonical"). The prerender snapshot is the single source of truth for which
+// slugs have real HTML.
+const prerenderedSlugs = await readPrerenderedCardSlugs();
+if (prerenderedSlugs) {
+  console.log(
+    `[sitemap] Limiting card URLs to ${prerenderedSlugs.size} prerendered slugs.`,
+  );
+}
+
 for (const card of cards) {
   if (!isIndexableCardRow(card)) continue;
   const slug = slugifyCardName(card.name);
   if (!slug) continue;
+  if (prerenderedSlugs && !prerenderedSlugs.has(slug)) continue;
   pushUnique(`/cards/${slug}`, toLastmodDate(card.updated_at));
 }
+
 
 
 const xml =
