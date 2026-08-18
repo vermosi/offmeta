@@ -305,6 +305,30 @@ for (const row of seoPages) {
   pushUnique(`/ai/${row.slug}`, toLastmodDate(row.updated_at));
 }
 
+/**
+ * Slugs that scripts/prerender-cards.mjs will emit static HTML for. Returns
+ * null when the snapshot is unreadable so the sitemap degrades to full
+ * coverage rather than losing card URLs entirely.
+ */
+async function readPrerenderedCardSlugs() {
+  try {
+    const raw = await fs.readFile('scripts/data/prerender-cards.json', 'utf8');
+    const parsed = JSON.parse(raw);
+    const limit = Number(process.env.PRERENDER_CARD_LIMIT ?? 5000);
+    const slugs = new Set();
+    for (const card of Array.isArray(parsed?.cards) ? parsed.cards : []) {
+      if (slugs.size >= limit) break;
+      const slug = typeof card?.name === 'string' ? slugifyCardName(card.name) : '';
+      if (slug) slugs.add(slug);
+    }
+    return slugs.size > 0 ? slugs : null;
+  } catch {
+    return null;
+  }
+}
+
+
+
 // Only list card URLs that the postbuild prerenderer actually writes a static
 // document for. Everything beyond that cap ships as the bare SPA shell, and a
 // sitemap full of identical shells is what Semrush reports as "incorrect pages
