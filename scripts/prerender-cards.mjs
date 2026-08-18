@@ -306,9 +306,19 @@ function customizeHtmlForCard(templateHtml, card, slug) {
   );
   html = html.replace(/<aside\b[^>]*id=["']seo-content["'][\s\S]*?<\/aside>\s*/i, '');
 
-  // Inject noscript with the card body — right after <body ...>
-  const noscript = `
-    <noscript>
+  // Inject the card's own indexable copy using the same #seo-content contract
+  // as the shell: it is present in the raw HTML for crawlers (text, heading,
+  // internal links) and removed by src/main.tsx once React mounts, so the
+  // rendered page still has exactly one <h1>. A <noscript> block was used here
+  // before, but crawlers that render JS counted its <h1> on top of the React
+  // one and discounted its text, which showed up as "more than one H1 tag" and
+  // "low text-HTML ratio".
+  const seoContent = `
+    <aside
+      id="seo-content"
+      aria-label="${escapeHtml(card.name)}"
+      style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"
+    >
       <article>
         <h1>${escapeHtml(card.name)}</h1>
         ${card.type_line ? `<p><strong>Type:</strong> ${escapeHtml(card.type_line)}</p>` : ''}
@@ -316,11 +326,21 @@ function customizeHtmlForCard(templateHtml, card, slug) {
         ${card.rarity ? `<p><strong>Rarity:</strong> ${escapeHtml(card.rarity)}</p>` : ''}
         ${oracleParagraphs}
         ${legalFormats.length > 0 ? `<p><strong>Legal in:</strong> ${escapeHtml(legalFormats.join(', '))}</p>` : ''}
-        <p><a href="${escapeHtml(canonicalUrl)}">Open ${escapeHtml(card.name)} on OffMeta</a></p>
+        <p>${escapeHtml(description)}</p>
+        <nav aria-label="Related searches">
+          <ul>
+            <li><a href="/cards-like/${escapeHtml(slug)}">Cards like ${escapeHtml(card.name)}</a></li>
+            <li><a href="/search/cheaper-alternatives-to-${escapeHtml(slug)}">Cheaper alternatives to ${escapeHtml(card.name)}</a></li>
+            <li><a href="/guides">MTG search guides</a></li>
+            <li><a href="/docs/syntax">Scryfall syntax cheat sheet</a></li>
+            <li><a href="/combos">Commander combo finder</a></li>
+          </ul>
+        </nav>
       </article>
-    </noscript>
+    </aside>
   `;
-  html = html.replace(/<body([^>]*)>/i, `<body$1>${noscript}`);
+  html = html.replace(/<body([^>]*)>/i, `<body$1>${seoContent}`);
+
 
 
   return html;
