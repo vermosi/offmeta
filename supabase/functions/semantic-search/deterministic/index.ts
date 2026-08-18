@@ -35,6 +35,7 @@ import {
   parseOraclePatterns,
   parseManaProduction,
   parseEquipmentPatterns,
+  parseFramePatterns,
 } from './parse-patterns.ts';
 import { renderIR } from './render.ts';
 
@@ -71,7 +72,7 @@ function isLikelyCardName(query: string): boolean {
   const hasPossessive = /\w's\b/.test(trimmed);
   const allCapitalized = words.every(w => /^[A-Z]/.test(w) || /^(of|the|and|to|in|for|a|an)$/i.test(w));
   // Must not contain search-like keywords
-  const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commanders?|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|best|good|great|top|find|payoffs?|synerg(?:y|ies)|released|after|before|since|until|mana|rocks?|wipes?|board|ramp|removal|draw|produce|generate|create|make|search|tap|theme|build|outlet|outlets|lifegain|lifeloss|free|cost|tribal|staples?|format|standard|modern|pioneer|pauper|vintage|legacy|historic|hate|graveyard|exile|protection|counter|tutor|token|sacrifice|flicker|blink|bounce|mill|scry|reanimate|reanimation|aristocrats|pillowfort|voltron|stax|burn|aggro|combo|control|midrange|tempo)\b/i.test(trimmed);
+  const hasSearchKeywords = /\b(with|that|under|below|above|less|more|cheap|budget|from|legal|commanders?|deck|spells?|cards?|creatures?|artifacts?|enchantments?|lands?|instants?|sorcery|sorceries|best|good|great|top|find|payoffs?|synerg(?:y|ies)|released|after|before|since|until|mana|rocks?|wipes?|board|ramp|removal|draw|produce|generate|create|make|search|tap|theme|build|outlet|outlets|lifegain|lifeloss|free|cost|tribal|staples?|format|standard|modern|pioneer|pauper|vintage|legacy|historic|hate|graveyard|exile|protection|counter|tutor|token|sacrifice|flicker|blink|bounce|mill|scry|reanimate|reanimation|aristocrats|pillowfort|voltron|stax|burn|aggro|combo|control|midrange|tempo|frames?|borders?|borderless|textless|showcase|foils?|retro|reprints?|arts?|artwork|printings?)\b/i.test(trimmed);
   if (hasSearchKeywords) return false;
   // Single capitalized word that looks like a proper noun (not a common MTG keyword or creature subtype)
   const singleWordMtgTerms = /^(untap|untapper|untappers|flying|trample|haste|deathtouch|lifelink|vigilance|reach|menace|flash|hexproof|indestructible|ward|defender|first|double|strike|prowess|cascade|storm|affinity|convoke|delve|dredge|infect|wither|persist|undying|annihilator|protection|shroud|regenerate|morph|suspend|evoke|unearth|exalted|devour|bloodthirst|modular|sunburst|equip|ninjutsu|bushido|flanking|phasing|banding|rampage|cumulative|echo|fading|vanishing|kicker|buyback|flashback|madness|retrace|rebound|overload|bestow|dash|surge|emerge|escalate|improvise|aftermath|embalm|eternalize|explore|ascend|adapt|riot|spectacle|escape|mutate|companion|foretell|boast|learn|disturb|daybound|nightbound|cleave|training|blitz|casualty|connive|ravenous|enlist|prototype|toxic|backup|bargain|craft|discover|collect|adventure|channel|cycling|landfall|mill|scry|proliferate|populate|manifest|amass|food|treasure|blood|clue|map|powerstone|incubate|transform|meld|partner|eminence|encore|demonstrate|decayed|exploit|skulk|changeling|devoid|ingest|rally|cohort|support|investigate|fabricate|crew|revolt|improvise|afflict|exert|eternalize|surveil|undergrowth|spectacle|afterlife|jump|red|blue|green|white|black|colorless|multicolor|mono|tribal|removal|ramp|draw|tutor|counter|burn|mill|blink|bounce|copy|clone|theft|discard|sacrifice|token|anthem|lord|stax|hatebear|pillowfort|voltron|aristocrats|reanimator|control|aggro|combo|midrange|tempo|prison|taxes|storm|dredge|infect|aura|equipment|ping|reskins?|angels?|dragons?|elves?|goblins?|zombies?|vampires?|merfolk|wizards?|knights?|demons?|elementals?|beasts?|soldiers?|spirits?|rogues?|clerics?|warriors?|shamans?|druids?|dinosaurs?|pirates?|cats?|dogs?|birds?|snakes?|spiders?|hydras?|phoenixes?|sphinxes?|wurms?|drakes?|faeries?|giants?|humans?|saprolings?|slivers?|treefolk|fungi|oozes?|ninjas?|samurais?)$/i;
@@ -121,6 +122,7 @@ function buildIR(query: string): SearchIR {
   remaining = parseKeywords(remaining, ir); // Parse keywords for kw: operator
   remaining = parseArchetypes(remaining, ir); // Parse archetype strategies
   remaining = parseExclusions(remaining, ir); // Parse exclusions before types
+  remaining = parseFramePatterns(remaining, ir); // Frame/border treatments before type parsing
   remaining = parseCompanions(remaining, ir);
   remaining = parseSpecialPatterns(remaining, ir);
   remaining = parseOraclePatterns(remaining, ir);
