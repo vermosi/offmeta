@@ -132,8 +132,45 @@ export function parseCompanions(query: string, ir: SearchIR): string {
   return remaining;
 }
 
+/**
+ * Frame, border, and print-treatment vocabulary.
+ * "retro frame" must never fall through to the card-name heuristic
+ * (which produced `name:retro name:frame`).
+ */
+const FRAME_PATTERNS: Array<[RegExp, string]> = [
+  [/\b(?:retro|old|old[- ]school|vintage[- ]style)\s+(?:frame|border)s?\b/gi, 'is:retro'],
+  [/\b(?:modern|new|current)\s+frames?\b/gi, 'frame:2015'],
+  [/\b(?:future|futureshifted)\s+frames?\b/gi, 'frame:future'],
+  [/\b(?:1993|alpha|original)\s+frames?\b/gi, 'frame:1993'],
+  [/\b1997\s+frames?\b/gi, 'frame:1997'],
+  [/\b2003\s+frames?\b/gi, 'frame:2003'],
+  [/\b2015\s+frames?\b/gi, 'frame:2015'],
+  [/\bextended[- ]art\b/gi, 'frame:extendedart'],
+  [/\bborderless\b/gi, 'border:borderless'],
+  [/\bwhite[- ]border(?:ed)?\b/gi, 'border:white'],
+  [/\bsilver[- ]border(?:ed)?\b/gi, 'border:silver'],
+  [/\bblack[- ]border(?:ed)?\b/gi, 'border:black'],
+  [/\bfull[- ]art\b/gi, 'is:fullart'],
+  [/\btextless\b/gi, 'is:textless'],
+  [/\bshowcase(?:\s+frames?)?\b/gi, 'is:showcase'],
+];
+
+export function parseFramePatterns(query: string, ir: SearchIR): string {
+  let remaining = query;
+  for (const [pattern, token] of FRAME_PATTERNS) {
+    pattern.lastIndex = 0;
+    if (pattern.test(remaining)) {
+      if (!ir.specials.includes(token)) ir.specials.push(token);
+      pattern.lastIndex = 0;
+      remaining = remaining.replace(pattern, ' ').replace(/\s+/g, ' ').trim();
+    }
+  }
+  return remaining;
+}
+
 export function parseSpecialPatterns(query: string, ir: SearchIR): string {
   let remaining = query;
+
 
   // Legality status ("banned in commander", "restricted in vintage") must be
   // parsed BEFORE the commander format patterns, otherwise "in commander" is
