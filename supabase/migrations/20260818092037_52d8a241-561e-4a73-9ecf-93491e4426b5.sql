@@ -1,0 +1,1 @@
+grant execute on function public.trigger_pipeline_job(text, integer) to postgres;
