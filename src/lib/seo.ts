@@ -339,29 +339,37 @@ export function buildSearchResultsJsonLd(
     name: `MTG cards: ${queryDescription}`,
     description: `Magic: The Gathering cards matching "${queryDescription}"`,
     numberOfItems: cards.length,
-    itemListElement: cards.slice(0, 20).map((card, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      item: {
-        '@type': 'Product',
+    itemListElement: cards.slice(0, 20).map((card, i) => {
+      const url = `https://offmeta.app/cards/${encodeURIComponent(
+        card.name.toLowerCase().replace(/['']/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-'),
+      )}`;
+      const shared = {
         name: card.name,
         description: card.oracle_text ?? card.type_line,
         image: card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal,
-        url: `https://offmeta.app/cards/${encodeURIComponent(
-          card.name.toLowerCase().replace(/['']/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-'),
-        )}`,
-        ...(card.prices?.usd
+        url,
+      };
+      // Priced cards can be a Product (offers present); unpriced ones would be
+      // an invalid Product, so they are described as CreativeWork instead.
+      return {
+        '@type': 'ListItem',
+        position: i + 1,
+        item: card.prices?.usd
           ? {
+              '@type': 'Product',
+              ...shared,
               offers: {
                 '@type': 'Offer',
                 price: card.prices.usd,
                 priceCurrency: 'USD',
                 availability: 'https://schema.org/InStock',
+                url,
               },
             }
-          : {}),
-      },
-    })),
+          : { '@type': 'CreativeWork', ...shared, genre: 'Trading card game' },
+      };
+    }),
+
   };
 }
 
