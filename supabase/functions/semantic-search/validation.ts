@@ -99,10 +99,13 @@ export function sanitizeInputQuery(query: string): {
 } {
   const trimmed = query.trim();
 
-  // Reject queries under 3 characters
-  if (trimmed.length < 3) {
+  // Reject queries under 3 characters. CJK scripts pack whole words into two
+  // characters ("新枠", "旧枠"), so allow 2 characters for non-Latin scripts.
+  const hasCjk = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(trimmed);
+  if (trimmed.length < (hasCjk ? 2 : 3)) {
     return { valid: false, reason: 'Query too short (minimum 3 characters)' };
   }
+
 
   // Detect repeated empty operators (spam pattern: "t: t: t: t:")
   const repeatedEmptyOps = /(?:[toc]:[\s]*){3,}/gi;

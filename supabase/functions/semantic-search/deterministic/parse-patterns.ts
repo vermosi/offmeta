@@ -168,7 +168,18 @@ const FRAME_PATTERNS: Array<[RegExp, string]> = [
   [/(?<!\p{L})(?:retro[-\s]?rahmen|alte[rns]?\s+rahmen)(?!\p{L})/giu, 'is:retro'],
   [/(?<!\p{L})(?:cornice\s+retr[òo]|bordo\s+vecchio)(?!\p{L})/giu, 'is:retro'],
   [/(?<!\p{L})moldura\s+(?:retr[ôo]|antiga)(?!\p{L})/giu, 'is:retro'],
+  // Modern / new frame
+  [/(?:モダン|モダーン|現代|新)\s*(?:フレーム|枠)/gu, 'frame:2015'],
+  [/(?:모던|현대|신|새)\s*(?:프레임|틀)/gu, 'frame:2015'],
+  [/现代边框|現代邊框|现代框|現代框|新边框|新邊框|新框/gu, 'frame:2015'],
+  [/(?<!\p{L})(?:современн\p{L}*|нов\p{L}+)\s+рамк\p{L}*(?!\p{L})/giu, 'frame:2015'],
+  [/(?<!\p{L})(?:marcos?|bordes?)\s+(?:modernos?|nuevos?)(?!\p{L})/giu, 'frame:2015'],
+  [/(?<!\p{L})(?:cadres?\s+moderne?s?|nouveau\s+cadre)(?!\p{L})/giu, 'frame:2015'],
+  [/(?<!\p{L})(?:modern\p{L}*\s+rahmen|neue[rns]?\s+rahmen)(?!\p{L})/giu, 'frame:2015'],
+  [/(?<!\p{L})cornice\s+(?:modern[ae]|nuova)(?!\p{L})/giu, 'frame:2015'],
+  [/(?<!\p{L})moldura\s+(?:moderna|nova)(?!\p{L})/giu, 'frame:2015'],
   // Borderless
+
   [/ボーダーレス|枠なし/gu, 'border:borderless'],
   [/보더리스|테두리\s*없\p{L}*/gu, 'border:borderless'],
   [/无边框|無邊框|无框|無框/gu, 'border:borderless'],
