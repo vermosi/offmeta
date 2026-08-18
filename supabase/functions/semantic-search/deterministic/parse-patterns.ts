@@ -153,6 +153,9 @@ const FRAME_PATTERNS: Array<[RegExp, string]> = [
   [/\bfull[- ]art\b/gi, 'is:fullart'],
   [/\btextless\b/gi, 'is:textless'],
   [/\bshowcase(?:\s+frames?)?\b/gi, 'is:showcase'],
+  // Bare "retro" — must stay last so "retro frame" matches the compound rule first
+  [/\bretro\b/gi, 'is:retro'],
+
 
   // --- Localized print-treatment vocabulary (all 11 supported locales) ---
   // Non-Latin scripts and accented letters break `\b`, so these use explicit
