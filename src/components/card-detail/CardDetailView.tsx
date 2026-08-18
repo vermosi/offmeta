@@ -129,7 +129,27 @@ export function CardDetailView({ card }: CardDetailViewProps) {
     setIsLoadingRulings(true);
     setIsLoadingPrintings(true);
     setComboCount(0);
+    setLocalizedFields(null);
   }
+
+  // Localized printing (name / type line / oracle text) for non-English locales.
+  // Canonical English data stays authoritative for SEO and structured data.
+  useEffect(() => {
+    const lang = LOCALE_TO_SCRYFALL_LANG[locale] ?? 'en';
+    if (lang === 'en') {
+      setLocalizedFields(null);
+      return;
+    }
+    let cancelled = false;
+    getLocalizedPrintedFields(card.name, lang).then((fields) => {
+      if (!cancelled) setLocalizedFields(fields);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [card.name, locale]);
+
+
 
   useEffect(() => {
     let cancelled = false;
