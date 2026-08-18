@@ -222,44 +222,50 @@ const CardPage = () => {
               <Skeleton className="h-4 w-40" />
             </div>
 
-            {/* Card hero: image on top on mobile, side-by-side on md+ */}
-            <div className="grid gap-6 sm:gap-8 md:grid-cols-[320px_1fr]">
-              <div className="mx-auto w-full max-w-[300px] sm:max-w-[320px] md:mx-0">
-                <Skeleton className="aspect-[488/680] w-full rounded-xl" />
+            {/* Card hero: real content when the page was prerendered with a
+                build-time payload, skeletons otherwise. */}
+            {preload ? (
+              <CardPreloadHero preload={preload} />
+            ) : (
+              <div className="grid gap-6 sm:gap-8 md:grid-cols-[320px_1fr]">
+                <div className="mx-auto w-full max-w-[300px] sm:max-w-[320px] md:mx-0">
+                  <Skeleton className="aspect-[488/680] w-full rounded-xl" />
+                </div>
+
+                <div className="space-y-4">
+                  {/* Title + mana cost row */}
+                  <div className="flex items-start justify-between gap-3">
+                    <Skeleton className="h-7 sm:h-9 w-2/3" />
+                    <Skeleton className="h-7 w-20 rounded-md" />
+                  </div>
+
+                  {/* Type line */}
+                  <Skeleton className="h-4 w-1/2" />
+
+                  {/* Oracle text block */}
+                  <div className="space-y-2 rounded-lg border border-border/60 bg-card/40 p-4">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-11/12" />
+                    <Skeleton className="h-4 w-4/5" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+
+                  {/* Stat chips row */}
+                  <div className="flex flex-wrap gap-2">
+                    <Skeleton className="h-7 w-24 rounded-full" />
+                    <Skeleton className="h-7 w-20 rounded-full" />
+                    <Skeleton className="h-7 w-28 rounded-full" />
+                  </div>
+
+                  {/* CTAs */}
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <Skeleton className="h-10 w-32 rounded-md" />
+                    <Skeleton className="h-10 w-24 rounded-md" />
+                  </div>
+                </div>
               </div>
+            )}
 
-              <div className="space-y-4">
-                {/* Title + mana cost row */}
-                <div className="flex items-start justify-between gap-3">
-                  <Skeleton className="h-7 sm:h-9 w-2/3" />
-                  <Skeleton className="h-7 w-20 rounded-md" />
-                </div>
-
-                {/* Type line */}
-                <Skeleton className="h-4 w-1/2" />
-
-                {/* Oracle text block */}
-                <div className="space-y-2 rounded-lg border border-border/60 bg-card/40 p-4">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-11/12" />
-                  <Skeleton className="h-4 w-4/5" />
-                  <Skeleton className="h-4 w-3/4" />
-                </div>
-
-                {/* Stat chips row */}
-                <div className="flex flex-wrap gap-2">
-                  <Skeleton className="h-7 w-24 rounded-full" />
-                  <Skeleton className="h-7 w-20 rounded-full" />
-                  <Skeleton className="h-7 w-28 rounded-full" />
-                </div>
-
-                {/* CTAs */}
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <Skeleton className="h-10 w-32 rounded-md" />
-                  <Skeleton className="h-10 w-24 rounded-md" />
-                </div>
-              </div>
-            </div>
 
             <span className="sr-only">{t('card.loadingSrText', 'Loading card details…')}</span>
           </div>
