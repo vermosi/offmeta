@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!--
+      No cache-busting meta tags. `Cache-Control: no-store` at the document
+      level defeats browser caching of the HTML shell and hurts LCP on
+      repeat views. Cache invalidation is handled by Vite's hashed asset
+      filenames and the auto-recovery loader in src/main.tsx.
+    -->
+
+    <!-- build marker: 2026-08-06T16:30Z (forces rebuild so analytics connector env vars are inlined) -->
+    <meta name="google-site-verification" content="BFbOUBW-CLUbLmfgd3BS6GYFS2tLjT0hCgdkFY-cH3o" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta
+      name="theme-color"
+      content="#0a0a0a"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta
+      name="theme-color"
+      content="#ffffff"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta
+      name="impact-site-verification"
+      value="e16a5db3-241c-490f-a97b-cc87331a15fa"
+    />
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/offmeta-logo.png" />
+
+    <link rel="manifest" href="/manifest.json" />
+
+    <title>MTG Card Search in Plain English | OffMeta</title>
+    <meta
+      name="description"
+      content="Find Magic: The Gathering cards without learning Scryfall syntax. Describe what you want in plain English and get real, filterable card results."
+    />
+
+    <meta name="author" content="OffMeta" />
+    <meta
+      name="keywords"
+      content="magic card search engine, MTG natural language search, Magic The Gathering search, MTG card search, Scryfall natural language, Commander card search, EDH card finder, MTG keywords search"
+    />
+    <!--
+      Homepage canonical only. Per-route pages (/cards/*, /search/*,
+      /guides/*, /ai/*, etc.) overwrite this <link> via applySeoMeta in
+      src/lib/seo.ts after mount, so Googlebot sees the right canonical
+      for JS-rendered routes. The static self-reference here exists so
+      duplicate hosts (offmeta.lovable.app, id-preview--*.lovable.app,
+      trailing-slash variants) resolve to https://offmeta.app/ instead
+      of being flagged "Duplicate without user-selected canonical".
+
+      hreflang self-references pointing at "/" for every language were
+      actively harmful for non-homepage URLs — omit them until per-route
+      hreflang can be emitted with a real localized href.
+    -->
+    <link rel="canonical" href="https://offmeta.app/" />
+    <!--
+      Self-reference the current route as early as possible. Without this the
+      SPA shell told every crawler that /cards/*, /search/*, /ai/* etc. were
+      all duplicates of the homepage until React mounted, which Semrush
+      reported as "incorrect pages found in sitemap.xml".
+    -->
+    <script>
+      (function () {
+        try {
+          var path = location.pathname.replace(/\/+$/, '') || '/';
+          if (/^\/(admin|profile|reset-password|user)(\/|$)/.test(path)) return;
+          var link = document.querySelector('link[rel="canonical"]');
+          if (link) link.setAttribute('href', 'https://offmeta.app' + path);
+        } catch (e) {
+          /* canonical stays at the static homepage value */
+        }
+      })();
+    </script>
+
+
+
+    <!-- DNS prefetch for external APIs -->
+    <link rel="dns-prefetch" href="https://api.scryfall.com" />
+    <link rel="preconnect" href="https://cards.scryfall.io" crossorigin />
+    <link rel="dns-prefetch" href="https://cards.scryfall.io" />
+    <link
+      rel="preconnect"
+      href="https://nxmzyykkzwomkcentctt.supabase.co"
+      crossorigin
+    />
+    <link rel="dns-prefetch" href="https://nxmzyykkzwomkcentctt.supabase.co" />
+
+    <!-- Preload webfonts statically so the browser's preload scanner
+         discovers them during HTML parse, not after main.tsx executes.
+         These URLs are the latin subsets served by the stylesheet below —
+         keep them in sync with it, or each file downloads twice. -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+      fetchpriority="high"
+      href="https://fonts.gstatic.com/s/archivo/v25/k3kPo8UDI-1M0wlSV9XAw6lQkqWY8Q82sLydOxI.woff2"
+    />
+
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+      fetchpriority="high"
+      href="https://fonts.gstatic.com/s/manrope/v20/xn7gYHE41ni1AdIRggexSg.woff2"
+    />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Archivo:wght@600;700;800;900&family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Archivo:wght@600;700;800;900&family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@400;500&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+
+
+
+    <!-- Open Graph (homepage defaults; per-route pages override og:url/title/desc via applySeoMeta) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://offmeta.app/" />
+    <meta
+      property="og:title"
+      content="MTG Card Search in Plain English | OffMeta"
+    />
+    <meta
+      property="og:description"
+      content="Find Magic: The Gathering cards without learning Scryfall syntax. Describe what you want in plain English and get real, filterable card results."
+    />
+
+    <meta
+      property="og:image"
+      content="https://offmeta.app/og-image.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="OffMeta — natural language Magic: The Gathering card search"
+    />
+    <meta property="og:site_name" content="OffMeta" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter/X Card (per-route pages override twitter:url/title/desc via applySeoMeta) -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@offmeta" />
+    <meta name="twitter:creator" content="@offmeta" />
+    <meta name="twitter:url" content="https://offmeta.app/" />
+    <meta
+      name="twitter:title"
+      content="MTG Card Search in Plain English | OffMeta"
+    />
+    <meta
+      name="twitter:description"
+      content="Find Magic: The Gathering cards without learning Scryfall syntax. Describe what you want in plain English and get real, filterable card results."
+    />
+
+    <meta
+      name="twitter:image"
+      content="https://offmeta.app/og-image.png"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="OffMeta — natural language Magic: The Gathering card search"
+    />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://offmeta.app/#organization",
+            "name": "OffMeta",
+            "url": "https://offmeta.app/",
+            "logo": "https://offmeta.app/logo.svg",
+            "description": "Natural language search for Magic: The Gathering cards, powered by Scryfall.",
+            "sameAs": ["https://github.com/vermosi/offmeta"]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://offmeta.app/#website",
+            "name": "OffMeta",
+            "url": "https://offmeta.app/",
+            "description": "Natural language search translator for Magic: The Gathering cards. Describe what you need in plain English and get real card results from Scryfall.",
+            "publisher": { "@id": "https://offmeta.app/#organization" },
+            "inLanguage": "en",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://offmeta.app/search/{search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]
+      }
+    </script>
+
+    <!-- Critical inline CSS: prevents render-blocking on the main stylesheet -->
+    <style>
+      html, body { overscroll-behavior-y: contain; margin: 0; }
+      body {
+        font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Archivo', system-ui, -apple-system, sans-serif;
+        letter-spacing: -0.02em;
+      }
+
+      /* Dark mode default (matches .dark tokens) */
+      :root {
+        --bg: hsl(270 45% 6%);
+        --fg: hsl(270 20% 95%);
+        --mfg: hsl(270 20% 65%);
+        --gs: 300 90% 60%;
+        --ge: 195 95% 55%;
+      }
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: hsl(270 30% 98%);
+          --fg: hsl(270 50% 15%);
+          --mfg: hsl(270 15% 45%);
+          --gs: 300 85% 55%;
+          --ge: 195 90% 55%;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!--
+      Static indexable content for SEO crawlers. Removed from the DOM by
+      src/main.tsx once React mounts, so the rendered page keeps exactly one
+      main heading (the React one) while the raw HTML still ships a heading,
+      copy and internal links for crawlers that do not execute JavaScript.
+      Route prerenderers strip this block and supply their own heading.
+    -->
+
+    <aside
+      id="seo-content"
+      aria-label="About OffMeta"
+      style="
+        position: absolute;
+        left: -9999px;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+      "
+    >
+      <h1>OffMeta — Natural Language Magic Card Search</h1>
+      <p>
+        OffMeta is a natural language Magic: The Gathering card search tool. It
+        lets players describe cards the way they talk and translates that into
+        real Scryfall searches. No syntax knowledge required. Type something
+        like "cheap green ramp spells", "creatures that make treasure tokens"
+        or "budget alternatives to Rhystic Study" and OffMeta builds the
+        Scryfall query for you, shows it, and lets you edit it.
+      </p>
+      <nav aria-label="Primary">
+        <ul>
+          <li><a href="/guides">Search guides</a></li>
+          <li><a href="/combos">Commander combo finder</a></li>
+          <li><a href="/market">Magic card market trends</a></li>
+          <li><a href="/docs">Search syntax docs</a></li>
+          <li><a href="/about">About OffMeta</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Fallback for JavaScript-disabled browsers -->
+
+
+
+    <noscript>
+      <div style="padding: 2rem; font-family: system-ui, sans-serif">
+        <h2>OffMeta — Natural Language Magic Card Search</h2>
+
+        <p>
+          OffMeta is a natural language Magic: The Gathering card search tool.
+          It lets players describe cards the way they talk and translates that
+          into real Scryfall searches. No syntax knowledge required.
+        </p>
+        <h2>How it works</h2>
+        <ul>
+          <li>
+            Type what you're looking for: "cheap green ramp spells" or
+            "creatures that make treasure tokens"
+          </li>
+          <li>OffMeta translates your description into Scryfall syntax</li>
+          <li>See real card results instantly from Scryfall's database</li>
+        </ul>
+        <p>Please enable JavaScript to use OffMeta.</p>
+      </div>
+    </noscript>
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+  </body>
+</html>
