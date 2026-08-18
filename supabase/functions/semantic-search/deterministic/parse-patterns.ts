@@ -219,19 +219,16 @@ const FRAME_PATTERNS: Array<[RegExp, string]> = [
 const CARD_NOUN_NOISE =
   /(?<!\p{L})(?:cards?|cartas?|cartes?|karten?|carte|magic|mtg|карт\p{L}*)(?!\p{L})|カード|カード類|カードの|카드|卡牌|卡片|卡|[のはをがでとな々]|的/giu;
 
-/** Canonical English print-treatment words used for misspelling repair. */
-const FRAME_VOCAB = [
-  'borderless',
-  'textless',
-  'showcase',
-  'extended',
-  'retro',
-  'frame',
-  'frames',
-  'border',
-  'borders',
-  'vintage',
-] as const;
+/**
+ * Long, distinctive print-treatment words that are safe to fuzzy-match.
+ * Short words like "frame"/"retro" are excluded on purpose: they sit one edit
+ * away from common MTG words ("flame", "hero"), so they use explicit typo
+ * alternations below instead.
+ */
+const FUZZY_FRAME_VOCAB = ['borderless', 'textless', 'showcase'] as const;
+
+/** Real MTG words that must never be rewritten by the fuzzy pass. */
+const FUZZY_FRAME_DENYLIST = new Set(['bordering', 'boardless', 'shocase']);
 
 function levenshtein(a: string, b: string): number {
   const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
@@ -257,21 +254,26 @@ function levenshtein(a: string, b: string): number {
  * Only touches ASCII-letter tokens, so localized vocabulary is untouched.
  */
 export function normalizeFrameTypos(query: string): string {
-  let out = query
+  const out = query
+    // Glued compounds: "retroframe", "oldborder", "showcaseframe"
     .replace(/\b(retro|old|new|modern|future|showcase|extended)(frames?|borders?)\b/gi, '$1 $2')
-    .replace(/\bfull\s*-?\s*art\b/gi, 'full-art')
-    .replace(/\bfullart\b/gi, 'full-art');
+    .replace(/\bfullart\b/gi, 'full-art')
+    // Explicit short-word typos (fuzzy matching is unsafe at this length)
+    .replace(/\b(?:fram|framme|frme|frane)\b/gi, 'frame')
+    .replace(/\b(?:frams|frammes|franes)\b/gi, 'frames')
+    .replace(/\b(?:retr|retor|rerto|rertro)\b/gi, 'retro')
+    .replace(/\b(?:boarder|bordr)\b/gi, 'border');
 
-  return out.replace(/[a-z]{4,}/gi, (word) => {
+  return out.replace(/\b[a-z]{7,12}\b/gi, (word) => {
     const lower = word.toLowerCase();
-    if ((FRAME_VOCAB as readonly string[]).includes(lower)) return word;
+    if (FUZZY_FRAME_DENYLIST.has(lower)) return word;
+    if ((FUZZY_FRAME_VOCAB as readonly string[]).includes(lower)) return word;
     let best: string | null = null;
     let bestScore = Infinity;
-    for (const candidate of FRAME_VOCAB) {
+    for (const candidate of FUZZY_FRAME_VOCAB) {
       if (Math.abs(candidate.length - lower.length) > 2) continue;
-      const budget = candidate.length >= 8 ? 2 : 1;
       const distance = levenshtein(lower, candidate);
-      if (distance <= budget && distance < bestScore) {
+      if (distance <= 2 && distance < bestScore) {
         best = candidate;
         bestScore = distance;
       }
@@ -279,6 +281,7 @@ export function normalizeFrameTypos(query: string): string {
     return best ?? word;
   });
 }
+
 
 export function parseFramePatterns(query: string, ir: SearchIR): string {
   let remaining = normalizeFrameTypos(query);
