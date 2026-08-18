@@ -14,7 +14,9 @@ import {
   buildSearchResultsJsonLd,
   buildSeoTitle,
 } from '@/lib/seo';
+import { useTranslation } from '@/lib/i18n';
 import type { ScryfallCard } from '@/types/card';
+
 
 interface SeoManagerProps {
   hasSearched: boolean;
