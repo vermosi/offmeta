@@ -1175,10 +1175,16 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       const validation = validateQuery(correctedQuery);
 
       // Step 3: Scryfall validation and recovery
-      let finalQuery = validation.sanitized;
+      // Sanitization can strip every clause (e.g. an unknown oracle tag was the
+      // only constraint). Never return an empty query — that matches the whole
+      // catalog — fall back to keyword search on the English text.
+      let finalQuery = validation.sanitized.trim()
+        ? validation.sanitized
+        : buildFallbackQuery(queryForAI || query, filters);
       let resultCount: number | null = null;
       let aiValidationNote: string | null = null;
       let scryfallStatus: number | null = null;
+
 
       const probeScryfall = async (candidateQuery: string): Promise<void> => {
         const probe = await validateAgainstScryfall(
