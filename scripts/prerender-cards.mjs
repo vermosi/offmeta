@@ -576,11 +576,17 @@ async function main() {
     written += 1;
   }
 
-  await writeBuildInfo({ prerendered_cards: written, source, has_credentials: hasCredentials });
+  await writeBuildInfo({
+    prerendered_cards: written,
+    priced_cards: priced,
+    source,
+    has_credentials: hasCredentials,
+  });
 
   console.log(
-    `[prerender-cards] Wrote ${written} card HTML files (source: ${source}) to ${OUTPUT_DIR}/<slug>{.html,/index.html}`,
+    `[prerender-cards] Wrote ${written} card HTML files (${priced} with Product offers, source: ${source}) to ${OUTPUT_DIR}/<slug>{.html,/index.html}`,
   );
+
 }
 
 main().catch((err) => {
