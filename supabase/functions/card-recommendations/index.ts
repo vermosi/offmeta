@@ -87,7 +87,7 @@ serve(
             success: true,
             oracle_id: oracleId,
             format,
-            recommendations: data ?? [],
+            recommendations,
           }),
           { status: 200, headers },
         );
