@@ -18,7 +18,7 @@ import { SaveSearchButton } from '@/components/SaveSearchButton';
 import { cn } from '@/lib/core/utils';
 import { intentFromScryfallQuery } from '@/lib/search/whyItMatches';
 import type { SearchIntent } from '@/types/search';
-import { buildInterpretation } from '@/lib/search/interpretation';
+import { buildInterpretation, localizeConstraintValue } from '@/lib/search/interpretation';
 
 const COLOR_NAMES: Record<string, string> = {
   W: 'white',
