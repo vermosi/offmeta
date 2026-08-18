@@ -89,3 +89,16 @@ export function detectNonEnglishQuery(query: string): NonEnglishSignal {
 
   return { isNonEnglish: false, matches: best?.matches ?? [] };
 }
+
+/**
+ * Scripts used by the non-English locales OffMeta ships (ja, ko, ru, zhs/zht)
+ * plus other common non-Latin scripts. A single character is enough: these
+ * scripts never appear in an English query.
+ */
+const NON_LATIN_SCRIPT =
+  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u;
+
+/** True when the query contains characters from a non-Latin script. */
+export function hasNonLatinScript(query: string): boolean {
+  return NON_LATIN_SCRIPT.test(query);
+}

@@ -4,7 +4,11 @@ import { lookupCardName } from './card-name-lookup.ts';
 import { buildAiRepairCandidates } from './ai-repair-candidates.ts';
 import { buildSystemPrompt, type QueryTier } from './prompts.ts';
 import { getCorsHeaders } from '../_shared/auth.ts';
-import { detectNonEnglishQuery } from '../_shared/languageDetect.ts';
+import {
+  detectNonEnglishQuery,
+  hasNonLatinScript,
+} from '../_shared/languageDetect.ts';
+
 import { LOVABLE_API_KEY, supabase } from './client.ts';
 import {
   getCachedResult,
@@ -788,10 +792,8 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
     const normalizedLocale = locale?.toLowerCase();
     const localePrefersTranslation =
       normalizedLocale !== undefined && normalizedLocale !== 'en';
-    const hasNonLatin =
-      /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Devanagari}]/u.test(
-        remainingQuery,
-      );
+    const hasNonLatin = hasNonLatinScript(remainingQuery);
+
     const hasAccentedLatin = /[àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ]/i.test(
       remainingQuery,
     );
