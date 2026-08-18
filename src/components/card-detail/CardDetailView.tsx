@@ -24,7 +24,9 @@ import { ManaCost, OracleText } from '@/components/ManaSymbol';
 import { SaveCardButton } from '@/components/SaveCardButton';
 import { toSavedCardInput } from '@/lib/account';
 import { useAnalytics, useAffiliateConfig } from '@/hooks';
-import { useTranslation, LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n';
+import { useTranslation } from '@/lib/i18n';
+import { LOCALE_TO_SCRYFALL_LANG } from '@/lib/i18n/constants';
+
 
 
 import { CardModalImage } from '@/components/CardModal/CardModalImage';
