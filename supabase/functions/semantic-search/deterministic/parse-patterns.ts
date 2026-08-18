@@ -153,7 +153,69 @@ const FRAME_PATTERNS: Array<[RegExp, string]> = [
   [/\bfull[- ]art\b/gi, 'is:fullart'],
   [/\btextless\b/gi, 'is:textless'],
   [/\bshowcase(?:\s+frames?)?\b/gi, 'is:showcase'],
+
+  // --- Localized print-treatment vocabulary (all 11 supported locales) ---
+  // Non-Latin scripts have no \b word boundary, so these match bare substrings.
+  // Retro / old frame
+  [/レトロ\s*フレーム|旧枠|オールドフレーム/g, 'is:retro'],
+  [/레트로\s*(?:프레임|틀)|구\s*프레임/g, 'is:retro'],
+  [/复古边框|复古框|旧框|舊框|復古邊框|復古框/g, 'is:retro'],
+  [/ретро[-\s]?рамк\w*|стар\w+\s+рамк\w*/gi, 'is:retro'],
+  [/\b(?:marco|borde)s?\s+(?:retro|antiguos?)\b/gi, 'is:retro'],
+  [/\bcadres?\s+r[ée]tro\b|\bancien\s+cadre\b/gi, 'is:retro'],
+  [/\bretro[-\s]?rahmen\b|\balte[rns]?\s+rahmen\b/gi, 'is:retro'],
+  [/\bcornice\s+retr[òo]\b|\bbordo\s+vecchio\b/gi, 'is:retro'],
+  [/\bmoldura\s+(?:retr[ôo]|antiga)\b/gi, 'is:retro'],
+  // Borderless
+  [/ボーダーレス|枠なし/g, 'border:borderless'],
+  [/보더리스|테두리\s*없\w*/g, 'border:borderless'],
+  [/无边框|無邊框|无框|無框/g, 'border:borderless'],
+  [/без\s*рам\w*|безрамочн\w*/gi, 'border:borderless'],
+  [/\bsin\s+bordes?\b/gi, 'border:borderless'],
+  [/\bsans\s+bordures?\b/gi, 'border:borderless'],
+  [/\brandlos\b|\bohne\s+rand\b/gi, 'border:borderless'],
+  [/\bsenza\s+bordi?\b/gi, 'border:borderless'],
+  [/\bsem\s+bordas?\b/gi, 'border:borderless'],
+  // Full art
+  [/フルアート/g, 'is:fullart'],
+  [/풀\s*아트/g, 'is:fullart'],
+  [/全图|全圖|满图|滿圖/g, 'is:fullart'],
+  [/фулл[-\s]?арт|полн\w+\s+иллюстрац\w*/gi, 'is:fullart'],
+  [/\barte\s+complet[ao]\b/gi, 'is:fullart'],
+  [/\bpleine\s+(?:illustration|page)\b/gi, 'is:fullart'],
+  [/\bvollbild\b|\bganzseitige[rs]?\s+illustration\b/gi, 'is:fullart'],
+  // Textless
+  [/テキストレス|文章なし/g, 'is:textless'],
+  [/텍스트\s*없\w*/g, 'is:textless'],
+  [/无文本|無文字|无字|無字/g, 'is:textless'],
+  [/без\s*текст\w*/gi, 'is:textless'],
+  [/\bsin\s+texto\b/gi, 'is:textless'],
+  [/\bsans\s+texte\b/gi, 'is:textless'],
+  [/\bohne\s+text\b/gi, 'is:textless'],
+  [/\bsenza\s+testo\b/gi, 'is:textless'],
+  [/\bsem\s+texto\b/gi, 'is:textless'],
+  // Extended art
+  [/拡張アート/g, 'frame:extendedart'],
+  [/확장\s*아트/g, 'frame:extendedart'],
+  [/扩展艺术|擴展藝術|延伸藝術/g, 'frame:extendedart'],
+  [/расширенн\w*\s+(?:арт\w*|иллюстрац\w*)/gi, 'frame:extendedart'],
+  [/\barte\s+extendid[ao]\b|\barte\s+estesa\b|\barte\s+estendida\b/gi, 'frame:extendedart'],
+  [/\bart\s+[ée]tendu\b/gi, 'frame:extendedart'],
+  [/\berweiterte[rsn]?\s+(?:kunst|artwork|rahmen)\b/gi, 'frame:extendedart'],
+  // Showcase
+  [/ショーケース/g, 'is:showcase'],
+  [/쇼케이스/g, 'is:showcase'],
+  [/展示框|展示邊框/g, 'is:showcase'],
+  [/витринн\w*/gi, 'is:showcase'],
+  [/\bescaparate\b|\bvitrine\b|\bvetrina\b/gi, 'is:showcase'],
 ];
+
+/**
+ * Generic "card(s)" nouns across supported locales — ignored when deciding
+ * whether a query is purely about print treatment.
+ */
+const CARD_NOUN_NOISE =
+  /\b(?:cards?|cartas?|cartes?|karten?|carte|magic|mtg)\b|カード|카드|卡牌|卡片|卡|карт\w*/gi;
 
 export function parseFramePatterns(query: string, ir: SearchIR): string {
   let remaining = query;
@@ -167,6 +229,24 @@ export function parseFramePatterns(query: string, ir: SearchIR): string {
   }
   return remaining;
 }
+
+/**
+ * Whole-query print-treatment match ("retro frame", "レトロフレーム", "sin bordes").
+ * Runs before the card-name heuristic so localized frame terms never become
+ * `name:` tokens.
+ */
+export function matchFrameOnlyQuery(query: string): string | null {
+  const specials: string[] = [];
+  const remainder = parseFramePatterns(query, { specials } as unknown as SearchIR);
+  if (specials.length === 0) return null;
+  const leftover = remainder
+    .replace(CARD_NOUN_NOISE, ' ')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+  if (leftover.length > 0) return null;
+  return specials.join(' ');
+}
+
 
 export function parseSpecialPatterns(query: string, ir: SearchIR): string {
   let remaining = query;
