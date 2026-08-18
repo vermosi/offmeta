@@ -235,7 +235,9 @@ export function CardDetailView({ card }: CardDetailViewProps) {
   const displayImageUrl =
     selectedPrinting?.image_uris?.large ??
     getCardImage(card, 'large', currentFace);
-  const faceDetails = getCardFaceDetails(card, currentFace, locale);
+  const localizedCard = localizedFields ? { ...card, ...localizedFields } : card;
+  const faceDetails = getCardFaceDetails(localizedCard, currentFace, locale);
+
   const displaySetName = selectedPrinting?.set_name || card.set_name;
   const displayRarity = selectedPrinting?.rarity || card.rarity;
   const displayCollectorNumber =
