@@ -543,7 +543,7 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       ),
     );
 
-    const deterministicQuery = applyFiltersToQuery(
+    let deterministicQuery = applyFiltersToQuery(
       deterministicResult.deterministicQuery,
       filters,
     );
@@ -562,11 +562,22 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
 
     // Non-Latin queries (ja/ko/zh/ru) have no spaces or ASCII tokens, so the
     // card-name heuristic wraps the whole phrase in `name:` and returns zero
-    // results. Route those to translation instead of short-circuiting here.
+    // results. Discard that guess and route the text through translation.
     const isNonLatinNameGuess =
       !isKnownCard &&
       hasNonLatinScript(query) &&
       /(^|\s)!?"?name:/i.test(deterministicResult.deterministicQuery || '');
+
+    if (isNonLatinNameGuess) {
+      deterministicQuery = applyFiltersToQuery('', filters);
+      deterministicResult.deterministicQuery = '';
+      deterministicResult.intent.remainingQuery = query;
+      deterministicResult.intent.warnings =
+        deterministicResult.intent.warnings.filter(
+          (w: string) => w !== 'likely_card_name',
+        );
+    }
+
 
     // Deterministic fast-path: never wait on cache/DB for this case.
     if (
