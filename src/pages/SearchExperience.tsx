@@ -564,16 +564,17 @@ const Index = () => {
   const translationConfidence = lastSearchResult?.explanation?.confidence;
   const translationSourceLabel =
     translationSource === 'deterministic'
-      ? 'Deterministic'
+      ? t('search.source.deterministic', 'Deterministic')
       : translationSource === 'cache'
-        ? 'Cached'
+        ? t('search.source.cache', 'Cached')
         : translationSource === 'client_recovery'
-          ? 'Recovered'
+          ? t('search.source.client_recovery', 'Recovered')
           : translationSource === 'concept_match'
-            ? 'Concept match'
+            ? t('search.source.concept_match', 'Concept match')
             : translationSource === 'budget_fallback'
-              ? 'Fallback'
-              : 'AI';
+              ? t('search.source.budget_fallback', 'Fallback')
+              : t('search.source.ai', 'AI');
+
 
   return (
     <ErrorBoundary>
