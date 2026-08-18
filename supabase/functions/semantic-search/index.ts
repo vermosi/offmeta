@@ -543,7 +543,7 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       ),
     );
 
-    const deterministicQuery = applyFiltersToQuery(
+    let deterministicQuery = applyFiltersToQuery(
       deterministicResult.deterministicQuery,
       filters,
     );
@@ -560,8 +560,41 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
 
     // Hardcoded patterns already checked at step 2.5a above
 
+    // Foreign-language queries (CJK/Cyrillic have no spaces or ASCII tokens;
+    // Spanish/Portuguese/etc. look like plain words) get wrapped in `name:` by
+    // the card-name heuristic and return nothing. Discard that guess for
+    // unknown card names and route the text through translation instead.
+    const foreignSignal = detectNonEnglishQuery(query);
+    const looksForeignInput =
+      hasNonLatinScript(query) ||
+      foreignSignal.isNonEnglish ||
+      foreignSignal.matches.length > 0 ||
+      (locale !== undefined && locale.toLowerCase() !== 'en');
+    const isForeignNameGuess =
+      !isKnownCard &&
+      looksForeignInput &&
+      /^(\s*!?"?name:[^\s]*\s*)+$/i.test(
+        deterministicResult.deterministicQuery || '',
+      );
+
+    if (isForeignNameGuess) {
+      deterministicQuery = applyFiltersToQuery('', filters);
+      deterministicResult.deterministicQuery = '';
+      deterministicResult.intent.remainingQuery = query;
+      deterministicResult.intent.warnings =
+        deterministicResult.intent.warnings.filter(
+          (w: string) => w !== 'likely_card_name',
+        );
+    }
+
+
+
     // Deterministic fast-path: never wait on cache/DB for this case.
-    if (deterministicQuery && deterministicRemaining.length < 3) {
+    if (
+      deterministicQuery &&
+      deterministicRemaining.length < 3 &&
+      !isForeignNameGuess
+    ) {
       const validation = validateQuery(deterministicQuery || query);
       const responseTimeMs = Date.now() - requestStartTime;
       logInfo(
@@ -1152,10 +1185,16 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       const validation = validateQuery(correctedQuery);
 
       // Step 3: Scryfall validation and recovery
-      let finalQuery = validation.sanitized;
+      // Sanitization can strip every clause (e.g. an unknown oracle tag was the
+      // only constraint). Never return an empty query — that matches the whole
+      // catalog — fall back to keyword search on the English text.
+      let finalQuery = validation.sanitized.trim()
+        ? validation.sanitized
+        : buildFallbackQuery(queryForAI || query, filters).sanitized;
       let resultCount: number | null = null;
       let aiValidationNote: string | null = null;
       let scryfallStatus: number | null = null;
+
 
       const probeScryfall = async (candidateQuery: string): Promise<void> => {
         const probe = await validateAgainstScryfall(
