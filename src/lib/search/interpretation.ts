@@ -51,29 +51,42 @@ export function buildInterpretation(intent?: SearchIntent | null): Constraint[] 
 
 
   for (const type of intent.types ?? []) {
-    out.push({ kind: 'type', value: type.toLowerCase() });
+    out.push({ kind: 'type', kindKey: 'type', value: type.toLowerCase() });
   }
 
   if (intent.cmc) {
-    out.push({ kind: 'mana value', value: `${intent.cmc.op} ${intent.cmc.value}` });
+    out.push({
+      kind: 'mana value',
+      kindKey: 'manaValue',
+      value: `${intent.cmc.op} ${intent.cmc.value}`,
+    });
   }
   if (intent.power) {
-    out.push({ kind: 'power', value: `${intent.power.op} ${intent.power.value}` });
+    out.push({ kind: 'power', kindKey: 'power', value: `${intent.power.op} ${intent.power.value}` });
   }
   if (intent.toughness) {
-    out.push({ kind: 'toughness', value: `${intent.toughness.op} ${intent.toughness.value}` });
+    out.push({
+      kind: 'toughness',
+      kindKey: 'toughness',
+      value: `${intent.toughness.op} ${intent.toughness.value}`,
+    });
   }
 
   for (const tag of intent.tags ?? []) {
-    out.push({ kind: 'function tag', value: tag.replace(/^otag:/, '').replace(/-/g, ' ') });
+    out.push({
+      kind: 'function tag',
+      kindKey: 'functionTag',
+      value: tag.replace(/^otag:/, '').replace(/-/g, ' '),
+    });
   }
   for (const phrase of intent.oraclePatterns ?? []) {
     const cleaned = phrase
       .replace(/^(?:o|oracle|fo):/i, '')
       .replace(/^"|"$/g, '')
       .trim();
-    if (cleaned) out.push({ kind: 'oracle text', value: `“${cleaned}”` });
+    if (cleaned) out.push({ kind: 'oracle text', kindKey: 'oracleText', value: `“${cleaned}”` });
   }
+
 
   return out.slice(0, 12);
 }
