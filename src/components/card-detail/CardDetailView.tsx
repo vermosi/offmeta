@@ -111,6 +111,9 @@ export function CardDetailView({ card }: CardDetailViewProps) {
   const [isLoadingRulings, setIsLoadingRulings] = useState(true);
   const [showRulings, setShowRulings] = useState(true);
   const [comboCount, setComboCount] = useState(0);
+  const [localizedFields, setLocalizedFields] =
+    useState<LocalizedPrintedFields | null>(null);
+
 
   const isDoubleFaced = isDoubleFacedCard(card);
 
