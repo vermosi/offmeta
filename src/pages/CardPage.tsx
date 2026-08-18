@@ -201,6 +201,7 @@ const CardPage = () => {
 
   if (isLoading) {
     return (
+
       <div className="min-h-screen flex flex-col bg-background relative">
         <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
         <Header />
