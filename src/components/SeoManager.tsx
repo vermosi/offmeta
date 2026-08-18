@@ -38,6 +38,7 @@ export function SeoManager({
   totalCards,
 }: SeoManagerProps) {
   const jsonLdCleanup = useRef<(() => void) | null>(null);
+  const { t, locale } = useTranslation();
 
   useEffect(() => {
     jsonLdCleanup.current?.();
@@ -52,9 +53,8 @@ export function SeoManager({
     // per-route tags in the head (which would mis-attribute link previews).
     if (!hasSearched || isSearching) {
       applySeoMeta({
-        title: 'Search MTG cards in plain English | OffMeta',
-        description:
-          'Find Magic: The Gathering cards without Scryfall syntax. Describe what you want in plain English and get filterable results.',
+        title: t('searchSeo.homeTitle'),
+        description: t('searchSeo.homeDescription'),
 
         url: 'https://offmeta.app/',
         type: 'website',
@@ -65,19 +65,23 @@ export function SeoManager({
     }
 
     if (displayCards.length === 0) {
-      const title = `${originalQuery} - No cards found | OffMeta`;
-      const desc = `No Magic: The Gathering cards matched "${originalQuery}". Try a broader search or adjust the wording.`;
+      const title = buildSeoTitle(
+        t('searchSeo.noResultsTitle', { query: originalQuery }),
+      );
+      const desc = t('searchSeo.noResultsDescription', {
+        query: originalQuery,
+      });
       applySeoMeta({
         title,
-        description: desc,
+        description: desc.slice(0, 160),
         url: canonicalUrl,
         type: 'website',
         image: 'https://offmeta.app/og-image.png',
         twitterCard: 'summary_large_image',
         extraMeta: {
-          'twitter:label1': 'Results',
-          'twitter:data1': '0 cards',
-          'twitter:label2': 'Query',
+          'twitter:label1': t('searchSeo.labelResults'),
+          'twitter:data1': t('searchSeo.dataCards', { count: 0 }),
+          'twitter:label2': t('searchSeo.labelQuery'),
           'twitter:data2': originalQuery.slice(0, 60),
         },
       });
@@ -98,15 +102,20 @@ export function SeoManager({
     // " | OffMeta" suffix that applySeoMeta appends.
     const MAX_TITLE = 60;
     const candidates = [
-      `${originalQuery} - MTG Card Search`,
-      `${originalQuery} - MTG Search`,
-      `${originalQuery}`,
+      t('searchSeo.resultsTitle', { query: originalQuery }),
+      t('searchSeo.resultsTitleShort', { query: originalQuery }),
+      originalQuery,
     ];
     const title =
-      candidates.find((c) => buildSeoTitle(c).length <= MAX_TITLE) ??
+      candidates
+        .map((c) => buildSeoTitle(c))
+        .find((c) => c.length <= MAX_TITLE) ??
       buildCappedTitle(originalQuery, ' | OffMeta', MAX_TITLE);
 
-    const desc = `Find ${totalCards} Magic: The Gathering cards matching "${originalQuery}" - off-meta picks, alternatives & synergies.`;
+    const desc = t('searchSeo.resultsDescription', {
+      count: totalCards,
+      query: originalQuery,
+    });
     applySeoMeta({
       title,
       description: desc.slice(0, 160),
@@ -115,9 +124,9 @@ export function SeoManager({
       image: firstArt ?? 'https://offmeta.app/og-image.png',
       twitterCard: 'summary_large_image',
       extraMeta: {
-        'twitter:label1': 'Results',
-        'twitter:data1': `${totalCards} cards`,
-        'twitter:label2': 'Query',
+        'twitter:label1': t('searchSeo.labelResults'),
+        'twitter:data1': t('searchSeo.dataCards', { count: totalCards }),
+        'twitter:label2': t('searchSeo.labelQuery'),
         'twitter:data2': originalQuery.slice(0, 60),
       },
     });
@@ -126,7 +135,8 @@ export function SeoManager({
       jsonLdCleanup.current?.();
       jsonLdCleanup.current = null;
     };
-  }, [hasSearched, isSearching, displayCards, originalQuery, searchQuery, compiledQuery, totalCards]);
+  }, [hasSearched, isSearching, displayCards, originalQuery, searchQuery, compiledQuery, totalCards, t, locale]);
+
 
   return null;
 }
