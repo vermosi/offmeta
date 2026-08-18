@@ -282,29 +282,49 @@ export function buildCardJsonLd(card: ScryfallCard, pageUrl: string): Record<str
     }
   }
 
-  const product: Record<string, unknown> = {
+  // A Product without offers/review/aggregateRating is invalid structured data
+  // (Google + Semrush both flag it). Cards with no price fall back to
+  // CreativeWork, which carries the same facts and validates cleanly.
+  const hasOffers = offers.length > 0;
+
+  const base: Record<string, unknown> = {
     '@context': 'https://schema.org',
-    '@type': 'Product',
     name: card.name,
     description,
     image,
     url: pageUrl,
-    brand: { '@type': 'Brand', name: 'Magic: The Gathering' },
-    category: card.type_line,
-    sku: card.id,
-    ...(card.collector_number && { mpn: card.collector_number }),
     ...(card.artist && { creator: { '@type': 'Person', name: card.artist } }),
     ...(card.released_at && { releaseDate: card.released_at }),
     ...(card.set_name && { isPartOf: { '@type': 'CreativeWorkSeries', name: card.set_name } }),
     audience: { '@type': 'PeopleAudience', name: 'Magic: The Gathering players' },
     inLanguage: card.lang ?? 'en',
     ...(additionalProperty.length > 0 && { additionalProperty }),
+  };
+
+  if (!hasOffers) {
+    return {
+      ...base,
+      '@type': 'CreativeWork',
+      headline: card.name,
+      genre: 'Trading card game',
+      ...(card.type_line && { about: card.type_line }),
+    };
+  }
+
+  const product: Record<string, unknown> = {
+    ...base,
+    '@type': 'Product',
+    brand: { '@type': 'Brand', name: 'Magic: The Gathering' },
+    category: card.type_line,
+    sku: card.id,
+    ...(card.collector_number && { mpn: card.collector_number }),
     ...(offers.length === 1 && { offers: offers[0] }),
     ...(offers.length > 1 && { offers: { '@type': 'AggregateOffer', lowPrice: usd, highPrice: foil, priceCurrency: 'USD', offerCount: offers.length, offers } }),
   };
 
   return product;
 }
+
 
 /**
  * Build an ItemList JSON-LD for search results.
