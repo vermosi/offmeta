@@ -60,17 +60,27 @@ serve(
           );
         }
 
+        // The RPC has no relationship_type parameter — it returns the column,
+        // so over-fetch and filter here when a type is requested.
         const { data, error } = await supabase.rpc('get_card_recommendations', {
           target_oracle_id: oracleId,
-          result_limit: limit,
+          result_limit: relationshipType ? Math.min(limit * 3, 150) : limit,
           target_format: format,
-          target_relationship_type: relationshipType,
         });
 
         if (error) {
           log.error('Recommendation RPC failed', error);
           throw error;
         }
+
+        type Recommendation = { relationship_type: string | null };
+        const rows = (data ?? []) as Recommendation[];
+        const recommendations = relationshipType
+          ? rows
+              .filter((row) => row.relationship_type === relationshipType)
+              .slice(0, limit)
+          : rows;
+
 
         return new Response(
           JSON.stringify({
