@@ -299,7 +299,10 @@ export interface LocalizedPrintedFields {
   printed_name?: string;
   printed_type_line?: string;
   printed_text?: string;
+  /** Flavor text of the localized printing, when present. */
+  flavor_text?: string;
 }
+
 
 const localizedPrintingCache = new Map<string, LocalizedPrintedFields | null>();
 const LOCALIZED_PRINTING_CACHE_MAX = 300;
