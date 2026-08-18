@@ -326,17 +326,10 @@ export function useSearch() {
   const totalCards =
     recommendationCards?.length ?? data?.pages[0]?.total_cards ?? 0;
 
-  // --- Dynamic document title ---
-  useEffect(() => {
-    if (hasSearched && originalQuery) {
-      document.title = `${originalQuery} — OffMeta MTG Search`;
-    } else {
-      document.title = 'MTG Card Search in Plain English | OffMeta';
-    }
-    return () => {
-      document.title = 'MTG Card Search in Plain English | OffMeta';
-    };
-  }, [hasSearched, originalQuery]);
+  // Document title is owned by <SeoManager>, which sets a localized title
+  // alongside the matching description/OG tags. Writing it here too caused a
+  // race that left non-English locales with an English title.
+
 
   // --- Track results count + zero-result failures ---
   useEffect(() => {
