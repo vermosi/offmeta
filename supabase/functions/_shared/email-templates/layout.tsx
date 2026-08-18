@@ -105,7 +105,7 @@ interface EmailLayoutProps {
 
 /**
  * Shared shell for every auth email:
- * logo -> content -> divider -> minimal footer.
+ * content -> divider -> minimal footer.
  */
 export const EmailLayout = ({ preview, children }: EmailLayoutProps) => (
   <Html lang="en" dir="ltr">
@@ -113,13 +113,6 @@ export const EmailLayout = ({ preview, children }: EmailLayoutProps) => (
     <Preview>{preview}</Preview>
     <Body style={styles.main}>
       <Container style={styles.container}>
-        <Img
-          src={LOGO_URL}
-          width="112"
-          height="28"
-          alt="OffMeta"
-          style={styles.logo}
-        />
         <Section>{children}</Section>
         <Hr style={styles.hr} />
         <Text style={styles.footer}>
@@ -134,3 +127,4 @@ export const EmailLayout = ({ preview, children }: EmailLayoutProps) => (
 )
 
 export default EmailLayout
+
