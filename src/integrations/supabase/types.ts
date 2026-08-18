@@ -478,6 +478,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ontology_classify_state: {
+        Row: {
+          active: boolean
+          cards_done: number
+          cursor_oracle_id: string | null
+          finished_at: string | null
+          id: number
+          started_at: string | null
+          tags_done: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          cards_done?: number
+          cursor_oracle_id?: string | null
+          finished_at?: string | null
+          id?: number
+          started_at?: string | null
+          tags_done?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          cards_done?: number
+          cursor_oracle_id?: string | null
+          finished_at?: string | null
+          id?: number
+          started_at?: string | null
+          tags_done?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ontology_edges: {
         Row: {
           created_at: string
@@ -1439,6 +1472,11 @@ export type Database = {
       }
       classify_card_ontology: {
         Args: { p_limit?: number; p_since?: string }
+        Returns: Json
+      }
+      classify_card_ontology_start: { Args: never; Returns: Json }
+      classify_card_ontology_step: {
+        Args: { p_batch_size?: number }
         Returns: Json
       }
       cleanup_expired_cache: { Args: never; Returns: undefined }
