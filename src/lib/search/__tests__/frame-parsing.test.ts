@@ -11,6 +11,25 @@ describe('frame / print-treatment parsing', () => {
     expect(build('full art lands')).toContain('is:fullart');
   });
 
+  it('tolerates misspellings and glued compounds', () => {
+    expect(build('borderles cards')).toBe('border:borderless');
+    expect(build('bordeless')).toBe('border:borderless');
+    expect(build('boarderless cards')).toBe('border:borderless');
+    expect(build('retroframe')).toBe('is:retro');
+    expect(build('retro fram')).toBe('is:retro');
+    expect(build('retro')).toBe('is:retro');
+    expect(build('textles cards')).toBe('is:textless');
+    expect(build('showcse cards')).toBe('is:showcase');
+    expect(build('fullart lands')).toContain('is:fullart');
+  });
+
+  it('does not rewrite unrelated MTG words', () => {
+    expect(build('flame cards')).not.toContain('is:retro');
+    expect(build('creatures with flying')).not.toContain('border:borderless');
+  });
+
+
+
   const LOCALIZED_RETRO: Array<[string, string]> = [
     ['es', 'marco retro'],
     ['fr', 'cadre rétro'],
