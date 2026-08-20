@@ -303,6 +303,7 @@ export default function AdminSeoPages() {
                     })
                   }
                   title={page.status === 'published' ? 'Unpublish' : 'Publish'}
+                  aria-label={page.status === 'published' ? 'Unpublish' : 'Publish'}
                 >
                   {page.status === 'published' ? (
                     <EyeOff className="h-3.5 w-3.5" />
