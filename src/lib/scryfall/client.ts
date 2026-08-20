@@ -365,7 +365,93 @@ export async function getLocalizedPrintedFields(
   return result;
 }
 
+/**
+ * In-memory caches for single-card and autocomplete lookups.
+ *
+ * Repeated navigation between a search result, a card page, and back re-asks
+ * Scryfall for identical payloads. A short-lived bounded map makes those
+ * repeats instant without persisting anything to disk or localStorage.
+ * In-flight maps additionally collapse concurrent duplicate requests.
+ */
+const CARD_CACHE_TTL_MS = 5 * 60 * 1000;
+const CARD_CACHE_MAX_ENTRIES = 300;
+const AUTOCOMPLETE_CACHE_TTL_MS = 5 * 60 * 1000;
+const AUTOCOMPLETE_CACHE_MAX_ENTRIES = 200;
+
+interface MemoEntry<T> {
+  value: T;
+  expiresAt: number;
+}
+
+function readMemo<T>(cache: Map<string, MemoEntry<T>>, key: string): T | undefined {
+  const entry = cache.get(key);
+  if (!entry) return undefined;
+  if (Date.now() > entry.expiresAt) {
+    cache.delete(key);
+    return undefined;
+  }
+  // LRU touch
+  cache.delete(key);
+  cache.set(key, entry);
+  return entry.value;
+}
+
+function writeMemo<T>(
+  cache: Map<string, MemoEntry<T>>,
+  key: string,
+  value: T,
+  ttlMs: number,
+  maxEntries: number,
+): void {
+  if (cache.size >= maxEntries) {
+    const oldest = cache.keys().next().value;
+    if (oldest !== undefined) cache.delete(oldest);
+  }
+  cache.set(key, { value, expiresAt: Date.now() + ttlMs });
+}
+
+const cardByNameCache = new Map<string, MemoEntry<ScryfallCard>>();
+const cardByNameInFlight = new Map<string, Promise<ScryfallCard>>();
+const autocompleteCache = new Map<string, MemoEntry<string[]>>();
+const autocompleteInFlight = new Map<string, Promise<string[]>>();
+
+/** Test-only: clear the card and autocomplete memory caches. */
+export function __resetCardLookupCaches(): void {
+  cardByNameCache.clear();
+  cardByNameInFlight.clear();
+  autocompleteCache.clear();
+  autocompleteInFlight.clear();
+}
+
 export async function getCardByName(name: string): Promise<ScryfallCard> {
+  const cacheKey = name.trim().toLowerCase();
+  const cached = readMemo(cardByNameCache, cacheKey);
+  if (cached) return cached;
+
+  const inFlight = cardByNameInFlight.get(cacheKey);
+  if (inFlight) return inFlight;
+
+  const request = fetchCardByName(name)
+    .then((card) => {
+      writeMemo(
+        cardByNameCache,
+        cacheKey,
+        card,
+        CARD_CACHE_TTL_MS,
+        CARD_CACHE_MAX_ENTRIES,
+      );
+      return card;
+    })
+    .finally(() => {
+      cardByNameInFlight.delete(cacheKey);
+    });
+
+  cardByNameInFlight.set(cacheKey, request);
+  return request;
+}
+
+async function fetchCardByName(name: string): Promise<ScryfallCard> {
+
 
   const encodedName = encodeURIComponent(name);
 
