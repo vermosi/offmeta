@@ -10,7 +10,14 @@ import { GUIDE_SUMMARIES as GUIDES } from '@/data/guide-summaries';
 import { BookOpen, FileText, Sparkles, ChevronRight, TrendingUp } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
-import { applySeoMeta, injectJsonLd } from '@/lib/seo';
+import {
+  applySeoMeta,
+  injectJsonLdGraphs,
+  buildWebSiteJsonLd,
+  buildBreadcrumbJsonLd,
+  buildDocsArticleJsonLd,
+} from '@/lib/seo';
+
 
 export default function DocsIndex() {
   const { t } = useTranslation();
