@@ -166,118 +166,152 @@ export default function SyntaxCheatSheet() {
     },
   ], [t]);
 
-  return (
-    <div className="min-h-screen flex flex-col bg-background relative overflow-x-hidden">
-      <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
-      <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
+  const codeClass =
+    'font-mono text-[11px] tracking-tight text-foreground underline decoration-border/70 decoration-dotted underline-offset-4';
 
+  return (
+    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
       <SkipLinks />
       <Header />
 
-      <main id="main-content" className="flex-1 container-main py-8 sm:py-12">
-        <div className="max-w-3xl mx-auto space-y-8">
-          <Link
-            to="/docs"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            {t('syntax.backToDocs')}
-          </Link>
+      <nav className="container-main pt-8" aria-label="Breadcrumb">
+        <ol className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+          <li>
+            <Link to="/" className="transition-colors hover:text-foreground">
+              OffMeta
+            </Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li>
+            <Link to="/docs" className="transition-colors hover:text-foreground">
+              {t('nav.docs', 'Docs')}
+            </Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li className="text-foreground">{t('docs.syntaxTitle', 'Search Syntax Cheat Sheet')}</li>
+        </ol>
+      </nav>
 
-          <header className="space-y-4">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-foreground">
+      <main id="main-content" className="container-main flex-1 pb-16 pt-8">
+        <article className="mx-auto min-w-0 max-w-2xl">
+          <header className="border-b border-border/60 pb-8">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              {t('docs.pageTitle', 'OffMeta Documentation')}
+            </p>
+            <h1 className="mt-4 break-words font-display text-[clamp(2rem,5vw,3.25rem)] font-extrabold uppercase leading-[0.9] tracking-tight text-foreground">
               {t('cheatSheet.pageHeading', 'Scryfall Syntax Cheat Sheet — Natural Language to MTG Search')}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="mt-4 break-words text-base leading-relaxed text-muted-foreground sm:text-lg">
               {t('syntax.subtitle')}
             </p>
-            <div className="text-sm text-foreground/90 leading-relaxed space-y-2 border-b border-border/30 pb-6">
-              <p>
-                {t('cheatSheet.introPart1Pre', 'Scryfall uses a powerful query language to filter the entire Magic: The Gathering card database. Operators like')} <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">t:</code> {t('cheatSheet.introType', '(type),')}{' '}
-                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">c:</code> {t('cheatSheet.introColor', '(color),')}{' '}
-                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">f:</code> {t('cheatSheet.introFormat', '(format),')}{' '}
-                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">kw:</code> {t('cheatSheet.introKeyword', '(keyword),')}{' '}
-                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">usd&lt;</code> {t('cheatSheet.introPrice', '(price), and')}{' '}
-                <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">otag:</code> {t('cheatSheet.introPart1Post', '(community tag) can be combined to build precise searches. OffMeta generates this syntax automatically from plain English descriptions — the table below shows what each phrase maps to so you can understand and edit the generated queries.')}
-              </p>
-              <p>
-                {t('cheatSheet.introPart2', 'Each row shows an example natural language phrase you might type into OffMeta on the left, and the Scryfall syntax it produces on the right. Click the copy icon to copy any syntax string directly to your clipboard.')}
-              </p>
+            <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
+              <Link
+                to="/docs"
+                className="inline-flex min-h-[36px] items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                {t('syntax.backToDocs')}
+              </Link>
             </div>
           </header>
 
+          <section className="min-w-0 space-y-4 border-b border-border/50 py-8 text-base leading-relaxed text-foreground/90">
+            <p>
+              {t('cheatSheet.introPart1Pre', 'Scryfall uses a powerful query language to filter the entire Magic: The Gathering card database. Operators like')} <code className={codeClass}>t:</code> {t('cheatSheet.introType', '(type),')}{' '}
+              <code className={codeClass}>c:</code> {t('cheatSheet.introColor', '(color),')}{' '}
+              <code className={codeClass}>f:</code> {t('cheatSheet.introFormat', '(format),')}{' '}
+              <code className={codeClass}>kw:</code> {t('cheatSheet.introKeyword', '(keyword),')}{' '}
+              <code className={codeClass}>usd&lt;</code> {t('cheatSheet.introPrice', '(price), and')}{' '}
+              <code className={codeClass}>otag:</code> {t('cheatSheet.introPart1Post', '(community tag) can be combined to build precise searches. OffMeta generates this syntax automatically from plain English descriptions — the table below shows what each phrase maps to so you can understand and edit the generated queries.')}
+            </p>
+            <p className="text-muted-foreground">
+              {t('cheatSheet.introPart2', 'Each row shows an example natural language phrase you might type into OffMeta on the left, and the Scryfall syntax it produces on the right. Click the copy icon to copy any syntax string directly to your clipboard.')}
+            </p>
+          </section>
+
           {SYNTAX_EXAMPLES.map((section) => (
-            <section key={section.categoryKey} className="space-y-2">
-              <h2 className="text-lg font-semibold text-foreground">
+            <section key={section.categoryKey} className="border-b border-border/50 py-8">
+              <h2 className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
                 {t(section.categoryKey)}
               </h2>
-              <div className="rounded-xl border border-border/50 overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border/50 bg-muted/30">
-                      <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        {t('syntax.youType')}
-                      </th>
-                      <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        {t('syntax.scryfallSyntax')}
-                      </th>
+              <table className="mt-4 w-full text-sm">
+                <caption className="sr-only">{t(section.categoryKey)}</caption>
+                <thead>
+                  <tr className="border-b border-border/40">
+                    <th scope="col" className="py-2 pr-4 text-left font-mono text-[10px] font-normal uppercase tracking-[0.24em] text-muted-foreground">
+                      {t('syntax.youType')}
+                    </th>
+                    <th scope="col" className="py-2 text-left font-mono text-[10px] font-normal uppercase tracking-[0.24em] text-muted-foreground">
+                      {t('syntax.scryfallSyntax')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {section.rows.map((row) => (
+                    <tr key={row.natural} className="border-b border-border/20 last:border-0">
+                      <td className="py-3 pr-4 align-middle text-foreground">{row.natural}</td>
+                      <td className="py-3 align-middle">
+                        <div className="flex items-center gap-1">
+                          <code className="min-w-0 break-all font-mono text-[13px] text-foreground">
+                            {row.scryfall}
+                          </code>
+                          <CopyButton text={row.scryfall} />
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {section.rows.map((row) => (
-                      <tr key={row.natural} className="border-b border-border/30 last:border-0">
-                        <td className="px-4 py-2.5 text-foreground">{row.natural}</td>
-                        <td className="px-4 py-2.5">
-                          <div className="flex items-center gap-2">
-                            <code className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-foreground break-all">{row.scryfall}</code>
-                            <CopyButton text={row.scryfall} />
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </section>
           ))}
 
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-foreground/85">
-            <strong>Tip:</strong> {t('syntax.tip')}
-          </div>
+          <section className="border-b border-border/50 py-8">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              {t('syntax.tipLabel', 'Tip')}
+            </p>
+            <p className="mt-3 text-base leading-relaxed text-foreground/90">{t('syntax.tip')}</p>
+          </section>
 
           {/* Closing explanatory section — gives Googlebot substantive prose */}
-          <section className="space-y-3 border-t border-border/30 pt-6 text-sm text-foreground/90 leading-relaxed">
-            <h2 className="text-base font-semibold text-foreground">
+          <section className="space-y-4 py-8 text-base leading-relaxed text-foreground/90">
+            <h2 className="font-display text-xl font-extrabold uppercase tracking-tight text-foreground">
               {t('cheatSheet.whyHeading', 'Why Use Natural Language Instead of Scryfall Syntax Directly?')}
             </h2>
             <p>
-              {t('cheatSheet.whyPart1Pre', "Scryfall's query syntax is powerful but has a learning curve. You need to know that color identity uses")} <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">id:</code> {t('cheatSheet.whyNot', 'not')}{' '}
-              <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">c:</code> {t('cheatSheet.whyForCommander', 'for Commander, that ramp spells are')}{' '}
-              <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">otag:mana-ramp</code> {t('cheatSheet.whyNot', 'not')}{' '}
-              <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">o:ramp</code>, {t('cheatSheet.whyKeywordAbilities', 'and that keyword abilities should use')}{' '}
-              <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">kw:</code> {t('cheatSheet.whyPart1Post', 'rather than oracle text search for accuracy. OffMeta handles all of this for you — just describe what you need and the correct query is generated automatically.')}
+              {t('cheatSheet.whyPart1Pre', "Scryfall's query syntax is powerful but has a learning curve. You need to know that color identity uses")} <code className={codeClass}>id:</code> {t('cheatSheet.whyNot', 'not')}{' '}
+              <code className={codeClass}>c:</code> {t('cheatSheet.whyForCommander', 'for Commander, that ramp spells are')}{' '}
+              <code className={codeClass}>otag:mana-ramp</code> {t('cheatSheet.whyNot', 'not')}{' '}
+              <code className={codeClass}>o:ramp</code>, {t('cheatSheet.whyKeywordAbilities', 'and that keyword abilities should use')}{' '}
+              <code className={codeClass}>kw:</code> {t('cheatSheet.whyPart1Post', 'rather than oracle text search for accuracy. OffMeta handles all of this for you — just describe what you need and the correct query is generated automatically.')}
             </p>
-            <p>
+            <p className="text-muted-foreground">
               {t('cheatSheet.whyPart2', "The cheat sheet above is useful for understanding what OffMeta generates, for learning Scryfall syntax if you want to write queries manually, and for editing the generated query in OffMeta's editable query bar to make precise adjustments.")}
             </p>
-            <h2 className="text-base font-semibold text-foreground mt-4">
+            <h2 className="pt-4 font-display text-xl font-extrabold uppercase tracking-tight text-foreground">
               {t('cheatSheet.operatorsHeading', 'Common Scryfall Syntax Operators Reference')}
             </h2>
-            <ul className="space-y-1 list-disc list-inside">
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">t:</code> — {t('cheatSheet.op.type', 'card type or subtype (creature, instant, dragon, elf…)')}</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">c:</code> — {t('cheatSheet.op.color', 'color (r=red, u=blue, b=black, g=green, w=white)')}</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">id:</code> — {t('cheatSheet.op.identity', 'color identity (for Commander deck building)')}</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">f:</code> — {t('cheatSheet.op.format', 'format legality (commander, modern, standard, pauper…)')}</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">kw:</code> — {t('cheatSheet.op.keyword', 'keyword ability (flying, haste, deathtouch, lifelink…)')}</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">otag:</code> — {t('cheatSheet.op.otag', 'community function tag (ramp, removal, boardwipe, tutor…)')}</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">usd&lt;</code> — {t('cheatSheet.op.usd', 'price in US dollars (usd<5 means under $5)')}</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">mv</code> — {t('cheatSheet.op.mv', 'mana value / converted mana cost (mv<=3 means 3 or less)')}</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">pow / tou</code> — {t('cheatSheet.op.powTou', 'power and toughness (pow>=5 means 5 or more power)')}</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">r:</code> — {t('cheatSheet.op.rarity', 'rarity (common, uncommon, rare, mythic)')}</li>
-              <li><code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">order:</code> — {t('cheatSheet.op.order', 'sort results (edhrec, usd, released, name…)')}</li>
+            <ul className="divide-y divide-border/20 border-y border-border/40 text-sm">
+              {[
+                ['t:', t('cheatSheet.op.type', 'card type or subtype (creature, instant, dragon, elf…)')],
+                ['c:', t('cheatSheet.op.color', 'color (r=red, u=blue, b=black, g=green, w=white)')],
+                ['id:', t('cheatSheet.op.identity', 'color identity (for Commander deck building)')],
+                ['f:', t('cheatSheet.op.format', 'format legality (commander, modern, standard, pauper…)')],
+                ['kw:', t('cheatSheet.op.keyword', 'keyword ability (flying, haste, deathtouch, lifelink…)')],
+                ['otag:', t('cheatSheet.op.otag', 'community function tag (ramp, removal, boardwipe, tutor…)')],
+                ['usd<', t('cheatSheet.op.usd', 'price in US dollars (usd<5 means under $5)')],
+                ['mv', t('cheatSheet.op.mv', 'mana value / converted mana cost (mv<=3 means 3 or less)')],
+                ['pow / tou', t('cheatSheet.op.powTou', 'power and toughness (pow>=5 means 5 or more power)')],
+                ['r:', t('cheatSheet.op.rarity', 'rarity (common, uncommon, rare, mythic)')],
+                ['order:', t('cheatSheet.op.order', 'sort results (edhrec, usd, released, name…)')],
+              ].map(([op, desc]) => (
+                <li key={op} className="flex flex-wrap items-baseline gap-x-4 py-2.5">
+                  <code className="font-mono text-[13px] text-foreground">{op}</code>
+                  <span className="min-w-0 flex-1 text-muted-foreground">{desc}</span>
+                </li>
+              ))}
             </ul>
           </section>
-        </div>
+        </article>
       </main>
 
       <Footer />
