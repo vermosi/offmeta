@@ -98,7 +98,7 @@ export default function SearchIntentHub() {
   return (
     <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
       <Header />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:py-12">
+      <main id="main-content" className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:py-12">
         <nav
           className="mb-6 text-sm text-muted-foreground"
           aria-label="Breadcrumb"

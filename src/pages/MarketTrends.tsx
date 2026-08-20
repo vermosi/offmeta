@@ -371,7 +371,7 @@ export default function MarketTrends() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <main className="flex-1 container max-w-4xl mx-auto px-4 pb-16 pt-6 sm:pt-10">
+      <main id="main-content" className="flex-1 container max-w-4xl mx-auto px-4 pb-16 pt-6 sm:pt-10">
         <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
           {t('market.eyebrow', 'OffMeta / Market')}
         </p>

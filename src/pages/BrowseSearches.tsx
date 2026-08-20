@@ -146,7 +146,7 @@ export default function BrowseSearches() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container-main py-8 sm:py-12">
+      <main id="main-content" className="container-main py-8 sm:py-12">
         <div className="max-w-4xl mx-auto">
           <div className="mb-10">
             <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">

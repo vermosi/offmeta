@@ -174,13 +174,14 @@ export default function AdminSeoPages() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main id="main-content" className="max-w-5xl mx-auto px-4 py-8">
         {/* Back + title */}
         <div className="flex items-center gap-3 mb-6">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/admin/analytics')}
+            aria-label="Back to admin analytics"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -287,6 +288,7 @@ export default function AdminSeoPages() {
                   className="h-8 w-8"
                   onClick={() => window.open(`/ai/${page.slug}`, '_blank')}
                   title="Preview"
+                  aria-label="Preview"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                 </Button>
@@ -315,6 +317,7 @@ export default function AdminSeoPages() {
                   onClick={() => regeneratePage.mutate(page.query)}
                   disabled={regeneratePage.isPending}
                   title="Regenerate"
+                  aria-label="Regenerate"
                 >
                   <RefreshCw
                     className={`h-3.5 w-3.5 ${regeneratePage.isPending ? 'animate-spin' : ''}`}
@@ -330,6 +333,7 @@ export default function AdminSeoPages() {
                     }
                   }}
                   title="Delete"
+                  aria-label="Delete"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>

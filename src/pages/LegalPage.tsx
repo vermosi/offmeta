@@ -284,7 +284,7 @@ export default function LegalPage({ document: doc }: { document: LegalDocument }
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container-main py-8 sm:py-12">
+      <main id="main-content" className="container-main py-8 sm:py-12">
         <article className="mx-auto max-w-2xl">
           <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
             {page.eyebrow}
