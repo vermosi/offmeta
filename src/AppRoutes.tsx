@@ -47,7 +47,7 @@ const GoRedirect = lazy(() => import('./pages/GoRedirect'));
 
 
 
-const routeFallback = <div className="min-h-screen bg-background" />;
+const routeFallback = <div className="min-h-screen min-h-dvh bg-background" />;
 // Per-route ErrorBoundary so a lazy-chunk load failure or render crash on one
 // page doesn't blank the whole app via the root boundary.
 const withFullApp = (element: ReactElement) => (

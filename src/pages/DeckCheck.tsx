@@ -154,7 +154,7 @@ export default function DeckCheck() {
   const busy = analyzing || importing;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen min-h-dvh bg-background">
       <SkipLinks />
       <Header />
       <main id="main-content" className="mx-auto max-w-4xl px-4 pb-24">

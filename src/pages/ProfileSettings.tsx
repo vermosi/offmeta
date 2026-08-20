@@ -170,7 +170,7 @@ export default function ProfileSettings() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen min-h-dvh flex flex-col bg-background">
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -180,7 +180,7 @@ export default function ProfileSettings() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen min-h-dvh flex flex-col bg-background">
       <SkipLinks />
       <Header />
 

@@ -68,7 +68,7 @@ export default function GuidePage() {
 
   if (!guide) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen min-h-dvh flex flex-col bg-background">
         <Header />
         <main
           id="main-content"
@@ -193,7 +193,7 @@ export default function GuidePage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+    <div className="min-h-screen min-h-dvh flex flex-col bg-background overflow-x-hidden">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}

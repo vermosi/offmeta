@@ -136,7 +136,7 @@ export default function GuidesIndex() {
   })).filter((group) => group.guides.length > 0);
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden bg-background">
+    <div className="flex min-h-screen min-h-dvh flex-col overflow-x-hidden bg-background">
       <SkipLinks />
       <Header />
 

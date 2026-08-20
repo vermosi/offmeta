@@ -71,7 +71,7 @@ export default function SavedPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen min-h-dvh bg-background">
       <SkipLinks />
       <Header />
       <main id="main-content" className="container-main py-12">

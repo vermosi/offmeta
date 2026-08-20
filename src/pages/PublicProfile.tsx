@@ -72,7 +72,7 @@ export default function PublicProfile() {
   }, [userId, profile?.display_name, profile?.avatar_url]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen min-h-dvh flex flex-col bg-background">
       <SkipLinks />
       <Header />
       <main

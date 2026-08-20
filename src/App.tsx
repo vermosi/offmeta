@@ -10,7 +10,7 @@ import { I18nProvider } from '@/lib/i18n';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import AppRoutes from './AppRoutes';
 
-const routeFallback = <div className="min-h-screen bg-background" />;
+const routeFallback = <div className="min-h-screen min-h-dvh bg-background" />;
 
 const App = () => <AppShell />;
 
