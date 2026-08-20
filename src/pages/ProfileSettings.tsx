@@ -273,6 +273,7 @@ export default function ProfileSettings() {
                     ref={fileInputRef}
                     type="file"
                     accept="image/jpeg,image/png,image/webp,image/gif"
+                    aria-label={t('profile.avatar')}
                     className="hidden"
                     onChange={handleAvatarUpload}
                   />

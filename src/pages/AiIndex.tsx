@@ -84,7 +84,7 @@ export default function AiIndex() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+      <main id="main-content" className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
@@ -105,6 +105,7 @@ export default function AiIndex() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('ai.filterGuides', 'Filter guides...')}
+            aria-label={t('ai.filterGuides', 'Filter guides...')}
             className="pl-10"
           />
         </div>

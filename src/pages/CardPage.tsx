@@ -302,7 +302,7 @@ const CardPage = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 container-main py-16 text-center space-y-4">
+        <main id="main-content" className="flex-1 container-main py-16 text-center space-y-4">
           <h1 className="text-2xl font-bold text-foreground">{t('card.notFoundHeading', 'Card Not Found')}</h1>
           <p className="text-muted-foreground">
             {t('card.notFoundDesc', 'We couldn\'t find a card matching "{name}".', { name: guessedName })}
@@ -335,7 +335,7 @@ const CardPage = () => {
         <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
         <Header />
 
-        <main className="relative flex-1 py-4 sm:py-10">
+        <main id="main-content" className="relative flex-1 py-4 sm:py-10">
           <div className="container-main space-y-6 sm:space-y-10 animate-fade-in">
             {/* Persistent search funnel */}
             <PageSearchBar

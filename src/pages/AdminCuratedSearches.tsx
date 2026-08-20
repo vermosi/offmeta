@@ -307,7 +307,7 @@ export default function AdminCuratedSearches() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container-main py-6 sm:py-8">
+      <main id="main-content" className="container-main py-6 sm:py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
@@ -315,6 +315,7 @@ export default function AdminCuratedSearches() {
               variant="ghost"
               size="icon"
               onClick={() => navigate('/admin/analytics')}
+            aria-label="Back to admin analytics"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -501,6 +502,7 @@ export default function AdminCuratedSearches() {
                             className="h-7 w-7"
                             asChild
                             title="Preview"
+                            aria-label="Preview"
                           >
                             <Link to={`/search/${s.slug}`} target="_blank">
                               <ExternalLink className="h-3.5 w-3.5" />
@@ -512,6 +514,7 @@ export default function AdminCuratedSearches() {
                             className="h-7 w-7"
                             onClick={() => openEdit(s)}
                             title="Edit"
+                            aria-label="Edit"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
@@ -521,6 +524,7 @@ export default function AdminCuratedSearches() {
                             className="h-7 w-7 text-destructive hover:text-destructive"
                             onClick={() => setDeleteId(s.id)}
                             title="Delete"
+                            aria-label="Delete"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
