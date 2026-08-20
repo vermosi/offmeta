@@ -10,7 +10,14 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
-import { applySeoMeta, injectJsonLd } from '@/lib/seo';
+import {
+  applySeoMeta,
+  injectJsonLdGraphs,
+  buildWebSiteJsonLd,
+  buildBreadcrumbJsonLd,
+  buildDocsArticleJsonLd,
+} from '@/lib/seo';
+
 
 interface SyntaxRow {
   natural: string;
