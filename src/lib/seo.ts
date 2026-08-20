@@ -456,6 +456,67 @@ export function buildGuideArticleJsonLd(opts: {
 }
 
 /**
+ * Build WebSite JSON-LD with a SearchAction entry point.
+ * Mirrors the static graph in index.html for routes rendered without it.
+ */
+export function buildWebSiteJsonLd(
+  locale = 'en',
+): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': 'https://offmeta.app/#website',
+    name: 'OffMeta',
+    url: 'https://offmeta.app/',
+    description:
+      'Natural language search for Magic: The Gathering cards. Describe what you need in plain English and get real card results.',
+    inLanguage: locale,
+    publisher: { '@id': 'https://offmeta.app/#organization' },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: 'https://offmeta.app/search/{search_term_string}',
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+}
+
+/**
+ * Build TechArticle JSON-LD for reference/docs pages (syntax cheat sheet,
+ * docs index). TechArticle is the closest schema.org type for how-to
+ * reference material and is eligible for the same rich results as Article.
+ */
+export function buildDocsArticleJsonLd(opts: {
+  title: string;
+  description: string;
+  url: string;
+  publishedTime?: string;
+  modifiedTime?: string;
+  section?: string;
+  keywords?: string[];
+}): Record<string, unknown> {
+  const published = opts.publishedTime ?? '2025-01-01T00:00:00.000Z';
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: opts.title,
+    description: opts.description,
+    url: opts.url,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': opts.url },
+    isPartOf: { '@id': 'https://offmeta.app/#website' },
+    author: { '@type': 'Organization', name: 'OffMeta' },
+    publisher: { '@id': 'https://offmeta.app/#organization' },
+    datePublished: published,
+    dateModified: opts.modifiedTime ?? published,
+    ...(opts.section ? { articleSection: opts.section } : {}),
+    ...(opts.keywords?.length ? { keywords: opts.keywords.join(', ') } : {}),
+  };
+}
+
+
+/**
  * Build card-specific FAQ entries from card data for rich snippets.
  */
 export function buildCardFaqs(card: ScryfallCard): Array<{ question: string; answer: string }> {
