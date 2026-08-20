@@ -53,9 +53,24 @@ const componentFiles = globSync('src/{components,pages}/**/*.tsx', {
 
 /** Matches a single JSX opening tag, including multi-line attribute lists. */
 function openingTags(src: string, tagName: string): string[] {
-  const re = new RegExp(`<${tagName}\\b[^>]*?>`, 'gs');
-  return src.match(re) ?? [];
+  const tags: string[] = [];
+  const start = new RegExp(`<${tagName}\\b`, 'g');
+  let match: RegExpExecArray | null;
+  while ((match = start.exec(src)) !== null) {
+    let depth = 0;
+    for (let i = match.index; i < src.length; i++) {
+      const ch = src[i];
+      if (ch === '{') depth++;
+      else if (ch === '}') depth--;
+      else if (ch === '>' && depth === 0 && src[i - 1] !== '=') {
+        tags.push(src.slice(match.index, i + 1));
+        break;
+      }
+    }
+  }
+  return tags;
 }
+
 
 describe('icon-only controls have accessible names', () => {
   it.each(componentFiles)('%s labels every size="icon" Button', (file) => {
