@@ -29,6 +29,9 @@ const STATIC_PATHS = [
   '/docs',
   '/docs/syntax',
   '/about',
+  '/privacy',
+  '/terms',
+
   '/search-intents',
   '/search-intents/budget',
   '/search-intents/hate',
