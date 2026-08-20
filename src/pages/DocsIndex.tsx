@@ -10,7 +10,14 @@ import { GUIDE_SUMMARIES as GUIDES } from '@/data/guide-summaries';
 import { BookOpen, FileText, Sparkles, ChevronRight, TrendingUp } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
-import { applySeoMeta, injectJsonLd } from '@/lib/seo';
+import {
+  applySeoMeta,
+  injectJsonLdGraphs,
+  buildWebSiteJsonLd,
+  buildBreadcrumbJsonLd,
+  buildDocsArticleJsonLd,
+} from '@/lib/seo';
+
 
 export default function DocsIndex() {
   const { t } = useTranslation();
@@ -33,14 +40,32 @@ export default function DocsIndex() {
         'search card help',
       ],
     });
-    const cleanupLd = injectJsonLd({
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
-        { '@type': 'ListItem', position: 2, name: 'Docs', item: 'https://offmeta.app/docs' },
-      ],
-    });
+    const cleanupLd = injectJsonLdGraphs([
+      { slot: 'website', data: buildWebSiteJsonLd() },
+      {
+        slot: 'breadcrumb',
+        data: buildBreadcrumbJsonLd([
+          { name: 'OffMeta', url: 'https://offmeta.app/' },
+          { name: 'Docs', url: 'https://offmeta.app/docs' },
+        ]),
+      },
+      {
+        slot: 'article',
+        data: buildDocsArticleJsonLd({
+          title: 'MTG Search Docs, Guides, and Syntax Cheat Sheet',
+          description:
+            'Reference for natural-language Magic card search, Scryfall syntax, guide walkthroughs, and search tips for OffMeta.',
+          url: 'https://offmeta.app/docs',
+          section: 'Docs',
+          keywords: [
+            'MTG search documentation',
+            'Scryfall syntax',
+            'natural language MTG search',
+          ],
+        }),
+      },
+    ]);
+
     return () => {
       cleanupSeo();
       cleanupLd();

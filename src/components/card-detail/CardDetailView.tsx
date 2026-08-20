@@ -280,7 +280,7 @@ export function CardDetailView({ card }: CardDetailViewProps) {
         />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:gap-10 items-start">
-          <div className="mx-auto w-full max-w-[300px] sm:max-w-[340px] lg:mx-0 lg:sticky lg:top-20">
+          <div className="mx-auto w-full max-w-[300px] sm:max-w-[340px] lg:mx-0 lg:sticky lg:top-20 lg:z-10">
             <CardModalImage
               displayImageUrl={displayImageUrl}
               cardName={faceDetails.name}

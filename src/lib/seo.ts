@@ -179,13 +179,20 @@ const JSON_LD_ID = 'offmeta-jsonld';
 /**
  * Inject or update a JSON-LD script block in the document head.
  * Call with any valid JSON-LD object (Product, ItemList, BreadcrumbList, etc.).
+ *
+ * Pass a distinct `slot` when a page needs more than one graph (e.g. a
+ * BreadcrumbList *and* an Article) so the blocks don't overwrite each other.
  * Returns a cleanup function that removes the script element.
  */
-export function injectJsonLd(data: Record<string, unknown>): () => void {
-  let el = document.getElementById(JSON_LD_ID) as HTMLScriptElement | null;
+export function injectJsonLd(
+  data: Record<string, unknown>,
+  slot?: string,
+): () => void {
+  const id = slot ? `${JSON_LD_ID}-${slot}` : JSON_LD_ID;
+  let el = document.getElementById(id) as HTMLScriptElement | null;
   if (!el) {
     el = document.createElement('script');
-    el.id = JSON_LD_ID;
+    el.id = id;
     el.type = 'application/ld+json';
     document.head.appendChild(el);
   }
@@ -195,6 +202,18 @@ export function injectJsonLd(data: Record<string, unknown>): () => void {
     el?.remove();
   };
 }
+
+/**
+ * Inject several JSON-LD graphs at once, each in its own slot.
+ * Returns a single cleanup that removes all of them.
+ */
+export function injectJsonLdGraphs(
+  graphs: Array<{ slot: string; data: Record<string, unknown> }>,
+): () => void {
+  const cleanups = graphs.map(({ slot, data }) => injectJsonLd(data, slot));
+  return () => cleanups.forEach((fn) => fn());
+}
+
 
 // ── JSON-LD builders ──────────────────────────────────────────────────────────
 
@@ -435,6 +454,67 @@ export function buildGuideArticleJsonLd(opts: {
     dateModified: opts.modifiedTime,
   };
 }
+
+/**
+ * Build WebSite JSON-LD with a SearchAction entry point.
+ * Mirrors the static graph in index.html for routes rendered without it.
+ */
+export function buildWebSiteJsonLd(
+  locale = 'en',
+): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': 'https://offmeta.app/#website',
+    name: 'OffMeta',
+    url: 'https://offmeta.app/',
+    description:
+      'Natural language search for Magic: The Gathering cards. Describe what you need in plain English and get real card results.',
+    inLanguage: locale,
+    publisher: { '@id': 'https://offmeta.app/#organization' },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: 'https://offmeta.app/search/{search_term_string}',
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+}
+
+/**
+ * Build TechArticle JSON-LD for reference/docs pages (syntax cheat sheet,
+ * docs index). TechArticle is the closest schema.org type for how-to
+ * reference material and is eligible for the same rich results as Article.
+ */
+export function buildDocsArticleJsonLd(opts: {
+  title: string;
+  description: string;
+  url: string;
+  publishedTime?: string;
+  modifiedTime?: string;
+  section?: string;
+  keywords?: string[];
+}): Record<string, unknown> {
+  const published = opts.publishedTime ?? '2025-01-01T00:00:00.000Z';
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: opts.title,
+    description: opts.description,
+    url: opts.url,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': opts.url },
+    isPartOf: { '@id': 'https://offmeta.app/#website' },
+    author: { '@type': 'Organization', name: 'OffMeta' },
+    publisher: { '@id': 'https://offmeta.app/#organization' },
+    datePublished: published,
+    dateModified: opts.modifiedTime ?? published,
+    ...(opts.section ? { articleSection: opts.section } : {}),
+    ...(opts.keywords?.length ? { keywords: opts.keywords.join(', ') } : {}),
+  };
+}
+
 
 /**
  * Build card-specific FAQ entries from card data for rich snippets.

@@ -10,7 +10,14 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { SkipLinks } from '@/components/SkipLinks';
-import { applySeoMeta, injectJsonLd } from '@/lib/seo';
+import {
+  applySeoMeta,
+  injectJsonLdGraphs,
+  buildWebSiteJsonLd,
+  buildBreadcrumbJsonLd,
+  buildDocsArticleJsonLd,
+} from '@/lib/seo';
+
 
 interface SyntaxRow {
   natural: string;
@@ -64,15 +71,33 @@ export default function SyntaxCheatSheet() {
         'MTG search syntax',
       ],
     });
-    const cleanupLd = injectJsonLd({
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'OffMeta', item: 'https://offmeta.app/' },
-        { '@type': 'ListItem', position: 2, name: 'Docs', item: 'https://offmeta.app/docs' },
-        { '@type': 'ListItem', position: 3, name: 'Syntax Cheat Sheet', item: 'https://offmeta.app/docs/syntax' },
-      ],
-    });
+    const cleanupLd = injectJsonLdGraphs([
+      { slot: 'website', data: buildWebSiteJsonLd() },
+      {
+        slot: 'breadcrumb',
+        data: buildBreadcrumbJsonLd([
+          { name: 'OffMeta', url: 'https://offmeta.app/' },
+          { name: 'Docs', url: 'https://offmeta.app/docs' },
+          { name: 'Syntax Cheat Sheet', url: 'https://offmeta.app/docs/syntax' },
+        ]),
+      },
+      {
+        slot: 'article',
+        data: buildDocsArticleJsonLd({
+          title: 'Scryfall Syntax Cheat Sheet',
+          description:
+            'Maps natural-language MTG phrases to Scryfall operators: colors, types, mana cost, format, price, ramp, removal, and more.',
+          url: 'https://offmeta.app/docs/syntax',
+          section: 'Docs',
+          keywords: [
+            'Scryfall syntax',
+            'MTG search operators',
+            'Scryfall query reference',
+          ],
+        }),
+      },
+    ]);
+
     return () => {
       cleanupSeo();
       cleanupLd();
