@@ -2021,5 +2021,7 @@
   "whyItMatches.roleValue.removal": "除去",
   "whyItMatches.roleValue.tutor": "サーチ",
   "whyItMatches.structural": "構造的",
-  "whyItMatches.title": "一致する理由"
+  "whyItMatches.title": "一致する理由",
+  "syntax.tipLabel": "ヒント",
+  "nav.docs": "ドキュメント"
 }

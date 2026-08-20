@@ -2021,5 +2021,7 @@
   "whyItMatches.roleValue.removal": "removal",
   "whyItMatches.roleValue.tutor": "tutor",
   "whyItMatches.structural": "Structural",
-  "whyItMatches.title": "Why it matches"
+  "whyItMatches.title": "Why it matches",
+  "syntax.tipLabel": "Tip",
+  "nav.docs": "Docs"
 }
