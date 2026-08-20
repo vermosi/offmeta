@@ -2070,5 +2070,7 @@
   "whyItMatches.roleValue.removal": "제거",
   "whyItMatches.roleValue.tutor": "서치",
   "whyItMatches.structural": "구조적",
-  "whyItMatches.title": "일치하는 이유"
+  "whyItMatches.title": "일치하는 이유",
+  "syntax.tipLabel": "팁",
+  "nav.docs": "문서"
 }
