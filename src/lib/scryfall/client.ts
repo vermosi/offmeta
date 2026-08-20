@@ -229,12 +229,41 @@ export async function getCardsByExactNames(
 
 /**
  * Get card name suggestions for autocomplete.
+ * Results are memoised in-process (5 min TTL) and concurrent identical
+ * requests are deduped, so retyping the same prefix resolves instantly.
  * @param query - Partial card name (minimum 2 characters)
  * @returns Array of matching card names
  */
 export async function autocomplete(query: string): Promise<string[]> {
   if (query.length < 2) return [];
 
+  const cacheKey = query.trim().toLowerCase();
+  const cached = readMemo(autocompleteCache, cacheKey);
+  if (cached) return cached;
+
+  const inFlight = autocompleteInFlight.get(cacheKey);
+  if (inFlight) return inFlight;
+
+  const request = fetchAutocomplete(query)
+    .then((names) => {
+      writeMemo(
+        autocompleteCache,
+        cacheKey,
+        names,
+        AUTOCOMPLETE_CACHE_TTL_MS,
+        AUTOCOMPLETE_CACHE_MAX_ENTRIES,
+      );
+      return names;
+    })
+    .finally(() => {
+      autocompleteInFlight.delete(cacheKey);
+    });
+
+  autocompleteInFlight.set(cacheKey, request);
+  return request;
+}
+
+async function fetchAutocomplete(query: string): Promise<string[]> {
   // Try local card_names table first
   try {
     const localResults = await localAutocomplete(query);
@@ -257,6 +286,7 @@ export async function autocomplete(query: string): Promise<string[]> {
   recordHit('scryfall', 'autocomplete', data.data.length);
   return data.data;
 }
+
 
 /**
  * Fetch a random Magic card from Scryfall.
