@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, BookOpen, ArrowRight } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { useDebouncedValue } from '@/hooks';
+
 
 interface SeoPageSummary {
   slug: string;
