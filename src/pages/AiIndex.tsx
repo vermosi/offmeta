@@ -44,16 +44,21 @@ export default function AiIndex() {
     staleTime: 30 * 60 * 1000,
   });
 
+  // Debounced so typing doesn't re-filter (and re-render) the whole grid on
+  // every keystroke.
+  const debouncedSearch = useDebouncedValue(search, 200);
+
   const filtered = useMemo(() => {
     if (!pages) return [];
-    if (!search.trim()) return pages;
-    const q = search.toLowerCase();
+    if (!debouncedSearch.trim()) return pages;
+    const q = debouncedSearch.toLowerCase();
     return pages.filter(
       (p) =>
         p.query.toLowerCase().includes(q) ||
         p.content_json?.tldr?.toLowerCase().includes(q),
     );
-  }, [pages, search]);
+  }, [pages, debouncedSearch]);
+
 
   // SEO
   useEffect(() => {
