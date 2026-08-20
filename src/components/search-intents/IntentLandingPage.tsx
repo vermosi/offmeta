@@ -96,7 +96,7 @@ export function IntentLandingPage({
   }, [breadcrumbLabel, description, searches, title, url]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen min-h-dvh bg-background">
       <Header />
       <main id="main-content" className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
         <nav

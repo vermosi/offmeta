@@ -340,7 +340,7 @@ export default function AdminConsole() {
 
   if (authLoading || roleLoading) {
     return (
-      <div className="flex min-h-screen flex-col bg-background">
+      <div className="flex min-h-screen min-h-dvh flex-col bg-background">
         <Header />
         <main className="flex flex-1 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -352,7 +352,7 @@ export default function AdminConsole() {
   if (!user || !isAdmin) return null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen min-h-dvh flex-col bg-background">
       <SkipLinks />
       <Header />
 

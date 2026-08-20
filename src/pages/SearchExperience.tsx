@@ -579,7 +579,7 @@ const Index = () => {
   return (
     <ErrorBoundary>
       <SkipLinks showSearchLink />
-      <div className="min-h-screen min-h-[100dvh] flex flex-col relative overflow-x-hidden">
+      <div className="min-h-screen min-h-dvh flex flex-col relative overflow-x-hidden">
         {/* Shared page background stack — gradient wash, ambient glow, noise.
             Kept fixed so the hero and every section below share the same
             atmosphere instead of the hero's glow ending at its bottom edge. */}

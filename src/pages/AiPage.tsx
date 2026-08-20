@@ -214,7 +214,7 @@ export default function AiPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen min-h-dvh bg-background">
         <Header />
         <div className="mx-auto max-w-3xl space-y-6 px-4 py-12">
           <Skeleton className="h-10 w-3/4" />
@@ -228,7 +228,7 @@ export default function AiPage() {
 
   if (error || !page || !content) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen min-h-dvh bg-background">
         <Header />
         <div className="flex min-h-[60vh] items-center justify-center">
           <div className="space-y-4 text-center">
@@ -244,7 +244,7 @@ export default function AiPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen min-h-dvh bg-background">
       <Header />
       <article className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
         <nav className="mb-6 text-sm text-muted-foreground" aria-label={t('ai.breadcrumbLabel')}>

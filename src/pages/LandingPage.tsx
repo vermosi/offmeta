@@ -55,7 +55,7 @@ export default function LandingPage() {
   };
 
   return (
-    <main id="main-content" className="min-h-screen bg-background">
+    <main id="main-content" className="min-h-screen min-h-dvh bg-background">
       <section className="relative overflow-hidden pb-12 pt-10 sm:pb-16 sm:pt-16 lg:pt-20">
         <div
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(var(--accent-rgb),0.12),transparent_55%)]"

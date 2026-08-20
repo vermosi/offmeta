@@ -82,7 +82,7 @@ export default function AiIndex() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen min-h-dvh bg-background">
       <Header />
       <main id="main-content" className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
         {/* Header */}

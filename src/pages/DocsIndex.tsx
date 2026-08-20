@@ -81,7 +81,7 @@ export default function DocsIndex() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-background relative overflow-x-hidden">
+    <div className="min-h-screen min-h-dvh flex flex-col bg-background relative overflow-x-hidden">
       <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
       <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
 

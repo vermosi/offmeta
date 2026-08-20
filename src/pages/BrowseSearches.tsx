@@ -144,7 +144,7 @@ export default function BrowseSearches() {
   }, [t]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen min-h-dvh bg-background">
       <Header />
       <main id="main-content" className="container-main py-8 sm:py-12">
         <div className="max-w-4xl mx-auto">

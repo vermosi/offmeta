@@ -141,7 +141,7 @@ export default function AdminSeoPages() {
 
   if (roleLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen min-h-dvh bg-background">
         <Header />
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -152,7 +152,7 @@ export default function AdminSeoPages() {
 
   if (!user || !isAdmin) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen min-h-dvh bg-background">
         <Header />
         <div className="flex items-center justify-center py-20 text-muted-foreground">
           {t('common.adminAccessRequired', 'Admin access required.')}
@@ -172,7 +172,7 @@ export default function AdminSeoPages() {
   const drafts = filtered.filter((p) => p.status === 'draft').length;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen min-h-dvh bg-background">
       <Header />
       <main id="main-content" className="max-w-5xl mx-auto px-4 py-8">
         {/* Back + title */}

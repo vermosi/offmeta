@@ -85,7 +85,7 @@ export default function AdminAnalytics() {
 
   if (authLoading || roleLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen min-h-dvh flex flex-col bg-background">
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -97,7 +97,7 @@ export default function AdminAnalytics() {
   if (!user || !isAdmin) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background relative">
+    <div className="min-h-screen min-h-dvh flex flex-col bg-background relative">
       <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
       <div className="fixed inset-0 pointer-events-none bg-page-noise" aria-hidden="true" />
 

@@ -170,7 +170,7 @@ export default function SyntaxCheatSheet() {
     'font-mono text-[11px] tracking-tight text-foreground underline decoration-border/70 decoration-dotted underline-offset-4';
 
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+    <div className="min-h-screen min-h-dvh flex flex-col bg-background overflow-x-hidden">
       <SkipLinks />
       <Header />
 

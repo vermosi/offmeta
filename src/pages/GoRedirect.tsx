@@ -109,7 +109,7 @@ export default function GoRedirect(): ReactElement {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="min-h-screen min-h-dvh bg-background flex items-center justify-center p-6">
         <div className="max-w-md w-full rounded-2xl border border-border bg-card/60 backdrop-blur-xl p-8 shadow-2xl">
           <div className="flex items-start gap-4">
             <div className="rounded-full bg-destructive/10 p-3 shrink-0">
@@ -135,7 +135,7 @@ export default function GoRedirect(): ReactElement {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen min-h-dvh bg-background flex flex-col items-center justify-center p-6">
       <Loader2 className="h-10 w-10 animate-spin text-primary" />
       <p className="mt-4 text-muted-foreground">Opening your search results…</p>
     </div>

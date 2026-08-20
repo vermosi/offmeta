@@ -282,7 +282,7 @@ export default function LegalPage({ document: doc }: { document: LegalDocument }
   }, [page]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen min-h-dvh bg-background">
       <Header />
       <main id="main-content" className="container-main py-8 sm:py-12">
         <article className="mx-auto max-w-2xl">

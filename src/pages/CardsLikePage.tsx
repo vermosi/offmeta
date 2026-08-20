@@ -204,7 +204,7 @@ export default function CardsLikePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen min-h-dvh bg-background">
       <Header />
       <main id="main-content" className="mx-auto flex max-w-5xl flex-col px-4 py-8 sm:py-12">
         <div className="mx-auto w-full max-w-3xl space-y-6">

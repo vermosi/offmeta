@@ -108,7 +108,7 @@ export function LandingPageView({ config }: { config: LandingPageConfig }) {
   const indexLine = ['OffMeta', ...config.indexTrail].join(' / ');
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen min-h-dvh flex-col bg-background">
       <SkipLinks />
       <Header />
 

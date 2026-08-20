@@ -290,7 +290,7 @@ export default function AdminCuratedSearches() {
 
   if (authLoading || roleLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen min-h-dvh bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -305,7 +305,7 @@ export default function AdminCuratedSearches() {
   const activeCount = searches.filter((s) => s.is_active).length;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen min-h-dvh bg-background">
       <Header />
       <main id="main-content" className="container-main py-6 sm:py-8">
         {/* Header */}

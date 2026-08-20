@@ -210,7 +210,7 @@ const CardPage = () => {
   if (isLoading) {
     return (
 
-      <div className="min-h-screen flex flex-col bg-background relative">
+      <div className="min-h-screen min-h-dvh flex flex-col bg-background relative">
         <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
         <Header />
         <main
@@ -300,7 +300,7 @@ const CardPage = () => {
       canonical?.remove();
     }
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen min-h-dvh flex flex-col bg-background">
         <Header />
         <main id="main-content" className="flex-1 container-main py-16 text-center space-y-4">
           <h1 className="text-2xl font-bold text-foreground">{t('card.notFoundHeading', 'Card Not Found')}</h1>
@@ -331,7 +331,7 @@ const CardPage = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen flex flex-col bg-background relative">
+      <div className="min-h-screen min-h-dvh flex flex-col bg-background relative">
         <div className="fixed inset-0 pointer-events-none bg-page-gradient" aria-hidden="true" />
         <Header />
 
