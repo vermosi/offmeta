@@ -159,7 +159,7 @@ export default function OAuthConsent() {
     .filter(Boolean);
 
   return (
-    <main className="min-h-screen min-h-dvh flex items-center justify-center p-6 bg-background">
+    <main id="main-content" className="min-h-screen min-h-dvh flex items-center justify-center p-6 bg-background">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-lg space-y-4">
         <div className="flex items-center gap-2 mb-4">
           <ShieldCheck className="h-5 w-5 text-primary" aria-hidden="true" />
