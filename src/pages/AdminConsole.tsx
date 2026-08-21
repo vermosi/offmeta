@@ -31,6 +31,7 @@ import { SearchLab } from '@/pages/admin/sections/SearchLab';
 import { ConceptManager } from '@/pages/admin/sections/ConceptManager';
 import { OpportunityQueue } from '@/pages/admin/sections/OpportunityQueue';
 import { QualityBenchmark } from '@/pages/admin/sections/QualityBenchmark';
+import { ConfidenceMonitor } from '@/pages/admin/sections/ConfidenceMonitor';
 import { ExperimentsSection, ReleasesSection } from '@/pages/admin/sections/ReleasesSection';
 import { GuidesSection, LandingPagesSection } from '@/pages/admin/sections/ContentInventory';
 import { ConsoleHeading, ConsolePanel, EmptyRow } from '@/pages/admin/components/console-ui';
@@ -161,6 +162,8 @@ export default function AdminConsole() {
             </ConsolePanel>
           </div>
         );
+      case 'search/confidence':
+        return <ConfidenceMonitor days={days} />;
       case 'search/benchmark':
         return <QualityBenchmark metrics={ops.metrics} analytics={hook.data} days={days} />;
       case 'search/rules':
