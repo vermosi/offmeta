@@ -212,7 +212,7 @@ export function buildAnswerQuery(
     .trim();
   const exclusion = exclude ? ` -!"${exclude}"` : '';
   if (!names) return broader ? `${broader}${exclusion}` : '';
-  if (!broader || countConstraints(broader) < 2) {
+  if (!broader || countConstraintFields(broader) < 2) {
     return `${names}${exclusion} game:paper`;
   }
   return `(${names} or (${broader}))${exclusion} game:paper`;
