@@ -7,6 +7,9 @@ import '@testing-library/jest-dom';
 import { afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
+import { resetScryfallFetchState } from '@/lib/scryfall/fetch-utils';
+
+
 const TEST_SUPABASE_URL = 'https://example.supabase.co';
 const TEST_SUPABASE_PUBLISHABLE_KEY = 'public-key';
 
@@ -27,7 +30,11 @@ process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??= TEST_SUPABASE_PUBLISHABLE_KEY;
 // errors and slow interleaved failures in subsequent tests.
 afterEach(() => {
   cleanup();
+  // Scryfall pacing, circuit-breaker and request-dedupe state is module-level,
+  // so it must not leak a cached response from one test into the next.
+  resetScryfallFetchState();
 });
+
 
 // Mock window.matchMedia for tests that use responsive hooks
 Object.defineProperty(window, 'matchMedia', {

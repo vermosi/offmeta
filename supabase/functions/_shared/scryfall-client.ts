@@ -27,6 +27,10 @@ const MAX_QUEUE_DEPTH = 12;
 const CIRCUIT_FAILURE_THRESHOLD = 4;
 /** How long the breaker stays open before a single probe is allowed through. */
 const CIRCUIT_OPEN_MS = 30_000;
+/** How long a successful GET response is replayed to equivalent requests. */
+const DEDUPE_TTL_MS = 10_000;
+/** Upper bound on cached responses per isolate. */
+const DEDUPE_CACHE_MAX = 200;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -42,6 +46,11 @@ let consecutiveFailures = 0;
 let circuitOpenUntil = 0;
 /** Guards the single half-open probe once the open window has elapsed. */
 let probeInFlight = false;
+/** Equivalent GETs currently awaiting the same upstream response. */
+const inFlight = new Map<string, Promise<Response>>();
+/** Recently completed successful GETs, replayed for {@link DEDUPE_TTL_MS}. */
+const responseCache = new Map<string, { response: Response; expiresAt: number }>();
+
 
 export class ScryfallRateLimitError extends Error {
   readonly retryAfterMs: number;
@@ -99,7 +108,7 @@ function recordSuccess(): void {
   circuitOpenUntil = 0;
 }
 
-/** Test helper: clears pacing, cool-off and circuit-breaker state. */
+/** Test helper: clears pacing, cool-off, circuit-breaker and dedupe state. */
 export function resetScryfallClientState(): void {
   nextRequestAllowedAt = 0;
   queueDepth = 0;
@@ -107,7 +116,45 @@ export function resetScryfallClientState(): void {
   consecutiveFailures = 0;
   circuitOpenUntil = 0;
   probeInFlight = false;
+  inFlight.clear();
+  responseCache.clear();
 }
+
+/**
+ * Canonical key for an "equivalent" Scryfall GET: parameter order and
+ * surrounding/duplicated whitespace inside values (notably `q`) do not change
+ * the result, so they must not produce a second upstream request.
+ */
+function dedupeKey(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const params = [...parsed.searchParams.entries()]
+      .map(([k, v]) => [k, v.trim().replace(/\s+/g, ' ')] as const)
+      .sort(([a, av], [b, bv]) => (a === b ? av.localeCompare(bv) : a.localeCompare(b)));
+    const search = new URLSearchParams(params.map(([k, v]) => [k, v]));
+    return `${parsed.origin}${parsed.pathname.replace(/\/+$/, '')}?${search.toString()}`;
+  } catch {
+    return url;
+  }
+}
+
+/** Mocks and non-standard responses may lack `clone()`; never share those. */
+function isCloneable(response: Response): boolean {
+  return typeof (response as { clone?: unknown }).clone === 'function';
+}
+
+function cacheResponse(key: string, response: Response): void {
+  if (!isCloneable(response)) return;
+  if (responseCache.size >= DEDUPE_CACHE_MAX) {
+    const oldest = responseCache.keys().next().value;
+    if (oldest !== undefined) responseCache.delete(oldest);
+  }
+  responseCache.set(key, {
+    response: response.clone(),
+    expiresAt: Date.now() + DEDUPE_TTL_MS,
+  });
+}
+
 
 
 function parseRetryAfterMs(response: Response): number {
@@ -150,6 +197,11 @@ export interface ScryfallFetchOptions extends RequestInit {
    * queueing behind it. Background jobs can set false to wait it out.
    */
   failFastOnCooldown?: boolean;
+  /**
+   * Share in-flight and freshly cached responses with equivalent GET requests.
+   * Defaults to true; set false for calls that must hit the network.
+   */
+  dedupe?: boolean;
 }
 
 /**
@@ -163,10 +215,52 @@ export interface ScryfallFetchOptions extends RequestInit {
  * breaker opens: calls throw `ScryfallUnavailableError` immediately for
  * {@link CIRCUIT_OPEN_MS} without touching the network, then a single probe is
  * allowed through to close it again.
+ *
+ * Equivalent GET requests issued while one is in flight — or within
+ * {@link DEDUPE_TTL_MS} of a successful one — reuse that single response
+ * instead of hitting Scryfall again.
  */
 export async function scryfallFetch(
   url: string,
   options: ScryfallFetchOptions = {},
+): Promise<Response> {
+  const { dedupe = true, ...rest } = options;
+  const method = (rest.method ?? 'GET').toUpperCase();
+  if (!dedupe || method !== 'GET') return performScryfallFetch(url, rest);
+
+  const key = dedupeKey(url);
+
+  const cached = responseCache.get(key);
+  if (cached) {
+    if (cached.expiresAt > Date.now()) return cached.response.clone();
+    responseCache.delete(key);
+  }
+
+  const pending = inFlight.get(key);
+  if (pending) {
+    const shared = await pending;
+    if (isCloneable(shared)) return shared.clone();
+  }
+
+  const request = performScryfallFetch(url, rest).then((response) => {
+    // Only successful bodies are worth replaying; errors and query failures
+    // must be re-evaluated by the next caller.
+    if (response.ok) cacheResponse(key, response);
+    return response;
+  });
+  inFlight.set(key, request);
+
+  try {
+    const response = await request;
+    return isCloneable(response) ? response.clone() : response;
+  } finally {
+    if (inFlight.get(key) === request) inFlight.delete(key);
+  }
+}
+
+async function performScryfallFetch(
+  url: string,
+  options: Omit<ScryfallFetchOptions, 'dedupe'> = {},
 ): Promise<Response> {
   const {
     timeoutMs = DEFAULT_TIMEOUT_MS,

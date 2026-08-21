@@ -22,6 +22,10 @@ const MAX_COOLDOWN_MS = 60_000;
 const CIRCUIT_FAILURE_THRESHOLD = 4;
 /** How long the breaker stays open before a single probe is allowed through. */
 const CIRCUIT_OPEN_MS = 30_000;
+/** How long a successful GET response is replayed to equivalent requests. */
+const DEDUPE_TTL_MS = 10_000;
+/** Upper bound on cached responses. */
+const DEDUPE_CACHE_MAX = 100;
 
 let queuedRequests = 0;
 let nextRequestAllowedAt = 0;
@@ -29,8 +33,13 @@ let cooldownUntil = 0;
 let consecutiveFailures = 0;
 let circuitOpenUntil = 0;
 let probeInFlight = false;
+/** Equivalent GETs currently awaiting the same upstream response. */
+const inFlight = new Map<string, Promise<Response>>();
+/** Recently completed successful GETs, replayed for {@link DEDUPE_TTL_MS}. */
+const responseCache = new Map<string, { response: Response; expiresAt: number }>();
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 
 /** Thrown while the circuit breaker is open — Scryfall is not called at all. */
 export class ScryfallUnavailableError extends Error {
@@ -71,7 +80,7 @@ function recordSuccess(): void {
   circuitOpenUntil = 0;
 }
 
-/** Test helper: clears pacing, cool-off and circuit-breaker state. */
+/** Test helper: clears pacing, cool-off, circuit-breaker and dedupe state. */
 export function resetScryfallFetchState(): void {
   queuedRequests = 0;
   nextRequestAllowedAt = 0;
@@ -79,7 +88,46 @@ export function resetScryfallFetchState(): void {
   consecutiveFailures = 0;
   circuitOpenUntil = 0;
   probeInFlight = false;
+  inFlight.clear();
+  responseCache.clear();
 }
+
+/**
+ * Canonical key for an "equivalent" Scryfall GET: parameter order and
+ * surrounding/duplicated whitespace inside values (notably `q`) do not change
+ * the result, so they must not produce a second upstream request.
+ */
+function dedupeKey(url: string): string {
+  try {
+    const parsed = new URL(url, 'https://api.scryfall.com');
+    const params = [...parsed.searchParams.entries()]
+      .map(([k, v]) => [k, v.trim().replace(/\s+/g, ' ')] as const)
+      .sort(([a, av], [b, bv]) => (a === b ? av.localeCompare(bv) : a.localeCompare(b)));
+    const search = new URLSearchParams(params.map(([k, v]) => [k, v]));
+    return `${parsed.origin}${parsed.pathname.replace(/\/+$/, '')}?${search.toString()}`;
+  } catch {
+    return url;
+  }
+}
+
+/** Mocks and non-standard responses may lack `clone()`; never share those. */
+function isCloneable(response: Response): boolean {
+  return typeof (response as { clone?: unknown }).clone === 'function';
+}
+
+function cacheResponse(key: string, response: Response): void {
+  if (!isCloneable(response)) return;
+  if (responseCache.size >= DEDUPE_CACHE_MAX) {
+    const oldest = responseCache.keys().next().value;
+    if (oldest !== undefined) responseCache.delete(oldest);
+  }
+  responseCache.set(key, {
+    response: response.clone(),
+    expiresAt: Date.now() + DEDUPE_TTL_MS,
+  });
+}
+
+
 
 
 function parseRetryAfterMs(response: Response): number {
@@ -139,11 +187,51 @@ export async function fetchWithTimeout(
  * A 429 sets a global cool-off (honouring Retry-After) so every other
  * in-flight Scryfall call waits instead of hammering the API.
  *
+ * Equivalent GETs (same URL ignoring parameter order and query whitespace)
+ * share one upstream request while it is in flight, and replay a successful
+ * response for {@link DEDUPE_TTL_MS} afterwards.
+ *
  * After {@link CIRCUIT_FAILURE_THRESHOLD} consecutive failures the circuit
  * breaker opens and calls throw {@link ScryfallUnavailableError} immediately
  * for {@link CIRCUIT_OPEN_MS}; one probe then re-tests the API.
  */
 export async function fetchWithRetry(
+  url: string,
+  init?: RequestInit,
+  retries = MAX_RETRIES,
+): Promise<Response> {
+  const method = (init?.method ?? 'GET').toUpperCase();
+  if (method !== 'GET') return performFetchWithRetry(url, init, retries);
+
+  const key = dedupeKey(url);
+
+  const cached = responseCache.get(key);
+  if (cached) {
+    if (cached.expiresAt > Date.now()) return cached.response.clone();
+    responseCache.delete(key);
+  }
+
+  const pending = inFlight.get(key);
+  if (pending) {
+    const shared = await pending;
+    if (isCloneable(shared)) return shared.clone();
+  }
+
+  const request = performFetchWithRetry(url, init, retries).then((response) => {
+    if (response.ok) cacheResponse(key, response);
+    return response;
+  });
+  inFlight.set(key, request);
+
+  try {
+    const response = await request;
+    return isCloneable(response) ? response.clone() : response;
+  } finally {
+    if (inFlight.get(key) === request) inFlight.delete(key);
+  }
+}
+
+async function performFetchWithRetry(
   url: string,
   init?: RequestInit,
   retries = MAX_RETRIES,
@@ -160,6 +248,7 @@ export async function fetchWithRetry(
     probeInFlight = true;
     ownsProbe = true;
   }
+
 
   let attempt = 0;
   let lastError: Error | undefined;
