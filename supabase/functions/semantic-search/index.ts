@@ -1215,11 +1215,40 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       logWarn('request_budget_exceeded_before_ai_translate');
       return createBudgetExceededResponse();
     }
-    const systemPrompt = buildSystemPrompt(tier, dynamicRules, '');
+
+    // Comprehensive Rules grounding: official glossary definitions for the
+    // rules jargon in this query, so the model reads "amass" or "annihilator"
+    // the way the game defines them rather than as loose English.
+    const { getRulesContext, buildRulesGrounding, glossaryClauses } =
+      await import('./pipeline/rules-glossary.ts');
+    const rulesMatches = isLikelyName ? [] : await getRulesContext(queryForAI);
+    const rulesGrounding = buildRulesGrounding(rulesMatches);
+    if (rulesMatches.length > 0) {
+      logInfo('rules_glossary_grounding', {
+        terms: rulesMatches.map((m) => m.term),
+      });
+    }
+
+    const systemPrompt = buildSystemPrompt(
+      tier,
+      [dynamicRules, rulesGrounding].filter(Boolean).join('\n\n'),
+      '',
+    );
     const cardNameHint = isLikelyName
       ? ' (IMPORTANT: This is likely a Magic: The Gathering card name, not a search description. Output ONLY the exact Scryfall name search like !"Gray Merchant of Asphodel" using the correct card name. Fix common misspellings: grey→gray, etc. If unsure of full name, use name: syntax like name:merchant.)'
       : '';
-    const userMessage = `Translate to Scryfall search syntax: "${queryForAI}"${cardNameHint}${cardSynergyContext} ${deterministicQuery ? `(must include: ${deterministicQuery})` : ''}`;
+    // Keyword abilities named outright map to real Scryfall clauses; hand them
+    // to the model as required syntax alongside the deterministic clauses.
+    const requiredClauses = [
+      deterministicQuery,
+      ...glossaryClauses(rulesMatches).filter(
+        (clause) => !(deterministicQuery || '').includes(clause),
+      ),
+    ]
+      .filter(Boolean)
+      .join(' ');
+    const userMessage = `Translate to Scryfall search syntax: "${queryForAI}"${cardNameHint}${cardSynergyContext} ${requiredClauses ? `(must include: ${requiredClauses})` : ''}`;
+
 
     // Deterministic fallback guard: never start the AI call unless there is
     // enough time budget remaining for it to complete.
