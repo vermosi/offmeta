@@ -66,11 +66,20 @@ export default function AdminConsole() {
   const days = Number(hook.days);
   const ops = useAdminOpsData(isAdmin, days);
 
+  const legacyPath = resolveLegacyPath(areaParam, sectionParam);
+
+  useEffect(() => {
+    if (legacyPath) {
+      navigate(`/admin/${legacyPath}`, { replace: true });
+    }
+  }, [legacyPath, navigate]);
+
   useEffect(() => {
     if (!authLoading && !roleLoading && (!user || !isAdmin)) {
       navigate('/', { replace: true });
     }
   }, [authLoading, roleLoading, user, isAdmin, navigate]);
+
 
   const refresh = () => {
     hook.fetchAnalytics();
