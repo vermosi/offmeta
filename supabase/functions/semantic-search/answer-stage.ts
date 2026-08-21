@@ -26,8 +26,8 @@ export interface AnswerResolution {
   tier: 'answer_index' | 'answer_lookup';
 }
 
-const AI_LOOKUP_TIMEOUT_MS = 3500;
-const SCRYFALL_VERIFY_TIMEOUT_MS = 2500;
+const AI_LOOKUP_TIMEOUT_MS = 3000;
+const SCRYFALL_VERIFY_TIMEOUT_MS = 1500;
 const MAX_ANSWER_CARDS = 8;
 
 type Logger = (event: string, payload: Record<string, unknown>) => void;
@@ -178,6 +178,8 @@ export async function resolveAnswer(args: {
   remainingBudgetMs: number;
   apiKey: string | undefined;
   allowAiLookup: boolean;
+  /** Skip tier A when the index was already checked earlier in the request. */
+  skipIndex?: boolean;
   logInfo: Logger;
   logWarn: Logger;
 }): Promise<AnswerResolution | null> {
@@ -186,24 +188,26 @@ export async function resolveAnswer(args: {
   if (!looksLikeAnswerableQuestion(query)) return null;
 
   // Tier A — curated / previously learned answers.
-  try {
-    const indexed = await findIndexedAnswer(query);
-    if (indexed) {
-      args.logInfo('answer_index_hit', {
-        query: query.substring(0, 60),
-        cards: indexed.cardNames.length,
+  if (!args.skipIndex) {
+    try {
+      const indexed = await findIndexedAnswer(query);
+      if (indexed) {
+        args.logInfo('answer_index_hit', {
+          query: query.substring(0, 60),
+          cards: indexed.cardNames.length,
+        });
+        return indexed;
+      }
+    } catch (error) {
+      args.logWarn('answer_index_error', {
+        error: error instanceof Error ? error.message : String(error),
       });
-      return indexed;
     }
-  } catch (error) {
-    args.logWarn('answer_index_error', {
-      error: error instanceof Error ? error.message : String(error),
-    });
   }
 
   // Tier B — grounded lookup, only with enough budget left.
   if (!allowAiLookup || !apiKey) return null;
-  if (remainingBudgetMs < AI_LOOKUP_TIMEOUT_MS + SCRYFALL_VERIFY_TIMEOUT_MS) {
+  if (remainingBudgetMs < AI_LOOKUP_TIMEOUT_MS + SCRYFALL_VERIFY_TIMEOUT_MS + 200) {
     args.logInfo('answer_lookup_skipped_budget', { remainingBudgetMs });
     return null;
   }
