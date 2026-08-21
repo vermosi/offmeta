@@ -125,7 +125,9 @@ export function ReportIssueDialog({
       toast.success(t('report.success', 'Issue reported'), {
         description: `${t('report.thanks', "Thanks! We'll use this to improve searches.")}${remaining <= 2 ? ` (${remaining} submissions remaining)` : ''}`,
       });
+      onSubmitted?.();
       onOpenChange(false);
+
     } catch (error: unknown) {
       toast.error(t('report.failed', 'Failed to submit feedback'), {
         description: extractErrorDetail(error),
