@@ -1556,6 +1556,7 @@
   "nav.deckCheck": "Analisi Mazzo",
   "nav.deckRecs": "Raccomandazioni",
   "nav.discord": "Discord",
+  "nav.docs": "Documenti",
   "nav.guides": "Guide",
   "nav.history": "Cronologia",
   "nav.home": "Home",
@@ -1663,6 +1664,11 @@
   "queryBar.scryfall": "Scryfall",
   "queryBar.share": "Condividi",
   "queryBar.shareTitle": "Condividi questa ricerca",
+  "quickQueries.label": "Ricerche popolari",
+  "quickQueries.q1": "board wipe economici sotto i 5 $",
+  "quickQueries.q2": "carte come Rhystic Study sotto i 5 $",
+  "quickQueries.q3": "carte che proteggono il mio comandante",
+  "quickQueries.q4": "ramp verde per Commander",
   "removed": "Rimosso",
   "report.autoContext": "Contesto incluso automaticamente",
   "report.cancel": "Annulla",
@@ -1944,6 +1950,7 @@
   "syntax.scryfallSyntax": "Sintassi Scryfall",
   "syntax.subtitle": "OffMeta traduce automaticamente il linguaggio naturale in sintassi Scryfall. Ecco un riferimento di cosa puoi dire e a cosa corrisponde.",
   "syntax.tip": "Non devi memorizzare nulla! Digita semplicemente cosa stai cercando e OffMeta si occuperà della traduzione.",
+  "syntax.tipLabel": "Suggerimento",
   "syntax.title": "Scheda Rapida Sintassi",
   "syntax.youType": "Tu digiti",
   "theme.switchToDark": "Passa al tema scuro",
@@ -2021,7 +2028,5 @@
   "whyItMatches.roleValue.removal": "rimozione",
   "whyItMatches.roleValue.tutor": "tutore",
   "whyItMatches.structural": "Strutturale",
-  "whyItMatches.title": "Perché corrisponde",
-  "syntax.tipLabel": "Suggerimento",
-  "nav.docs": "Documenti"
+  "whyItMatches.title": "Perché corrisponde"
 }

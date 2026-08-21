@@ -1585,6 +1585,7 @@
   "nav.deckCheck": "덱 점검",
   "nav.deckRecs": "덱 추천",
   "nav.discord": "Discord",
+  "nav.docs": "문서",
   "nav.guides": "가이드",
   "nav.history": "기록",
   "nav.home": "홈",
@@ -1692,6 +1693,11 @@
   "queryBar.scryfall": "Scryfall",
   "queryBar.share": "공유",
   "queryBar.shareTitle": "이 검색 공유",
+  "quickQueries.label": "인기 검색",
+  "quickQueries.q1": "5달러 이하 저렴한 전체 제거",
+  "quickQueries.q2": "5달러 이하 Rhystic Study 같은 카드",
+  "quickQueries.q3": "내 커맨더를 보호하는 카드",
+  "quickQueries.q4": "커맨더용 녹색 마나 가속",
   "removed": "제거됨",
   "report.autoContext": "자동 포함 컨텍스트",
   "report.cancel": "취소",
@@ -1993,6 +1999,7 @@
   "syntax.scryfallSyntax": "Scryfall 구문",
   "syntax.subtitle": "OffMeta는 자연어를 Scryfall 구문으로 자동 번역합니다. 무엇을 말할 수 있는지와 그 대응표입니다.",
   "syntax.tip": "이것을 외울 필요가 없습니다! 찾고 있는 것을 입력하기만 하면 OffMeta가 번역을 처리합니다.",
+  "syntax.tipLabel": "팁",
   "syntax.title": "구문 치트시트",
   "syntax.youType": "당신이 입력",
   "theme.switchToDark": "다크 테마로 전환",
@@ -2070,7 +2077,5 @@
   "whyItMatches.roleValue.removal": "제거",
   "whyItMatches.roleValue.tutor": "서치",
   "whyItMatches.structural": "구조적",
-  "whyItMatches.title": "일치하는 이유",
-  "syntax.tipLabel": "팁",
-  "nav.docs": "문서"
+  "whyItMatches.title": "일치하는 이유"
 }

@@ -1585,6 +1585,7 @@
   "nav.deckCheck": "套牌检查",
   "nav.deckRecs": "套牌推荐",
   "nav.discord": "Discord",
+  "nav.docs": "文档",
   "nav.guides": "指南",
   "nav.history": "历史",
   "nav.home": "首页",
@@ -1692,6 +1693,11 @@
   "queryBar.scryfall": "Scryfall",
   "queryBar.share": "分享",
   "queryBar.shareTitle": "分享此搜索",
+  "quickQueries.label": "热门搜索",
+  "quickQueries.q1": "5 美元以下的廉价全场清除",
+  "quickQueries.q2": "5 美元以下类似 Rhystic Study 的牌",
+  "quickQueries.q3": "保护我的指挥官的牌",
+  "quickQueries.q4": "指挥官格式的绿色加速",
   "removed": "已移除",
   "report.autoContext": "自动包含的上下文",
   "report.cancel": "取消",
@@ -1993,6 +1999,7 @@
   "syntax.scryfallSyntax": "Scryfall 语法",
   "syntax.subtitle": "OffMeta 自动将自然语言翻译为 Scryfall 语法。这是你可以说什么以及对应内容的参考。",
   "syntax.tip": "你不需要记住这些！只需输入你在找什么，OffMeta 会处理翻译。",
+  "syntax.tipLabel": "提示",
   "syntax.title": "语法速查表",
   "syntax.youType": "你输入",
   "theme.switchToDark": "切换到深色主题",
@@ -2070,7 +2077,5 @@
   "whyItMatches.roleValue.removal": "去除",
   "whyItMatches.roleValue.tutor": "检索",
   "whyItMatches.structural": "结构性",
-  "whyItMatches.title": "匹配原因",
-  "syntax.tipLabel": "提示",
-  "nav.docs": "文档"
+  "whyItMatches.title": "匹配原因"
 }

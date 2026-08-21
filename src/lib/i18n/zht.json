@@ -1585,6 +1585,7 @@
   "nav.deckCheck": "套牌檢查",
   "nav.deckRecs": "套牌推薦",
   "nav.discord": "Discord",
+  "nav.docs": "文件",
   "nav.guides": "指南",
   "nav.history": "歷史",
   "nav.home": "首頁",
@@ -1692,6 +1693,11 @@
   "queryBar.scryfall": "Scryfall",
   "queryBar.share": "分享",
   "queryBar.shareTitle": "分享此搜尋",
+  "quickQueries.label": "熱門搜尋",
+  "quickQueries.q1": "5 美元以下的廉價全場清除",
+  "quickQueries.q2": "5 美元以下類似 Rhystic Study 的牌",
+  "quickQueries.q3": "保護我的指揮官的牌",
+  "quickQueries.q4": "指揮官賽制的綠色加速",
   "removed": "已移除",
   "report.autoContext": "自動包含的上下文",
   "report.cancel": "取消",
@@ -1993,6 +1999,7 @@
   "syntax.scryfallSyntax": "Scryfall 語法",
   "syntax.subtitle": "OffMeta 自動將自然語言翻譯為 Scryfall 語法。這是你可以說什麼以及對應內容的參考。",
   "syntax.tip": "你不需要記住這些！只需輸入你在找什麼，OffMeta 會處理翻譯。",
+  "syntax.tipLabel": "提示",
   "syntax.title": "語法速查表",
   "syntax.youType": "你輸入",
   "theme.switchToDark": "切換到深色主題",
@@ -2070,7 +2077,5 @@
   "whyItMatches.roleValue.removal": "去除",
   "whyItMatches.roleValue.tutor": "檢索",
   "whyItMatches.structural": "結構性",
-  "whyItMatches.title": "相符原因",
-  "syntax.tipLabel": "提示",
-  "nav.docs": "文件"
+  "whyItMatches.title": "相符原因"
 }
