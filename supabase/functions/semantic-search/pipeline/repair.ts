@@ -4,7 +4,7 @@
  */
 
 import type { ValidationResult, RepairResult, BroadenResult } from './types.ts';
-import { fetchWithRetry } from '../utils.ts';
+import { scryfallFetch } from '../../_shared/scryfall-client.ts';
 
 const SCRYFALL_SEARCH_URL = 'https://api.scryfall.com/cards/search';
 
@@ -88,7 +88,7 @@ export async function validateWithScryfall(
   const url = `${SCRYFALL_SEARCH_URL}?q=${encodeURIComponent(query)}`;
 
   try {
-    const response = await fetchWithRetry(url);
+    const response = await scryfallFetch(url, { retries: 1 });
 
     if (response.status === 200) {
       const data = await response.json();

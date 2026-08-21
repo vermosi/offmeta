@@ -19,6 +19,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
 import { claimDedupe } from '../_shared/dedupe.ts';
 import { resolveAlternativesQuery } from './alternatives.ts';
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 function normalizeDiacritics(str: string): string {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -871,17 +872,11 @@ async function fetchScryfallSlice(
   const { page, indexInPage } = scryfallPageFor(offset);
   let scryfallResponse: Response;
   try {
-    scryfallResponse = await fetch(
+    scryfallResponse = await scryfallFetch(
       `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
         `${scryfallQuery} game:paper`,
       )}&unique=cards&order=edhrec&dir=asc&page=${page}`,
-      {
-        headers: {
-          'User-Agent': 'OffMetaDiscordBot/1.0',
-          Accept: 'application/json',
-        },
-        signal: AbortSignal.timeout(SCRYFALL_TIMEOUT_MS),
-      },
+      { timeoutMs: SCRYFALL_TIMEOUT_MS, retries: 0 },
     );
   } catch (error) {
     log.error('scryfall_error', {

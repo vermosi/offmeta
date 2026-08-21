@@ -8,6 +8,7 @@
  */
 
 import { validateOtags } from './otagValidation.ts';
+import { scryfallFetch } from './scryfall-client.ts';
 
 /** Curated Scryfall oracle tags the repair model is allowed to reach for. */
 export const SCRYFALL_OTAGS = [
@@ -87,9 +88,7 @@ export async function checkScryfall(query: string): Promise<ScryfallCheck> {
     const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
       `${query} game:paper`,
     )}&page=1`;
-    const response = await fetch(url, {
-      headers: { 'User-Agent': 'OffMeta/1.0 (self-heal-search)' },
-    });
+    const response = await scryfallFetch(url, { failFastOnCooldown: false });
     const body = await response.json().catch(() => null);
     if (response.status === 200 && body) {
       return { ok: (body.total_cards ?? 0) > 0, totalCards: body.total_cards ?? 0 };

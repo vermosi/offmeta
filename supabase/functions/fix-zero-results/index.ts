@@ -14,6 +14,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, LOVABLE_API_KEY } =
   validateEnv(['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'LOVABLE_API_KEY']);
@@ -243,9 +244,7 @@ async function validateScryfall(
 ): Promise<{ valid: boolean; totalCards: number }> {
   try {
     const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}&page=1`;
-    const resp = await fetch(url, {
-      headers: { 'User-Agent': 'OffMeta/1.0 (zero-result-fixer)' },
-    });
+    const resp = await scryfallFetch(url, { failFastOnCooldown: false });
 
     if (resp.status === 200) {
       const data = await resp.json();

@@ -1,4 +1,5 @@
 import { SCRYFALL_ORACLE_TAGS } from '../_shared/otag-vocabulary.ts';
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 type ScryfallTagRecord = {
   label?: string;
@@ -172,8 +173,9 @@ function addTag(
 }
 
 async function loadRegistryFromApi(): Promise<TagRegistry> {
-  const bulkResponse = await fetch(TAGS_BULK_DATA_URL, {
-    headers: ScryfallHeaders,
+  const bulkResponse = await scryfallFetch(TAGS_BULK_DATA_URL, {
+    timeoutMs: 20000,
+    failFastOnCooldown: false,
   });
   if (!bulkResponse.ok) {
     throw new Error(`Bulk data index request failed: ${bulkResponse.status}`);

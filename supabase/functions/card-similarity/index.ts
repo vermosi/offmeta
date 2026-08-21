@@ -19,6 +19,7 @@ import {
   buildSimilarQuery,
   type QueryPlan,
 } from './query.ts';
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -155,9 +156,8 @@ async function getMechanicsForCard(card: SimilarityRequest): Promise<string[]> {
  */
 async function countResults(query: string): Promise<number | null> {
   try {
-    const res = await fetch(
+    const res = await scryfallFetch(
       `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}`,
-      { headers: { 'User-Agent': 'OffMeta/1.0', Accept: 'application/json' } },
     );
     if (res.status === 404) return 0;
     if (!res.ok) return null;

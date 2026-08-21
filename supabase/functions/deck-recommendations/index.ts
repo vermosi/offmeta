@@ -3,6 +3,7 @@ import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
 import { rateLimitedResponse } from '../_shared/rateLimitTelemetry.ts';
 import { withLogging } from '../_shared/logger.ts';
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 /** Minimal Scryfall card shape for type safety in this function. */
 interface ScryfallCardData {
@@ -74,10 +75,11 @@ async function resolveCards(
     const batch = names.slice(i, i + 75);
     const identifiers = batch.map((name) => ({ name }));
     try {
-      const resp = await fetch('https://api.scryfall.com/cards/collection', {
+      const resp = await scryfallFetch('https://api.scryfall.com/cards/collection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifiers }),
+        failFastOnCooldown: false,
       });
       if (resp.ok) {
         const data = await resp.json();

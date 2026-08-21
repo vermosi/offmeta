@@ -3,6 +3,7 @@ declare const Deno: { env: { get(key: string): string | undefined }; serve: (han
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { GUIDES_META, getGuideMetaBySlug } from '../_shared/guides-meta.ts';
 import { withLogging } from '../_shared/logger.ts';
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 /**
  * Prerender edge function — returns SEO-enriched HTML for /cards/:slug and /search/:slug.
@@ -89,7 +90,7 @@ async function fetchCardByName(name: string): Promise<ScryfallCard | null> {
   } catch { /* fall through to Scryfall */ }
 
   try {
-    const res = await fetch(`${SCRYFALL_API}/cards/named?fuzzy=${encodeURIComponent(name)}`);
+    const res = await scryfallFetch(`${SCRYFALL_API}/cards/named?fuzzy=${encodeURIComponent(name)}`, { retries: 1 });
     if (!res.ok) return null;
     return await res.json() as ScryfallCard;
   } catch {
@@ -99,7 +100,7 @@ async function fetchCardByName(name: string): Promise<ScryfallCard | null> {
 
 async function fetchSearchResults(query: string, limit = 6): Promise<ScryfallSearchResult | null> {
   try {
-    const res = await fetch(`${SCRYFALL_API}/cards/search?q=${encodeURIComponent(query)}&page=1`);
+    const res = await scryfallFetch(`${SCRYFALL_API}/cards/search?q=${encodeURIComponent(query)}&page=1`, { retries: 1 });
     if (!res.ok) return null;
     const data = await res.json() as ScryfallSearchResult;
     data.data = data.data.slice(0, limit);

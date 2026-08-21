@@ -21,6 +21,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
 import { pingSitemapSubmission } from '../_shared/sitemapPing.ts';
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 
 const log = createLogger('bulk-data-sync');
@@ -153,8 +154,9 @@ serve(withLogging('bulk-data-sync', async (req: Request): Promise<Response> => {
     while (nextPageUrl && pagesProcessed < MAX_PAGES) {
       await sleep(SCRYFALL_DELAY_MS);
 
-      const resp = await fetch(nextPageUrl, {
-        headers: { 'User-Agent': 'OffMeta/1.0' },
+      const resp = await scryfallFetch(nextPageUrl, {
+        timeoutMs: 30000,
+        failFastOnCooldown: false,
       });
 
       if (!resp.ok) {

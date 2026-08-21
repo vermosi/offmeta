@@ -1,22 +1,74 @@
 /**
  * Shared fetch utilities for Scryfall API calls.
- * Provides rate limiting, retry logic, and timeout handling.
+ *
+ * Scryfall asks clients to stay under ~10 requests/second, leave 50–100ms
+ * between calls, send an `Accept` header, and back off when a 429 arrives
+ * (https://scryfall.com/docs/api). Every request built here is paced through a
+ * single scheduler and pauses globally while a rate-limit cool-off is active.
+ *
  * @module lib/scryfall/fetch-utils
  */
 
 const FETCH_TIMEOUT_MS = 8000;
 const MAX_RETRIES = 2;
-const MIN_REQUEST_INTERVAL = 50;
+/** Conservative end of Scryfall's recommended 50–100ms spacing. */
+const MIN_REQUEST_INTERVAL = 100;
 const MAX_QUEUE_SIZE = 10;
 const QUEUE_ITEM_TIMEOUT_MS = FETCH_TIMEOUT_MS;
+/** Fallback cool-off when a 429 arrives without a Retry-After header. */
+const DEFAULT_COOLDOWN_MS = 2000;
+const MAX_COOLDOWN_MS = 60_000;
 
 let queuedRequests = 0;
 let nextRequestAllowedAt = 0;
+let cooldownUntil = 0;
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/** Milliseconds remaining in the current Scryfall cool-off (0 when clear). */
+export function scryfallCooldownRemainingMs(): number {
+  return Math.max(0, cooldownUntil - Date.now());
+}
+
+/** Test helper: clears pacing and cool-off state. */
+export function resetScryfallFetchState(): void {
+  queuedRequests = 0;
+  nextRequestAllowedAt = 0;
+  cooldownUntil = 0;
+}
+
+function parseRetryAfterMs(response: Response): number {
+  const header = response.headers.get('Retry-After');
+  if (!header) return DEFAULT_COOLDOWN_MS;
+  const seconds = Number(header);
+  if (Number.isFinite(seconds) && seconds > 0) {
+    return Math.min(seconds * 1000, MAX_COOLDOWN_MS);
+  }
+  const date = Date.parse(header);
+  if (!Number.isNaN(date)) {
+    return Math.min(Math.max(date - Date.now(), 0), MAX_COOLDOWN_MS);
+  }
+  return DEFAULT_COOLDOWN_MS;
+}
+
+function withScryfallHeaders(init?: RequestInit): RequestInit {
+  const headers = new Headers(init?.headers);
+  if (!headers.has('Accept')) headers.set('Accept', 'application/json');
+  return { ...init, headers };
+}
+
+/** Reserves this request's slot in the ≥100ms scheduler. */
+async function acquireSlot(): Promise<void> {
+  const now = Date.now();
+  const scheduledAt = Math.max(now, nextRequestAllowedAt, cooldownUntil);
+  nextRequestAllowedAt = scheduledAt + MIN_REQUEST_INTERVAL;
+  const waitMs = scheduledAt - now;
+  if (waitMs > 0) await delay(waitMs);
+}
+
 /**
- * Fetch with abort-controller timeout.
+ * Fetch with abort-controller timeout. Does not pace requests — prefer
+ * {@link fetchWithRetry} or {@link rateLimitedFetch} for Scryfall traffic.
  */
 export async function fetchWithTimeout(
   url: string,
@@ -28,7 +80,7 @@ export async function fetchWithTimeout(
 
   try {
     return await fetch(url, {
-      ...init,
+      ...withScryfallHeaders(init),
       signal: controller.signal,
       credentials: 'omit',
     });
@@ -38,7 +90,9 @@ export async function fetchWithTimeout(
 }
 
 /**
- * Fetch with automatic retry on 429/5xx errors.
+ * Paced fetch with automatic retry on 429/5xx errors.
+ * A 429 sets a global cool-off (honouring Retry-After) so every other
+ * in-flight Scryfall call waits instead of hammering the API.
  */
 export async function fetchWithRetry(
   url: string,
@@ -49,17 +103,26 @@ export async function fetchWithRetry(
   let lastError: Error | undefined;
 
   while (attempt <= retries) {
+    await acquireSlot();
     try {
       const response = await fetchWithTimeout(url, FETCH_TIMEOUT_MS, init);
-      if (
-        !response.ok &&
-        (response.status === 429 || response.status >= 500) &&
-        attempt < retries
-      ) {
+
+      if (response.status === 429 || response.status === 503) {
+        const retryAfterMs = parseRetryAfterMs(response);
+        cooldownUntil = Math.max(cooldownUntil, Date.now() + retryAfterMs);
+        if (attempt < retries) {
+          attempt += 1;
+          continue;
+        }
+        return response;
+      }
+
+      if (response.status >= 500 && attempt < retries) {
         await delay(300 * (attempt + 1));
         attempt += 1;
         continue;
       }
+
       return response;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
@@ -75,31 +138,32 @@ export async function fetchWithRetry(
 }
 
 /**
- * Rate-limited fetch that enforces Scryfall's ≥50ms between requests.
- * Uses token-bucket style scheduling.
+ * Rate-limited fetch for user-driven Scryfall calls.
+ * Adds a queue ceiling on top of {@link fetchWithRetry} so bursts fail fast
+ * instead of stacking up behind the scheduler.
  */
-export async function rateLimitedFetch(url: string): Promise<Response> {
+export async function rateLimitedFetch(
+  url: string,
+  init?: RequestInit,
+): Promise<Response> {
   if (queuedRequests >= MAX_QUEUE_SIZE) {
     throw new Error('Too many pending requests. Please try again.');
+  }
+
+  const cooldown = scryfallCooldownRemainingMs();
+  if (cooldown > QUEUE_ITEM_TIMEOUT_MS) {
+    throw new Error('Scryfall is rate limiting requests. Please try again shortly.');
   }
 
   queuedRequests += 1;
 
   try {
-    const now = Date.now();
-    const scheduledAt = Math.max(now, nextRequestAllowedAt);
-    const waitMs = scheduledAt - now;
-    nextRequestAllowedAt = scheduledAt + MIN_REQUEST_INTERVAL;
-
-    if (waitMs > QUEUE_ITEM_TIMEOUT_MS) {
+    const queueWaitMs = Math.max(0, nextRequestAllowedAt - Date.now());
+    if (queueWaitMs > QUEUE_ITEM_TIMEOUT_MS) {
       throw new Error('Request timed out while waiting in queue');
     }
 
-    if (waitMs > 0) {
-      await delay(waitMs);
-    }
-
-    return await fetchWithRetry(url);
+    return await fetchWithRetry(url, init);
   } finally {
     queuedRequests = Math.max(0, queuedRequests - 1);
   }

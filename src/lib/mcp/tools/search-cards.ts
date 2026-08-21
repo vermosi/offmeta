@@ -1,5 +1,6 @@
 import { defineTool } from '@lovable.dev/mcp-js';
 import { z } from 'zod';
+import { rateLimitedFetch } from '@/lib/scryfall/fetch-utils';
 
 /**
  * Search Magic: The Gathering cards using Scryfall's advanced search syntax.
@@ -40,9 +41,9 @@ export default defineTool({
       order: order ?? 'name',
     });
 
-    const res = await fetch(`https://api.scryfall.com/cards/search?${params}`, {
-      headers: { Accept: 'application/json' },
-    });
+    const res = await rateLimitedFetch(
+      `https://api.scryfall.com/cards/search?${params}`,
+    );
 
     if (res.status === 404) {
       return {
