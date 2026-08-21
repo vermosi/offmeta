@@ -46,7 +46,10 @@ import {
   createSearchSuccessResponse,
 } from './responses.ts';
 import { tryConceptStage } from './concept-stage.ts';
-import { resolveAnswer } from './answer-stage.ts';
+import {
+  resolveAnswer,
+  type AnswerResolution,
+} from './answer-stage.ts';
 import { runPipeline, type PipelineContext } from './pipeline/index.ts';
 import {
   validateAIResponse,
@@ -348,6 +351,74 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         jsonHeaders,
         { validationIssues: fallbackResult.issues },
       );
+    }
+
+    // 2.4b. Known-answer helper: turns a resolved answer into a response.
+    const respondWithAnswer = (answer: AnswerResolution): Response => {
+      const answerQuery = applyFiltersToQuery(answer.scryfallQuery, filters);
+      const validation = validateQuery(answerQuery || answer.scryfallQuery);
+      const responseTimeMs = Date.now() - requestStartTime;
+      const answerPayload = {
+        scryfallQuery: validation.sanitized,
+        explanation: {
+          readable:
+            answer.cardNames.length > 0
+              ? `Likely answers: ${answer.cardNames.slice(0, 5).join(', ')}`
+              : `Searching for: ${query}`,
+          assumptions:
+            answer.cardNames.length > 0
+              ? [`Known answer cards: ${answer.cardNames.join(', ')}`]
+              : [],
+          confidence: answer.confidence,
+        },
+        showAffiliate: true,
+      };
+
+      logInfo(
+        'request_completed',
+        buildPerfLogFields(stageDurationsMs, answer.tier, responseTimeMs),
+      );
+      setCachedResult(query, filters, answerPayload, cacheSalt);
+      logTranslation(
+        query,
+        validation.sanitized,
+        answer.confidence,
+        responseTimeMs,
+        [],
+        [],
+        filters,
+        false,
+        answer.tier,
+        null,
+        undefined,
+        requestId,
+      );
+      flushLogQueue();
+
+      return createSearchSuccessResponse(
+        query,
+        answerPayload,
+        responseTimeMs,
+        answer.tier,
+        jsonHeaders,
+      );
+    };
+
+    // 2.4c. Curated/learned answer index (cheap tier) — a stored answer for this
+    // question beats every heuristic below it.
+    const indexedAnswer = await markStage('answer', () =>
+      resolveAnswer({
+        query,
+        broaderQuery: '',
+        remainingBudgetMs: requestBudget.remainingMs(),
+        apiKey: LOVABLE_API_KEY,
+        allowAiLookup: false,
+        logInfo,
+        logWarn,
+      }),
+    );
+    if (indexedAnswer) {
+      return respondWithAnswer(indexedAnswer);
     }
 
     // 2.5a. Check hardcoded patterns FIRST (before card name detection)
@@ -906,9 +977,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       return conceptResponse;
     }
 
-    // 6c. Answer stage — resolve question-shaped queries to the specific cards
-    // that answer them (curated/learned index first, grounded AI lookup second),
-    // then search for those cards alongside the broader interpretation.
+    // 6c. Answer stage (grounded tier) — resolve question-shaped queries to the
+    // specific cards that answer them, verified against Scryfall, then search
+    // for those cards alongside the broader interpretation.
     if (!looksNonEnglish) {
       const answerBroaderQuery =
         deterministicQuery || buildFallbackQuery(query, filters).sanitized;
@@ -919,63 +990,16 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           remainingBudgetMs: requestBudget.remainingMs(),
           apiKey: LOVABLE_API_KEY,
           allowAiLookup: !isCircuitOpen(),
+          skipIndex: true,
           logInfo,
           logWarn,
         }),
       );
 
       if (answer) {
-        const answerQuery = applyFiltersToQuery(answer.scryfallQuery, filters);
-        const validation = validateQuery(answerQuery || answer.scryfallQuery);
-        const responseTimeMs = Date.now() - requestStartTime;
-        const answerPayload = {
-          scryfallQuery: validation.sanitized,
-          explanation: {
-            readable:
-              answer.cardNames.length > 0
-                ? `Likely answers: ${answer.cardNames.slice(0, 5).join(', ')}`
-                : `Searching for: ${query}`,
-            assumptions:
-              answer.cardNames.length > 0
-                ? [`Known answer cards: ${answer.cardNames.join(', ')}`]
-                : [],
-            confidence: answer.confidence,
-          },
-          showAffiliate: true,
-        };
-
-        logInfo(
-          'request_completed',
-          buildPerfLogFields(stageDurationsMs, answer.tier, responseTimeMs),
-        );
-        setCachedResult(query, filters, answerPayload, cacheSalt);
-        logTranslation(
-          query,
-          validation.sanitized,
-          answer.confidence,
-          responseTimeMs,
-          [],
-          [],
-          filters,
-          false,
-          answer.tier,
-          null,
-          undefined,
-          requestId,
-        );
-        flushLogQueue();
-
-        return createSearchSuccessResponse(
-          query,
-          answerPayload,
-          responseTimeMs,
-          answer.tier,
-          jsonHeaders,
-        );
+        return respondWithAnswer(answer);
       }
     }
-
-
 
     const buildBudgetExceededResponse = (
       stage: BudgetStage,
