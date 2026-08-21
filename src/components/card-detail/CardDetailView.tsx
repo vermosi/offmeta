@@ -134,20 +134,18 @@ export function CardDetailView({ card }: CardDetailViewProps) {
 
   // Localized printing (name / type line / oracle text) for non-English locales.
   // Canonical English data stays authoritative for SEO and structured data.
+  const scryfallLang = LOCALE_TO_SCRYFALL_LANG[locale] ?? 'en';
   useEffect(() => {
-    const lang = LOCALE_TO_SCRYFALL_LANG[locale] ?? 'en';
-    if (lang === 'en') {
-      setLocalizedFields(null);
-      return;
-    }
+    if (scryfallLang === 'en') return;
     let cancelled = false;
-    getLocalizedPrintedFields(card.name, lang).then((fields) => {
+    getLocalizedPrintedFields(card.name, scryfallLang).then((fields) => {
       if (!cancelled) setLocalizedFields(fields);
     });
     return () => {
       cancelled = true;
     };
-  }, [card.name, locale]);
+  }, [card.name, scryfallLang]);
+
 
 
 
