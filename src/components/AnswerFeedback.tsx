@@ -8,7 +8,7 @@
  * @module components/AnswerFeedback
  */
 
-import { useState, lazy, Suspense } from 'react';
+import { useRef, useState, lazy, Suspense } from 'react';
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -54,6 +54,9 @@ export function AnswerFeedback({
   const [submitted, setSubmitted] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  /** Set when the details dialog submits, so closing it is not counted as a cancel. */
+  const dialogSubmittedRef = useRef(false);
+
 
   if (!originalQuery.trim()) return null;
 
@@ -188,7 +191,14 @@ export function AnswerFeedback({
             variant="ghost"
             size="sm"
             className="h-9 rounded-full px-3 text-xs"
-            onClick={() => setDialogOpen(true)}
+            onClick={() => {
+              dialogSubmittedRef.current = false;
+              setDialogOpen(true);
+              trackEvent('feedback_dialog_opened', {
+                ...signalContext,
+                sentiment: 'down',
+              });
+            }}
           >
             {t('answerFeedback.addDetails', 'Add details')}
           </Button>
@@ -202,10 +212,24 @@ export function AnswerFeedback({
             onOpenChange={(open) => {
               setDialogOpen(open);
               if (!open) {
+                if (!dialogSubmittedRef.current) {
+                  trackEvent('feedback_dialog_cancelled', {
+                    ...signalContext,
+                    sentiment: 'down',
+                  });
+                }
                 setVote(null);
               }
             }}
-            onSubmitted={() => setSubmitted(true)}
+            onSubmitted={() => {
+              dialogSubmittedRef.current = true;
+              setSubmitted(true);
+              trackEvent('feedback_dialog_submitted', {
+                ...signalContext,
+                sentiment: 'down',
+              });
+            }}
+
             originalQuery={originalQuery}
             compiledQuery={scryfallQuery}
             filters={filters}
