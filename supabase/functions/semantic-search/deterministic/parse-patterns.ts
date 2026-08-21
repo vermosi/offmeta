@@ -421,9 +421,10 @@ export function parseSpecialPatterns(query: string, ir: SearchIR): string {
     'standard|pioneer|modern|legacy|vintage|pauper|historic|timeless|oathbreaker|brawl|commander|edh|alchemy|gladiator|penny';
 
   const bannedPattern = new RegExp(
-    `\\b(?:banned|illegal)\\s+(?:in|for|from)\\s+(?:the\\s+)?(${FORMAT_ALTERNATION})\\b|\\b(${FORMAT_ALTERNATION})\\s+(?:ban(?:ned)?)\\s*list\\b`,
+    `\\b(?:banned|illegal)(?:\\s+(?:cards?|spells?|permanents?))?\\s+(?:in|for|from)\\s+(?:the\\s+)?(${FORMAT_ALTERNATION})\\b|\\b(${FORMAT_ALTERNATION})\\s+(?:ban(?:ned)?)\\s*list\\b`,
     'gi',
   );
+
   const bannedMatch = bannedPattern.exec(remaining);
   if (bannedMatch) {
     const format = (bannedMatch[1] ?? bannedMatch[2]).toLowerCase();
@@ -575,6 +576,18 @@ export function parseOraclePatterns(query: string, ir: SearchIR): string {
     ir.oracle.push('o:"additional combat phase"');
     extraCombatPattern.lastIndex = 0;
     remaining = remaining.replace(extraCombatPattern, '').trim();
+  }
+
+  // Free casts / "cheating" spells into play ("cheat mana costs",
+  // "cast without paying its mana cost", "put onto the battlefield free")
+  const freeCastPattern =
+    /\bcheat(?:ing)?\s+(?:in\s+)?(?:mana\s+)?costs?\b|\bcheat\s+(?:cards?|creatures?|spells?)\s+(?:in|into\s+play)\b|\bcast(?:ing)?\s+(?:spells?\s+)?(?:for\s+free|without\s+paying(?:\s+(?:its|their))?(?:\s+mana\s+costs?)?)\b|\bfree\s+(?:spell\s+)?casts?\b/gi;
+  if (freeCastPattern.test(remaining)) {
+    ir.oracle.push(
+      '(o:"without paying its mana cost" or o:"without paying their mana costs")',
+    );
+    freeCastPattern.lastIndex = 0;
+    remaining = remaining.replace(freeCastPattern, '').trim();
   }
 
   // Finishers / game-enders → win condition payoffs

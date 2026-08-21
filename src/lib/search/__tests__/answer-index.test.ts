@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildAnswerQuery,
   buildNamesClause,
+  extractSimilarityReference,
   looksLikeAnswerableQuestion,
   normalizeQuestion,
   pickBestAnswer,
@@ -92,5 +93,31 @@ describe('buildAnswerQuery', () => {
   it('falls back to the broader query when no names resolve', () => {
     expect(buildAnswerQuery([], 'ci:rw o:indestructible')).toBe('ci:rw o:indestructible');
     expect(buildNamesClause(['  '])).toBe('');
+  });
+});
+
+describe('similarity intent', () => {
+  it('extracts the reference card from "cards like X"', () => {
+    expect(extractSimilarityReference('cards like Thief of Sanity')).toBe(
+      'Thief of Sanity',
+    );
+    expect(
+      extractSimilarityReference('budget alternatives to Optimus Prime'),
+    ).toBe('Optimus Prime');
+    expect(
+      extractSimilarityReference('cards like thief of sanity under 5'),
+    ).toBe('thief of sanity');
+    expect(extractSimilarityReference('blue counterspells')).toBeNull();
+  });
+
+  it('excludes the reference card from the answer query', () => {
+    const query = buildAnswerQuery(
+      ['Thief of Sanity', 'Hypnotic Specter'],
+      'c:b t:creature',
+      'Thief of Sanity',
+    );
+    expect(query).toContain('!"Hypnotic Specter"');
+    expect(query).not.toContain('(!"Thief of Sanity" or');
+    expect(query).toContain('-!"Thief of Sanity"');
   });
 });
