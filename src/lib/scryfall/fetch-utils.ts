@@ -18,24 +18,69 @@ const QUEUE_ITEM_TIMEOUT_MS = FETCH_TIMEOUT_MS;
 /** Fallback cool-off when a 429 arrives without a Retry-After header. */
 const DEFAULT_COOLDOWN_MS = 2000;
 const MAX_COOLDOWN_MS = 60_000;
+/** Consecutive failed calls (timeout, network, 5xx) before the breaker trips. */
+const CIRCUIT_FAILURE_THRESHOLD = 4;
+/** How long the breaker stays open before a single probe is allowed through. */
+const CIRCUIT_OPEN_MS = 30_000;
 
 let queuedRequests = 0;
 let nextRequestAllowedAt = 0;
 let cooldownUntil = 0;
+let consecutiveFailures = 0;
+let circuitOpenUntil = 0;
+let probeInFlight = false;
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Thrown while the circuit breaker is open — Scryfall is not called at all. */
+export class ScryfallUnavailableError extends Error {
+  readonly retryAfterMs: number;
+  constructor(retryAfterMs: number) {
+    super(
+      `Scryfall is unavailable; retrying in ${Math.ceil(retryAfterMs / 1000)}s`,
+    );
+    this.name = 'ScryfallUnavailableError';
+    this.retryAfterMs = retryAfterMs;
+  }
+}
 
 /** Milliseconds remaining in the current Scryfall cool-off (0 when clear). */
 export function scryfallCooldownRemainingMs(): number {
   return Math.max(0, cooldownUntil - Date.now());
 }
 
-/** Test helper: clears pacing and cool-off state. */
+/** Milliseconds left in the open circuit-breaker window (0 when closed). */
+export function scryfallCircuitRemainingMs(): number {
+  return Math.max(0, circuitOpenUntil - Date.now());
+}
+
+/** True while Scryfall calls short-circuit instead of hitting the network. */
+export function isScryfallCircuitOpen(): boolean {
+  return scryfallCircuitRemainingMs() > 0;
+}
+
+function recordFailure(): void {
+  consecutiveFailures += 1;
+  if (consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD) {
+    circuitOpenUntil = Date.now() + CIRCUIT_OPEN_MS;
+  }
+}
+
+function recordSuccess(): void {
+  consecutiveFailures = 0;
+  circuitOpenUntil = 0;
+}
+
+/** Test helper: clears pacing, cool-off and circuit-breaker state. */
 export function resetScryfallFetchState(): void {
   queuedRequests = 0;
   nextRequestAllowedAt = 0;
   cooldownUntil = 0;
+  consecutiveFailures = 0;
+  circuitOpenUntil = 0;
+  probeInFlight = false;
 }
+
 
 function parseRetryAfterMs(response: Response): number {
   const header = response.headers.get('Retry-After');
@@ -93,49 +138,76 @@ export async function fetchWithTimeout(
  * Paced fetch with automatic retry on 429/5xx errors.
  * A 429 sets a global cool-off (honouring Retry-After) so every other
  * in-flight Scryfall call waits instead of hammering the API.
+ *
+ * After {@link CIRCUIT_FAILURE_THRESHOLD} consecutive failures the circuit
+ * breaker opens and calls throw {@link ScryfallUnavailableError} immediately
+ * for {@link CIRCUIT_OPEN_MS}; one probe then re-tests the API.
  */
 export async function fetchWithRetry(
   url: string,
   init?: RequestInit,
   retries = MAX_RETRIES,
 ): Promise<Response> {
+  const circuitRemaining = scryfallCircuitRemainingMs();
+  if (circuitRemaining > 0) {
+    throw new ScryfallUnavailableError(circuitRemaining);
+  }
+
+  // Half-open: allow a single probe rather than a burst of retries.
+  let ownsProbe = false;
+  if (consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD) {
+    if (probeInFlight) throw new ScryfallUnavailableError(CIRCUIT_OPEN_MS);
+    probeInFlight = true;
+    ownsProbe = true;
+  }
+
   let attempt = 0;
   let lastError: Error | undefined;
 
-  while (attempt <= retries) {
-    await acquireSlot();
-    try {
-      const response = await fetchWithTimeout(url, FETCH_TIMEOUT_MS, init);
+  try {
+    while (attempt <= retries) {
+      await acquireSlot();
+      try {
+        const response = await fetchWithTimeout(url, FETCH_TIMEOUT_MS, init);
 
-      if (response.status === 429 || response.status === 503) {
-        const retryAfterMs = parseRetryAfterMs(response);
-        cooldownUntil = Math.max(cooldownUntil, Date.now() + retryAfterMs);
-        if (attempt < retries) {
+        if (response.status === 429 || response.status === 503) {
+          const retryAfterMs = parseRetryAfterMs(response);
+          cooldownUntil = Math.max(cooldownUntil, Date.now() + retryAfterMs);
+          if (attempt < retries) {
+            attempt += 1;
+            continue;
+          }
+          recordFailure();
+          return response;
+        }
+
+        if (response.status >= 500 && attempt < retries) {
+          await delay(300 * (attempt + 1));
           attempt += 1;
           continue;
         }
-        return response;
-      }
 
-      if (response.status >= 500 && attempt < retries) {
+        if (response.status >= 500) recordFailure();
+        else recordSuccess();
+        return response;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        if (attempt >= retries) {
+          recordFailure();
+          throw lastError;
+        }
         await delay(300 * (attempt + 1));
         attempt += 1;
-        continue;
       }
-
-      return response;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (attempt >= retries) {
-        throw lastError;
-      }
-      await delay(300 * (attempt + 1));
-      attempt += 1;
     }
-  }
 
-  throw lastError ?? new Error('Request failed');
+    recordFailure();
+    throw lastError ?? new Error('Request failed');
+  } finally {
+    if (ownsProbe) probeInFlight = false;
+  }
 }
+
 
 /**
  * Rate-limited fetch for user-driven Scryfall calls.
@@ -148,6 +220,11 @@ export async function rateLimitedFetch(
 ): Promise<Response> {
   if (queuedRequests >= MAX_QUEUE_SIZE) {
     throw new Error('Too many pending requests. Please try again.');
+  }
+
+  const circuitRemaining = scryfallCircuitRemainingMs();
+  if (circuitRemaining > 0) {
+    throw new ScryfallUnavailableError(circuitRemaining);
   }
 
   const cooldown = scryfallCooldownRemainingMs();
