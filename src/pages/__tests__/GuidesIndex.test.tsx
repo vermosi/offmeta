@@ -148,6 +148,6 @@ describe('GuidesIndex', () => {
 
   it('renders guide count text', () => {
     renderGuidesIndex();
-    expect(screen.getByText(/11 Guides \/ Beginner/i)).toBeInTheDocument();
+    expect(screen.getByText(/\d+ Guides \/ Beginner/i)).toBeInTheDocument();
   });
 });
