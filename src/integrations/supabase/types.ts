@@ -1019,6 +1019,7 @@ export type Database = {
           rejected_card_id: string | null
           request_id: string | null
           result_rank: number | null
+          retry_count: number
           scryfall_validation_count: number | null
           surface: string | null
           translated_query: string | null
@@ -1035,6 +1036,7 @@ export type Database = {
           rejected_card_id?: string | null
           request_id?: string | null
           result_rank?: number | null
+          retry_count?: number
           scryfall_validation_count?: number | null
           surface?: string | null
           translated_query?: string | null
@@ -1051,6 +1053,7 @@ export type Database = {
           rejected_card_id?: string | null
           request_id?: string | null
           result_rank?: number | null
+          retry_count?: number
           scryfall_validation_count?: number | null
           surface?: string | null
           translated_query?: string | null
