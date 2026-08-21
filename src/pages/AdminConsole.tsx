@@ -100,25 +100,8 @@ export default function AdminConsole() {
           />
         );
       case 'overview/product-health':
-        return (
-          <div className="space-y-6">
-            <ConsoleHeading
-              index="01"
-              title="Product health"
-              note="Usage, arrival → search → action, and returning searchers."
-            />
-            {hook.data ? (
-              <AnalyticsChartsSection data={hook.data} days={days} />
-            ) : (
-              <ConsolePanel>
-                <EmptyRow>No analytics data in this window.</EmptyRow>
-              </ConsolePanel>
-            )}
-            <EngagementMetricsPanel days={days} />
-            <ConversionFunnelPanel days={days} />
-            <HitRatePanel days={days} />
-          </div>
-        );
+        return <ProductHealth data={hook.data} days={days} />;
+
       case 'overview/alerts':
         return (
           <div className="space-y-6">
