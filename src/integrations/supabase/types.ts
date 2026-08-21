@@ -1188,6 +1188,164 @@ export type Database = {
         }
         Relationships: []
       }
+      search_regression_corpus: {
+        Row: {
+          active: boolean
+          archived_at: string | null
+          consecutive_failures: number
+          created_at: string
+          expected_min_results: number
+          id: string
+          last_checked_at: string | null
+          last_confidence: number | null
+          last_result_count: number | null
+          locale: string
+          min_confidence: number
+          query: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          archived_at?: string | null
+          consecutive_failures?: number
+          created_at?: string
+          expected_min_results?: number
+          id?: string
+          last_checked_at?: string | null
+          last_confidence?: number | null
+          last_result_count?: number | null
+          locale?: string
+          min_confidence?: number
+          query: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          archived_at?: string | null
+          consecutive_failures?: number
+          created_at?: string
+          expected_min_results?: number
+          id?: string
+          last_checked_at?: string | null
+          last_confidence?: number | null
+          last_result_count?: number | null
+          locale?: string
+          min_confidence?: number
+          query?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      search_regression_results: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          duration_ms: number | null
+          failure_reason: string | null
+          id: string
+          locale: string
+          passed: boolean
+          query: string
+          result_count: number | null
+          run_id: string
+          scryfall_query: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          duration_ms?: number | null
+          failure_reason?: string | null
+          id?: string
+          locale?: string
+          passed?: boolean
+          query: string
+          result_count?: number | null
+          run_id: string
+          scryfall_query?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          duration_ms?: number | null
+          failure_reason?: string | null
+          id?: string
+          locale?: string
+          passed?: boolean
+          query?: string
+          result_count?: number | null
+          run_id?: string
+          scryfall_query?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_regression_results_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "search_regression_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_regression_runs: {
+        Row: {
+          app_version: string | null
+          avg_confidence: number | null
+          created_at: string
+          details: Json
+          failed: number
+          finished_at: string | null
+          id: string
+          low_confidence: number
+          passed: number
+          repair_invoked: boolean
+          repaired: number
+          started_at: string
+          status: string
+          total: number
+          trigger_source: string
+          updated_at: string
+        }
+        Insert: {
+          app_version?: string | null
+          avg_confidence?: number | null
+          created_at?: string
+          details?: Json
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          low_confidence?: number
+          passed?: number
+          repair_invoked?: boolean
+          repaired?: number
+          started_at?: string
+          status?: string
+          total?: number
+          trigger_source?: string
+          updated_at?: string
+        }
+        Update: {
+          app_version?: string | null
+          avg_confidence?: number | null
+          created_at?: string
+          details?: Json
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          low_confidence?: number
+          passed?: number
+          repair_invoked?: boolean
+          repaired?: number
+          started_at?: string
+          status?: string
+          total?: number
+          trigger_source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       self_heal_runs: {
         Row: {
           candidates: number
