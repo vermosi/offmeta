@@ -4,11 +4,10 @@ import {
   validateAgainstScryfall,
 } from '../../supabase/functions/semantic-search/scryfall.ts';
 
-// Mock fetchWithRetry
+// scryfall.ts calls the shared paced client; stub it so no real request is made.
 const mockFetch = vi.fn();
-vi.mock('../../supabase/functions/semantic-search/utils.ts', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fetchWithRetry: (...args: any[]) => mockFetch(...args),
+vi.mock('../../supabase/functions/_shared/scryfall-client.ts', () => ({
+  scryfallFetch: (...args: unknown[]) => mockFetch(...args),
 }));
 
 describe('Semantic Search Scryfall Utils', () => {

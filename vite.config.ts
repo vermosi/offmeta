@@ -123,6 +123,7 @@ export default defineConfig(() => ({
       'src/**/*.test.tsx',
       'supabase/functions/_shared/card-roles.test.ts',
       'supabase/functions/_shared/scryfall-client.test.ts',
+      'supabase/functions/_shared/scryfall-dedupe.test.ts',
       'supabase/functions/card-similarity/*.test.ts',
     ],
     coverage: {

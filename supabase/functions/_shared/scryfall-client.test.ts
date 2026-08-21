@@ -13,7 +13,7 @@ const URL = 'https://api.scryfall.com/cards/search?q=test';
 /** Trips the breaker with the configured number of consecutive failures. */
 async function failUntilOpen(times = 4): Promise<void> {
   for (let i = 0; i < times; i += 1) {
-    await expect(scryfallFetch(URL, { retries: 0 })).rejects.toThrow();
+    await expect(scryfallFetch(URL, { retries: 0, dedupe: false })).rejects.toThrow();
   }
 }
 
@@ -51,7 +51,7 @@ describe('scryfallFetch circuit breaker', () => {
     );
 
     for (let i = 0; i < 4; i += 1) {
-      const res = await scryfallFetch(URL, { retries: 0 });
+      const res = await scryfallFetch(URL, { retries: 0, dedupe: false });
       expect(res.status).toBe(500);
     }
 
@@ -67,12 +67,12 @@ describe('scryfallFetch circuit breaker', () => {
     expect(isScryfallCircuitOpen()).toBe(false);
 
     fetchMock.mockResolvedValue(new Response('{}', { status: 200 }));
-    const response = await scryfallFetch(URL, { retries: 0 });
+    const response = await scryfallFetch(URL, { retries: 0, dedupe: false });
     expect(response.status).toBe(200);
 
     // Breaker fully closed: a later failure alone must not re-open it.
     fetchMock.mockRejectedValue(new Error('network down'));
-    await expect(scryfallFetch(URL, { retries: 0 })).rejects.toThrow();
+    await expect(scryfallFetch(URL, { retries: 0, dedupe: false })).rejects.toThrow();
     expect(isScryfallCircuitOpen()).toBe(false);
   });
 
@@ -83,7 +83,7 @@ describe('scryfallFetch circuit breaker', () => {
     );
 
     for (let i = 0; i < 6; i += 1) {
-      const res = await scryfallFetch(URL, { retries: 0 });
+      const res = await scryfallFetch(URL, { retries: 0, dedupe: false });
       expect(res.status).toBe(404);
     }
 
