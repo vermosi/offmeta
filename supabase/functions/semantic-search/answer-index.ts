@@ -87,7 +87,7 @@ export function looksLikeAnswerableQuestion(input: string): boolean {
   if (/[:<>=]/.test(text)) return false; // raw Scryfall syntax
   const words = text.split(/\s+/);
   if (words.length < 4) return false;
-  return /\b(that|which|who|what|how|gives?|grants?|makes?|lets?|allows?|prevents?|copies|copy|whenever|when|deals?|returns?|search(?:es)?|counters?|destroys?|exiles?|draws?|untaps?|doubles?|like|similar|instead|without|anthem|combo|synerg\w*)\b/i.test(
+  return /\b(that|which|who|what|how|gives?|grants?|makes?|lets?|allows?|prevents?|alternatives?|replacements?|substitutes?|copies|copy|whenever|when|deals?|returns?|search(?:es)?|counters?|destroys?|exiles?|draws?|untaps?|doubles?|like|similar|instead|without|anthem|combo|synerg\w*)\b/i.test(
     text,
   );
 }

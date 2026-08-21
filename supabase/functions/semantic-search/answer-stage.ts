@@ -28,6 +28,7 @@ export interface AnswerResolution {
 }
 
 const AI_LOOKUP_TIMEOUT_MS = 3000;
+const AI_LOOKUP_MIN_TIMEOUT_MS = 1600;
 const SCRYFALL_VERIFY_TIMEOUT_MS = 1500;
 const MAX_ANSWER_CARDS = 8;
 
@@ -95,6 +96,7 @@ async function lookupAnswerWithAi(
   apiKey: string,
   logWarn: Logger,
   similarityReference?: string | null,
+  timeoutMs: number = AI_LOOKUP_TIMEOUT_MS,
 ): Promise<string[]> {
   const systemPrompt = similarityReference
     ? 'You are a Magic: The Gathering card expert. The user wants cards that play like a reference card. ' +
@@ -126,7 +128,7 @@ async function lookupAnswerWithAi(
           response_format: { type: 'json_object' },
         }),
       },
-      AI_LOOKUP_TIMEOUT_MS,
+      timeoutMs,
     );
 
     if (!response.ok) {
@@ -213,7 +215,13 @@ export async function resolveAnswer(args: {
 
   // Tier B — grounded lookup, only with enough budget left.
   if (!allowAiLookup || !apiKey) return null;
-  if (remainingBudgetMs < AI_LOOKUP_TIMEOUT_MS + SCRYFALL_VERIFY_TIMEOUT_MS + 200) {
+  // Adaptive: the lookup is usually ~1s, so fit it into whatever budget is
+  // left rather than skipping the stage whenever the full window is gone.
+  const lookupTimeoutMs = Math.min(
+    AI_LOOKUP_TIMEOUT_MS,
+    remainingBudgetMs - SCRYFALL_VERIFY_TIMEOUT_MS - 200,
+  );
+  if (lookupTimeoutMs < AI_LOOKUP_MIN_TIMEOUT_MS) {
     args.logInfo('answer_lookup_skipped_budget', { remainingBudgetMs });
     return null;
   }
@@ -224,6 +232,7 @@ export async function resolveAnswer(args: {
     apiKey,
     args.logWarn,
     similarityReference,
+    lookupTimeoutMs,
   );
   if (suggested.length === 0) return null;
 
