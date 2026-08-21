@@ -1346,6 +1346,7 @@ export type Database = {
       }
       translation_logs: {
         Row: {
+          app_version: string | null
           confidence_score: number | null
           created_at: string | null
           fallback_used: boolean | null
@@ -1364,6 +1365,7 @@ export type Database = {
           validation_issues: string[] | null
         }
         Insert: {
+          app_version?: string | null
           confidence_score?: number | null
           created_at?: string | null
           fallback_used?: boolean | null
@@ -1382,6 +1384,7 @@ export type Database = {
           validation_issues?: string[] | null
         }
         Update: {
+          app_version?: string | null
           confidence_score?: number | null
           created_at?: string | null
           fallback_used?: boolean | null
@@ -1594,6 +1597,14 @@ export type Database = {
           weight: number
         }[]
       }
+      get_confidence_monitor: {
+        Args: {
+          days_back?: number
+          deploy_limit?: number
+          low_threshold?: number
+        }
+        Returns: Json
+      }
       get_conversion_funnel: { Args: { days_back?: number }; Returns: Json }
       get_edge_function_status: {
         Args: never
@@ -1625,6 +1636,21 @@ export type Database = {
           suggested_slug: string
           variant_count: number
           zero_result_count: number
+        }[]
+      }
+      get_low_confidence_candidates: {
+        Args: {
+          max_confidence?: number
+          max_results?: number
+          min_frequency?: number
+          since_date?: string
+        }
+        Returns: {
+          avg_confidence: number
+          frequency: number
+          last_translation: string
+          query: string
+          zero_results: number
         }[]
       }
       get_ops_freshness: { Args: never; Returns: Json }
