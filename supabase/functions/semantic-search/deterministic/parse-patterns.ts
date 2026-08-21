@@ -323,7 +323,7 @@ const GRANTABLE_KEYWORDS: Record<string, string> = {
 
 const GRANT_VERB = '(?:gives?|granting|grants?|giving|gain(?:s|ing)?|get(?:s)?)';
 const GRANT_SUBJECT =
-  '(?:(?:all|your|our|each|every|target|other|the)\\s+)*(?:creatures?|permanents?|team|creature)?\\s*(?:you\\s+control\\s*)?';
+  '(?:(?:all|your|my|our|their|each|every|target|other|the)\\s+)*(?:creatures?|permanents?|team|creature)?\\s*(?:you\\s+control\\s*)?';
 
 /**
  * Parse "gives your creatures indestructible" style phrases into an oracle
@@ -348,7 +348,7 @@ export function parseKeywordGrants(query: string, ir: SearchIR): string {
       if (!match) continue;
 
       const matchedText = match[0].toLowerCase();
-      const teamWide = /\b(your|our|you control|all|each|every|team)\b/.test(
+      const teamWide = /\b(your|my|our|their|you control|all|each|every|team)\b/.test(
         matchedText,
       );
 
