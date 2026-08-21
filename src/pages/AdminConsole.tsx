@@ -43,6 +43,8 @@ import { SelfHealPanel } from '@/pages/admin-analytics/components/SelfHealPanel'
 import { TranslationRulesPanel } from '@/pages/admin-analytics/components/TranslationRulesPanel';
 import { ConversionFunnelPanel } from '@/pages/admin-analytics/components/ConversionFunnelPanel';
 import { EngagementMetricsPanel } from '@/pages/admin-analytics/components/EngagementMetricsPanel';
+import { FeedbackQueuePanel } from '@/pages/admin-analytics/components/FeedbackQueuePanel';
+
 import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
 import { SemrushPanel } from '@/pages/admin-analytics/components/SemrushPanel';
 import { RumPanel } from '@/pages/admin-analytics/components/RumPanel';
