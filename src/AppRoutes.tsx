@@ -20,7 +20,6 @@ const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const SavedPage = lazy(() => import('./pages/SavedPage'));
 const HistoryPage = lazy(() => import('./pages/HistoryPage'));
 
-const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'));
 const AdminConsole = lazy(() => import('./pages/AdminConsole'));
 const AdminCuratedSearches = lazy(() => import('./pages/AdminCuratedSearches'));
 const FindMyCombos = lazy(() => import('./pages/FindMyCombos'));
