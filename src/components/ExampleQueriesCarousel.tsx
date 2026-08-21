@@ -21,6 +21,7 @@ import { MessageSquare, Sparkles, LayoutGrid, ArrowRight } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { cn } from '@/lib/core/utils';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { markOnce } from '@/lib/analytics/oncePerSession';
 import { usePrefersReducedMotion } from '@/hooks';
 
 interface ExampleQueriesCarouselProps {
@@ -111,19 +112,11 @@ export function ExampleQueriesCarousel({
   const active = steps.find((s) => s.key === activeStep) ?? steps[0];
   const trySearchLabel = t('examples.trySearchLabel', 'Try search:');
 
-  // Fire an impression event whenever a category (tab) becomes active. Guarded
-  // by a sessionStorage set so the same category-per-session emits once.
+  // Fire an impression the first time a category becomes active in a session.
+  // `markOnce` also guards in memory, so remounts cannot resend the event even
+  // when sessionStorage is unavailable (in-app browsers, private mode).
   useEffect(() => {
-    try {
-      const key = 'offmeta_hiw_examples_seen';
-      const raw = sessionStorage.getItem(key);
-      const seen: string[] = raw ? JSON.parse(raw) : [];
-      if (seen.includes(active.key)) return;
-      seen.push(active.key);
-      sessionStorage.setItem(key, JSON.stringify(seen));
-    } catch {
-      /* fall through; still track */
-    }
+    if (!markOnce(`hiw_examples:${active.key}`)) return;
     trackExampleQueryImpression({
       query: active.key,
       category: active.key,

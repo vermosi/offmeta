@@ -3,8 +3,9 @@
  * @module components/InstantDemoPreview
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { markOnce } from '@/lib/analytics/oncePerSession';
 import { useTranslation } from '@/lib/i18n';
 
 const DEMO_QUERY = 'budget board wipes under $5';
@@ -66,14 +67,14 @@ function useTypewriter(text: string, speed = 40) {
 export function InstantDemoPreview({ onTrySearch }: InstantDemoPreviewProps) {
   const { t } = useTranslation();
   const { trackEvent } = useAnalytics();
-  const impressionTracked = useRef(false);
-  const { displayed: typedQuery, done: typingDone } = useTypewriter(DEMO_QUERY, 50);
+  const { displayed: typedQuery, done: typingDone } = useTypewriter(
+    DEMO_QUERY,
+    50,
+  );
 
   useEffect(() => {
-    if (!impressionTracked.current) {
-      impressionTracked.current = true;
-      trackEvent('demo_preview_impression', { query: DEMO_QUERY });
-    }
+    if (!markOnce('demo_preview_impression')) return;
+    trackEvent('demo_preview_impression', { query: DEMO_QUERY });
   }, [trackEvent]);
 
   const handleSearchClick = () => {
