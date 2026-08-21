@@ -33,19 +33,16 @@ import { ConceptManager } from '@/pages/admin/sections/ConceptManager';
 import { OpportunityQueue } from '@/pages/admin/sections/OpportunityQueue';
 import { QualityBenchmark } from '@/pages/admin/sections/QualityBenchmark';
 import { ConfidenceMonitor } from '@/pages/admin/sections/ConfidenceMonitor';
+import { ProductHealth } from '@/pages/admin/sections/ProductHealth';
 import { ExperimentsSection, ReleasesSection } from '@/pages/admin/sections/ReleasesSection';
 import { GuidesSection, LandingPagesSection } from '@/pages/admin/sections/ContentInventory';
 import { ConsoleHeading, ConsolePanel, EmptyRow } from '@/pages/admin/components/console-ui';
-import { AnalyticsChartsSection } from '@/pages/admin-analytics/components/AnalyticsChartsSection';
 import { ErrorMonitorPanel } from '@/pages/admin-analytics/components/ErrorMonitorPanel';
 import { SystemStatusPanel } from '@/pages/admin-analytics/components/SystemStatusPanel';
 import { SelfHealPanel } from '@/pages/admin-analytics/components/SelfHealPanel';
 import { TranslationRulesPanel } from '@/pages/admin-analytics/components/TranslationRulesPanel';
-import { ConversionFunnelPanel } from '@/pages/admin-analytics/components/ConversionFunnelPanel';
-import { EngagementMetricsPanel } from '@/pages/admin-analytics/components/EngagementMetricsPanel';
 import { FeedbackQueuePanel } from '@/pages/admin-analytics/components/FeedbackQueuePanel';
 
-import { HitRatePanel } from '@/pages/admin-analytics/components/HitRatePanel';
 import { SemrushPanel } from '@/pages/admin-analytics/components/SemrushPanel';
 import { RumPanel } from '@/pages/admin-analytics/components/RumPanel';
 import { EdgeFunctionStatusPanel } from '@/pages/admin-analytics/components/EdgeFunctionStatusPanel';
@@ -100,25 +97,8 @@ export default function AdminConsole() {
           />
         );
       case 'overview/product-health':
-        return (
-          <div className="space-y-6">
-            <ConsoleHeading
-              index="01"
-              title="Product health"
-              note="Usage, arrival → search → action, and returning searchers."
-            />
-            {hook.data ? (
-              <AnalyticsChartsSection data={hook.data} days={days} />
-            ) : (
-              <ConsolePanel>
-                <EmptyRow>No analytics data in this window.</EmptyRow>
-              </ConsolePanel>
-            )}
-            <EngagementMetricsPanel days={days} />
-            <ConversionFunnelPanel days={days} />
-            <HitRatePanel days={days} />
-          </div>
-        );
+        return <ProductHealth data={hook.data} days={days} />;
+
       case 'overview/alerts':
         return (
           <div className="space-y-6">
