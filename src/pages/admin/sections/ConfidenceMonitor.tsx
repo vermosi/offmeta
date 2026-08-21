@@ -105,6 +105,7 @@ export function ConfidenceMonitor({ days }: { days: number }) {
   }, []);
 
   const load = useCallback(async () => {
+    setIsLoading(true);
     const { data: raw, error: rpcError } = await supabase.rpc(
       'get_confidence_monitor' as never,
       { days_back: days, deploy_limit: 8, low_threshold: 0.75 } as never,
@@ -121,11 +122,11 @@ export function ConfidenceMonitor({ days }: { days: number }) {
   }, [days]);
 
   useEffect(() => {
-    setIsLoading(true);
     void load();
     const timer = setInterval(() => void load(), POLL_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [load]);
+
 
   const healthy = data?.healthy_share ?? null;
   const deploys = data?.by_deploy ?? [];
