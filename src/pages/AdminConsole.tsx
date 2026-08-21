@@ -1,13 +1,14 @@
 /**
  * OffMeta Admin Control Room.
  *
- * Not a dashboard: a work surface organised around six areas (Overview,
- * Search, Knowledge, Content, Growth, System). The default view is the
- * Operations Inbox, which answers "what should I improve in OffMeta today?".
+ * Not a dashboard: a work surface organised around four areas (Overview,
+ * Search, Knowledge, System). The default view is the Operations Inbox, which
+ * answers "what should I improve in OffMeta today?".
  *
  * Existing telemetry panels are reused verbatim; the reorganisation is in the
  * information architecture and the action-first framing, not in the data.
  */
+
 
 import { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
