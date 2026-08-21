@@ -8,6 +8,7 @@
  */
 
 import { validateOtags } from './otagValidation.ts';
+import { scryfallFetch } from './scryfall-client.ts';
 
 /** Curated Scryfall oracle tags the repair model is allowed to reach for. */
 export const SCRYFALL_OTAGS = [

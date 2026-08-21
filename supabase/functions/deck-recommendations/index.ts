@@ -3,6 +3,7 @@ import { validateAuth, getCorsHeaders } from '../_shared/auth.ts';
 import { checkRateLimit, maybeCleanup } from '../_shared/rateLimit.ts';
 import { rateLimitedResponse } from '../_shared/rateLimitTelemetry.ts';
 import { withLogging } from '../_shared/logger.ts';
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 /** Minimal Scryfall card shape for type safety in this function. */
 interface ScryfallCardData {

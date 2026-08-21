@@ -77,6 +77,7 @@ import {
   sanitizeError,
 } from './handlers/http.ts';
 import { enforceSupportedTags } from './tag-guard.ts';
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 type BudgetStage = 'dynamic_rules' | 'pre_translation' | 'ai_call';
 

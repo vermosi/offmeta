@@ -25,6 +25,7 @@ import {
   suggestOracleTags,
   suggestArtTags,
 } from './otagValidation.ts';
+import { scryfallFetch } from './scryfall-client.ts';
 
 export type TagKind = 'oracle' | 'art';
 

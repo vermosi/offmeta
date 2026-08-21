@@ -19,6 +19,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
 import { reportEdgeError } from '../_shared/errorReporter.ts';
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 /** Scryfall's /cards/collection endpoint accepts at most 75 identifiers. */
 const BATCH_SIZE = 75;

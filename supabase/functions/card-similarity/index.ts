@@ -19,6 +19,7 @@ import {
   buildSimilarQuery,
   type QueryPlan,
 } from './query.ts';
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
