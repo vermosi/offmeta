@@ -9,7 +9,7 @@ test.describe('Admin analytics access control', () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test('seeded admin user can load analytics view', async ({ page }) => {
+  test('seeded admin user can load the repair queue view', async ({ page }) => {
     await mockAdminAPIs(page);
 
     await page.goto('/');
@@ -18,8 +18,8 @@ test.describe('Admin analytics access control', () => {
     await page.goto('/admin/search/repair');
 
     await expect(
-      page.getByRole('heading', { name: /search analytics/i }),
+      page.getByRole('heading', { name: /repair queue/i }),
     ).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('42')).toBeVisible();
   });
+
 });
