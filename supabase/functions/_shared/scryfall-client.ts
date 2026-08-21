@@ -23,6 +23,10 @@ const DEFAULT_COOLDOWN_MS = 2000;
 const MAX_COOLDOWN_MS = 60_000;
 /** Requests already waiting in the pacing queue before we shed load. */
 const MAX_QUEUE_DEPTH = 12;
+/** Consecutive failed calls (timeout, network, 5xx, exhausted 429) to trip. */
+const CIRCUIT_FAILURE_THRESHOLD = 4;
+/** How long the breaker stays open before a single probe is allowed through. */
+const CIRCUIT_OPEN_MS = 30_000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -32,6 +36,12 @@ let nextRequestAllowedAt = 0;
 let queueDepth = 0;
 /** Set when Scryfall returns 429/503: no request is sent before this time. */
 let cooldownUntil = 0;
+/** Consecutive failures observed since the last successful response. */
+let consecutiveFailures = 0;
+/** While in the future, the breaker is open and no request is sent. */
+let circuitOpenUntil = 0;
+/** Guards the single half-open probe once the open window has elapsed. */
+let probeInFlight = false;
 
 export class ScryfallRateLimitError extends Error {
   readonly retryAfterMs: number;
@@ -44,17 +54,61 @@ export class ScryfallRateLimitError extends Error {
   }
 }
 
+/**
+ * Thrown while the circuit breaker is open. Extends `ScryfallRateLimitError`
+ * so existing back-off handling treats it as "skip Scryfall for now".
+ */
+export class ScryfallUnavailableError extends ScryfallRateLimitError {
+  constructor(retryAfterMs: number) {
+    super(retryAfterMs);
+    this.name = 'ScryfallUnavailableError';
+    this.message =
+      `Scryfall circuit breaker open after ${CIRCUIT_FAILURE_THRESHOLD}+ ` +
+      `failures; retry in ${Math.ceil(retryAfterMs / 1000)}s`;
+  }
+}
+
 /** Milliseconds until the current Scryfall cool-off ends (0 when clear). */
 export function scryfallCooldownRemainingMs(): number {
   return Math.max(0, cooldownUntil - Date.now());
 }
 
-/** Test helper: clears pacing and cool-off state. */
+/** Milliseconds left in the open circuit-breaker window (0 when closed). */
+export function scryfallCircuitRemainingMs(): number {
+  return Math.max(0, circuitOpenUntil - Date.now());
+}
+
+/**
+ * True while Scryfall should not be called at all. Callers that have a
+ * Scryfall-free path (e.g. the answer index) should take it instead of
+ * paying a timeout per request.
+ */
+export function isScryfallCircuitOpen(): boolean {
+  return scryfallCircuitRemainingMs() > 0;
+}
+
+function recordFailure(): void {
+  consecutiveFailures += 1;
+  if (consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD) {
+    circuitOpenUntil = Date.now() + CIRCUIT_OPEN_MS;
+  }
+}
+
+function recordSuccess(): void {
+  consecutiveFailures = 0;
+  circuitOpenUntil = 0;
+}
+
+/** Test helper: clears pacing, cool-off and circuit-breaker state. */
 export function resetScryfallClientState(): void {
   nextRequestAllowedAt = 0;
   queueDepth = 0;
   cooldownUntil = 0;
+  consecutiveFailures = 0;
+  circuitOpenUntil = 0;
+  probeInFlight = false;
 }
+
 
 function parseRetryAfterMs(response: Response): number {
   const header = response.headers.get('Retry-After');
