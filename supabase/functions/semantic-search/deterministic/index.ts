@@ -36,6 +36,7 @@ import {
   parseManaProduction,
   parseEquipmentPatterns,
   parseFramePatterns,
+  parseKeywordGrants,
   matchFrameOnlyQuery,
 
 } from './parse-patterns.ts';
@@ -121,6 +122,7 @@ function buildIR(query: string): SearchIR {
   remaining = applyTagMappings(remaining, ir);
   remaining = parseTokenCreation(remaining, ir); // Parse token creation BEFORE type parsing
   remaining = parseEnablers(remaining, ir); // Parse enablers early
+  remaining = parseKeywordGrants(remaining, ir); // "gives your creatures X" → oracle grant clause
   remaining = parseKeywords(remaining, ir); // Parse keywords for kw: operator
   remaining = parseArchetypes(remaining, ir); // Parse archetype strategies
   remaining = parseExclusions(remaining, ir); // Parse exclusions before types
