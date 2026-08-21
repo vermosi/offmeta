@@ -221,6 +221,14 @@ export async function resolveAnswer(args: {
 
   // Tier B — grounded lookup, only with enough budget left.
   if (!allowAiLookup || !apiKey) return null;
+  // Tier B can only ship names Scryfall confirms. While the breaker is open
+  // that verification is guaranteed to fail, so stop at the answer index.
+  if (isScryfallCircuitOpen()) {
+    args.logInfo('answer_lookup_skipped_circuit_open', {
+      circuitRemainingMs: scryfallCircuitRemainingMs(),
+    });
+    return null;
+  }
   // Adaptive: the lookup is usually ~1s, so fit it into whatever budget is
   // left rather than skipping the stage whenever the full window is gone.
   const lookupTimeoutMs = Math.min(
