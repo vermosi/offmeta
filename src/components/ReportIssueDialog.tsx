@@ -31,20 +31,25 @@ import { ReportContextPanel } from '@/components/report/ReportContextPanel';
 interface ReportIssueDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Called when the user successfully submits a report. */
+  onSubmitted?: () => void;
   originalQuery: string;
   compiledQuery: string;
   filters?: FilterState | null;
   requestId?: string;
 }
 
+
 export function ReportIssueDialog({
   open,
   onOpenChange,
+  onSubmitted,
   originalQuery,
   compiledQuery,
   filters,
   requestId,
 }: ReportIssueDialogProps) {
+
   const { t } = useTranslation();
   const [issue, setIssue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -120,7 +125,9 @@ export function ReportIssueDialog({
       toast.success(t('report.success', 'Issue reported'), {
         description: `${t('report.thanks', "Thanks! We'll use this to improve searches.")}${remaining <= 2 ? ` (${remaining} submissions remaining)` : ''}`,
       });
+      onSubmitted?.();
       onOpenChange(false);
+
     } catch (error: unknown) {
       toast.error(t('report.failed', 'Failed to submit feedback'), {
         description: extractErrorDetail(error),
