@@ -93,9 +93,13 @@ function shareTone(share: number | null): 'neutral' | 'good' | 'warn' | 'bad' {
 
 export function ConfidenceMonitor({ days }: { days: number }) {
   const [data, setData] = useState<ConfidenceMonitorData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loadedDays, setLoadedDays] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const isMounted = useRef(true);
+
+  // Loading is derived: no payload yet, or the payload belongs to a
+  // different range than the one currently selected.
+  const isLoading = loadedDays !== days;
 
   useEffect(() => {
     isMounted.current = true;
@@ -105,7 +109,6 @@ export function ConfidenceMonitor({ days }: { days: number }) {
   }, []);
 
   const load = useCallback(async () => {
-    setIsLoading(true);
     const { data: raw, error: rpcError } = await supabase.rpc(
       'get_confidence_monitor' as never,
       { days_back: days, deploy_limit: 8, low_threshold: 0.75 } as never,
@@ -118,7 +121,7 @@ export function ConfidenceMonitor({ days }: { days: number }) {
       setError(null);
       setData(raw as unknown as ConfidenceMonitorData);
     }
-    setIsLoading(false);
+    setLoadedDays(days);
   }, [days]);
 
   useEffect(() => {
@@ -126,6 +129,7 @@ export function ConfidenceMonitor({ days }: { days: number }) {
     const timer = setInterval(() => void load(), POLL_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [load]);
+
 
 
   const healthy = data?.healthy_share ?? null;
