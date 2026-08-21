@@ -19,7 +19,11 @@ import {
   pickBestAnswer,
   tokenizeQuestion,
 } from './answer-index.ts';
-import { scryfallFetch } from '../_shared/scryfall-client.ts';
+import {
+  isScryfallCircuitOpen,
+  scryfallCircuitRemainingMs,
+  scryfallFetch,
+} from '../_shared/scryfall-client.ts';
 
 export interface AnswerResolution {
   scryfallQuery: string;
