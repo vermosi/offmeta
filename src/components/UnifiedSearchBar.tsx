@@ -404,11 +404,11 @@ export const UnifiedSearchBar = forwardRef<
       {/* Example queries - shown when no query typed */}
       {showExamples && (
         <div
-          className="flex flex-wrap items-baseline gap-x-5 gap-y-2"
+          className="flex flex-wrap items-center gap-2"
           role="group"
           aria-label={t('search.trySearchingFor')}
         >
-          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70">
+          <span className="w-full font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70 sm:w-auto">
             {t('search.trySearchingFor')} →
           </span>
           {visibleExamples.map(({ query: example, position }) => (
@@ -426,7 +426,7 @@ export const UnifiedSearchBar = forwardRef<
                 setQuery(example);
                 handleSearch(example);
               }}
-              className="focus-ring font-mono text-[11px] lowercase tracking-[0.06em] text-muted-foreground underline decoration-border underline-offset-[6px] transition-colors hover:text-foreground hover:decoration-foreground"
+              className="focus-ring inline-flex min-h-9 items-center rounded-full border border-border/60 bg-background/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-accent/60 hover:text-foreground"
               aria-label={t('search.searchFor').replace('{query}', example)}
             >
               {example}
@@ -436,7 +436,7 @@ export const UnifiedSearchBar = forwardRef<
             <button
               type="button"
               onClick={() => setShowAllExamples(true)}
-              className="font-mono text-[11px] uppercase tracking-[0.12em] text-accent transition-colors hover:text-accent/80"
+              className="focus-ring inline-flex min-h-9 items-center px-2 font-mono text-[11px] uppercase tracking-[0.12em] text-accent transition-colors hover:text-accent/80"
             >
               {t('search.moreExamples', 'More')} ▾
             </button>
