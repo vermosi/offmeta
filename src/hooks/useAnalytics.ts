@@ -303,6 +303,8 @@ const ALLOWED_EVENT_TYPES = [
   'pagination_error_shown',
   'pagination_retry_clicked',
   'feedback_submitted',
+  'answer_feedback', // Thumbs up/down rating on a search answer
+
   'landing_page_view',
   'homepage_view',
   'route_view',
