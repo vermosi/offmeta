@@ -15,6 +15,7 @@ export interface LogEntry {
   pre_translation_attempted: boolean;
   pre_translation_skipped_reason: string | null;
   request_id: string | null;
+  app_version: string | null;
 }
 
 interface PreTranslationTelemetry {
@@ -23,6 +24,20 @@ interface PreTranslationTelemetry {
 }
 
 const logQueue: LogEntry[] = [];
+
+/**
+ * Build identifier of the client that issued the current request.
+ *
+ * Best-effort and isolate-scoped: it is set at request entry and stamped onto
+ * queued log rows. Concurrent requests from different builds can, in rare
+ * cases, share a stamp — acceptable for a coarse per-deploy quality signal.
+ */
+let currentAppVersion: string | null = null;
+
+/** Set the build identifier stamped onto subsequent translation logs. */
+export function setAppVersion(version: string | null): void {
+  currentAppVersion = version && version.trim() ? version.trim().slice(0, 64) : null;
+}
 export const LOG_BATCH_SIZE = 10;
 export const LOG_BATCH_INTERVAL = 5000; // 5 seconds
 
@@ -99,6 +114,7 @@ export function logTranslation(
     pre_translation_skipped_reason:
       preTranslationTelemetry?.preTranslationSkippedReason ?? null,
     request_id: requestId,
+    app_version: currentAppVersion,
   });
 
   if (logQueue.length >= LOG_BATCH_SIZE) {

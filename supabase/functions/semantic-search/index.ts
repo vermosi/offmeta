@@ -37,7 +37,12 @@ import {
   runValidationTables,
 } from './validation.ts';
 import { buildFallbackQuery, applyFiltersToQuery } from './fallback.ts';
-import { logTranslation, createLogger, flushLogQueue } from './logging.ts';
+import {
+  logTranslation,
+  createLogger,
+  flushLogQueue,
+  setAppVersion,
+} from './logging.ts';
 import { createDiagnosticsResponse, validateSearchRequest } from './request.ts';
 import {
   buildPerfLogFields,
@@ -254,7 +259,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
   const requestBody = validatedRequest.data;
 
   try {
-    const { query, filters, debug, useCache, cacheSalt, locale } = requestBody;
+    const { query, filters, debug, useCache, cacheSalt, locale, appVersion } =
+      requestBody;
+    setAppVersion(appVersion);
     const requestBudget = parseRequestBudget(
       req,
       requestStartTime,
