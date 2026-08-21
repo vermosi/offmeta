@@ -313,6 +313,7 @@ export async function translateQueryWithDedup(
             filters: filters || undefined,
             cacheSalt: cacheSalt || undefined,
             locale,
+            appVersion: APP_VERSION,
           },
           headers: {
             'x-session-id': sessionId,
