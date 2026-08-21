@@ -195,6 +195,14 @@ Deno.test('Golden: "red creatures" produces color + type', async () => {
   );
 });
 
+Deno.test('Regression: "retro frame cards" produces is:retro', async () => {
+  const res = await postSearch({ query: 'retro frame cards', useCache: false });
+  assertEquals(res.status, 200);
+  const data: SuccessResponse = await res.json();
+  assertSuccessShape(data);
+  assertQueryContains(data.scryfallQuery, ['is:retro'], 'retro frame cards');
+});
+
 Deno.test('Golden: "white enchantments for commander" includes format', async () => {
   const res = await postSearch({ query: 'white enchantments for commander', useCache: false });
   assertEquals(res.status, 200);

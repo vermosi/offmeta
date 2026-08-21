@@ -50,6 +50,7 @@ interface BenchmarkStats {
   minMs: number;
   maxMs: number;
   p50Ms: number;
+  p75Ms: number;
   p95Ms: number;
   successRate: number;
   cacheHitRate: number;
@@ -172,6 +173,7 @@ function calculateStats(results: BenchmarkResult[]): BenchmarkStats {
       minMs: 0,
       maxMs: 0,
       p50Ms: 0,
+      p75Ms: 0,
       p95Ms: 0,
       successRate: 0,
       cacheHitRate: 0,
@@ -191,6 +193,7 @@ function calculateStats(results: BenchmarkResult[]): BenchmarkStats {
     minMs: Math.round(times[0]),
     maxMs: Math.round(times[times.length - 1]),
     p50Ms: Math.round(times[Math.floor(times.length * 0.5)]),
+    p75Ms: Math.round(times[Math.floor(times.length * 0.75)] ?? times[times.length - 1]),
     p95Ms: Math.round(
       times[Math.floor(times.length * 0.95)] ?? times[times.length - 1],
     ),
@@ -611,24 +614,25 @@ Deno.test({
     console.log('\n' + '='.repeat(60));
     console.log('📈 PERFORMANCE BENCHMARK SUMMARY');
     console.log('='.repeat(60));
-    console.log('\nCategory           | Avg (ms) | P95 (ms) | Success');
+    console.log('\nCategory           | Avg (ms) | P75 (ms) | P95 (ms) | Success');
     console.log('-'.repeat(60));
 
     for (const [category, results] of byCategory) {
       const stats = calculateStats(results);
       const categoryPadded = category.padEnd(18);
       const avgPadded = String(stats.avgMs).padStart(8);
+      const p75Padded = String(stats.p75Ms).padStart(8);
       const p95Padded = String(stats.p95Ms).padStart(8);
       const successPadded = `${stats.successRate}%`.padStart(7);
       console.log(
-        `${categoryPadded} | ${avgPadded} | ${p95Padded} | ${successPadded}`,
+        `${categoryPadded} | ${avgPadded} | ${p75Padded} | ${p95Padded} | ${successPadded}`,
       );
     }
 
     const overallStats = calculateStats(allResults);
     console.log('-'.repeat(60));
     console.log(
-      `${'OVERALL'.padEnd(18)} | ${String(overallStats.avgMs).padStart(8)} | ${String(overallStats.p95Ms).padStart(8)} | ${`${overallStats.successRate}%`.padStart(7)}`,
+      `${'OVERALL'.padEnd(18)} | ${String(overallStats.avgMs).padStart(8)} | ${String(overallStats.p75Ms).padStart(8)} | ${String(overallStats.p95Ms).padStart(8)} | ${`${overallStats.successRate}%`.padStart(7)}`,
     );
     console.log('='.repeat(60));
 

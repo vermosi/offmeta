@@ -227,7 +227,7 @@ export const UnifiedSearchBar = forwardRef<
   // and buried every other signal.
   useEffect(() => {
     if (!showExamples) return;
-    if (!markOnce(`search_examples:${isMobile ? 'mobile' : 'desktop'}`)) return;
+    if (!markOnce('search_examples')) return;
 
     trackExampleQueryImpression({
       query: 'search_bar_examples',

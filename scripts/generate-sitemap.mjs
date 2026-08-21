@@ -371,7 +371,7 @@ if (!HAS_SUPABASE) {
   } catch {
     /* no existing sitemap */
   }
-  if (existingUrls > seen.size) {
+  if (existingUrls > seen.size && !prerenderedSlugs) {
     console.warn(
       `[sitemap] No Supabase env; keeping existing sitemap with ` +
         `${existingUrls} URLs instead of writing ${seen.size}.`,

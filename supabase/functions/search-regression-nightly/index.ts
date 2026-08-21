@@ -51,6 +51,7 @@ const RUN_BUDGET_MS = 220_000;
 const MIN_FAILURES_FOR_REPAIR = 1;
 /** Consecutive failures before an entry is parked as unrepairable. */
 const MAX_CONSECUTIVE_FAILURES = 8;
+const HEALTHY_CONFIDENCE_TARGET = 0.75;
 
 interface CorpusRow {
   id: string;
@@ -302,6 +303,7 @@ serve(
     let lowConfidence = 0;
     let confidenceSum = 0;
     let confidenceCount = 0;
+    let healthyConfidenceCount = 0;
     let circuitStatus: number | null = null;
     const failures: Array<{ query: string; reason: string }> = [];
 
@@ -329,6 +331,9 @@ serve(
         if (outcome.confidence !== null) {
           confidenceSum += outcome.confidence;
           confidenceCount += 1;
+          if (outcome.confidence >= HEALTHY_CONFIDENCE_TARGET) {
+            healthyConfidenceCount += 1;
+          }
         }
         if (outcome.passed) {
           passed += 1;
@@ -358,10 +363,17 @@ serve(
         repaired: repair.repaired,
         avg_confidence: confidenceCount ? confidenceSum / confidenceCount : null,
         details: {
+          healthyConfidenceTarget: HEALTHY_CONFIDENCE_TARGET,
+          healthyConfidenceRate: confidenceCount
+            ? healthyConfidenceCount / confidenceCount
+            : null,
+          healthyConfidenceMet: confidenceCount > 0 &&
+            healthyConfidenceCount / confidenceCount >= HEALTHY_CONFIDENCE_TARGET,
           toppedUp,
           circuitStatus,
           repairDetail: repair.detail,
           failures: failures.slice(0, 25),
+          triageRequired: failures.length > 0,
           durationMs: Date.now() - startedAt,
         },
         finished_at: new Date().toISOString(),
