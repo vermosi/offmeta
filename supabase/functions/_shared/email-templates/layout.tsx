@@ -16,6 +16,7 @@ import {
 
 const SITE_URL = 'https://offmeta.app'
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const colors = {
   ink: '#130F24',
   body: '#33313F',
