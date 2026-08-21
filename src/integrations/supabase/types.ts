@@ -2166,6 +2166,7 @@ export type Database = {
         Args: { client_ip: string; limit_count: number; window_seconds: number }
         Returns: Json
       }
+      is_service_role_request: { Args: never; Returns: boolean }
       list_ontology_concepts: {
         Args: never
         Returns: {
