@@ -298,6 +298,86 @@ export function normalizeFrameTypos(query: string): string {
 }
 
 
+/**
+ * Keywords that are commonly *granted* to other permanents rather than
+ * possessed by the card itself.
+ */
+const GRANTABLE_KEYWORDS: Record<string, string> = {
+  indestructible: 'indestructible',
+  hexproof: 'hexproof',
+  shroud: 'shroud',
+  flying: 'flying',
+  trample: 'trample',
+  haste: 'haste',
+  lifelink: 'lifelink',
+  vigilance: 'vigilance',
+  deathtouch: 'deathtouch',
+  menace: 'menace',
+  'first strike': 'first strike',
+  'double strike': 'double strike',
+  ward: 'ward',
+  reach: 'reach',
+  flash: 'flash',
+  protection: 'protection',
+};
+
+const GRANT_VERB = '(?:gives?|granting|grants?|giving|gain(?:s|ing)?|get(?:s)?)';
+const GRANT_SUBJECT =
+  '(?:(?:all|your|my|our|their|each|every|target|other|the)\\s+)*(?:creatures?|permanents?|team|creature)?\\s*(?:you\\s+control\\s*)?';
+
+/**
+ * Parse "gives your creatures indestructible" style phrases into an oracle
+ * grant clause instead of `kw:` (which would wrongly match cards that simply
+ * *have* the keyword).
+ */
+export function parseKeywordGrants(query: string, ir: SearchIR): string {
+  let remaining = query;
+
+  for (const [phrase, keyword] of Object.entries(GRANTABLE_KEYWORDS)) {
+    const escaped = phrase.replace(/\s+/g, '\\s+');
+    const patterns = [
+      new RegExp(`\\b${GRANT_VERB}\\s+${GRANT_SUBJECT}${escaped}\\b`, 'i'),
+      new RegExp(
+        `\\b(?:creatures?|permanents?)\\s+(?:you\\s+control\\s+)?(?:that\\s+)?gains?\\s+${escaped}\\b`,
+        'i',
+      ),
+    ];
+
+    for (const pattern of patterns) {
+      const match = remaining.match(pattern);
+      if (!match) continue;
+
+      const matchedText = match[0].toLowerCase();
+      const teamWide = /\b(your|my|our|their|you control|all|each|every|team)\b/.test(
+        matchedText,
+      );
+
+      const clause =
+        `(o:"gain ${keyword}" or o:"gains ${keyword}" or o:"have ${keyword}" or o:"has ${keyword}")`;
+      if (!ir.specials.includes(clause)) ir.specials.push(clause);
+      if (teamWide && !ir.specials.includes('o:"you control"')) {
+        ir.specials.push('o:"you control"');
+      }
+
+      // A grant clause is far more specific than the generic anthem/lord tags
+      // that "anthem"-style wording may have already added.
+      const isAnthemToken = (token: string) =>
+        token === 'otag:anthem' || token === 'otag:lord';
+      ir.tags = ir.tags.filter((tag) => !isAnthemToken(tag));
+      ir.specials = ir.specials.filter((token) => !isAnthemToken(token));
+
+      remaining = remaining.replace(pattern, ' ').replace(/\s+/g, ' ').trim();
+      break;
+    }
+  }
+
+  return remaining;
+}
+
+
+
+
+
 export function parseFramePatterns(query: string, ir: SearchIR): string {
   let remaining = normalizeFrameTypos(query);
   for (const [pattern, token] of FRAME_PATTERNS) {
