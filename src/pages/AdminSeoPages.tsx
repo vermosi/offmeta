@@ -180,7 +180,7 @@ export default function AdminSeoPages() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/admin/analytics')}
+            onClick={() => navigate('/admin')}
             aria-label="Back to admin analytics"
           >
             <ArrowLeft className="h-4 w-4" />

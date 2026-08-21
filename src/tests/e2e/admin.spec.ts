@@ -5,7 +5,7 @@ test.describe('Admin analytics access control', () => {
   test('unauthenticated user is redirected away from admin page', async ({
     page,
   }) => {
-    await page.goto('/admin/analytics');
+    await page.goto('/admin/search/repair');
     await expect(page).toHaveURL(/\/$/);
   });
 
@@ -15,7 +15,7 @@ test.describe('Admin analytics access control', () => {
     await page.goto('/');
     await signInViaDialog(page, { email: 'admin@example.com' });
 
-    await page.goto('/admin/analytics');
+    await page.goto('/admin/search/repair');
 
     await expect(
       page.getByRole('heading', { name: /search analytics/i }),
