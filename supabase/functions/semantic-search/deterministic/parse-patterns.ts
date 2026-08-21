@@ -421,9 +421,10 @@ export function parseSpecialPatterns(query: string, ir: SearchIR): string {
     'standard|pioneer|modern|legacy|vintage|pauper|historic|timeless|oathbreaker|brawl|commander|edh|alchemy|gladiator|penny';
 
   const bannedPattern = new RegExp(
-    `\\b(?:banned|illegal)\\s+(?:in|for|from)\\s+(?:the\\s+)?(${FORMAT_ALTERNATION})\\b|\\b(${FORMAT_ALTERNATION})\\s+(?:ban(?:ned)?)\\s*list\\b`,
+    `\\b(?:banned|illegal)(?:\\s+(?:cards?|spells?|permanents?))?\\s+(?:in|for|from)\\s+(?:the\\s+)?(${FORMAT_ALTERNATION})\\b|\\b(${FORMAT_ALTERNATION})\\s+(?:ban(?:ned)?)\\s*list\\b`,
     'gi',
   );
+
   const bannedMatch = bannedPattern.exec(remaining);
   if (bannedMatch) {
     const format = (bannedMatch[1] ?? bannedMatch[2]).toLowerCase();
