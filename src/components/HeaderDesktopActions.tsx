@@ -72,7 +72,7 @@ export function HeaderDesktopActions({
               {t('nav.profileSettings')}
             </DropdownMenuItem>
             {isAdmin && (
-              <DropdownMenuItem onClick={() => navigate('/admin/analytics')}>
+              <DropdownMenuItem onClick={() => navigate('/admin')}>
                 <Shield className="h-4 w-4 mr-2" />
                 {t('nav.adminDashboard')}
               </DropdownMenuItem>

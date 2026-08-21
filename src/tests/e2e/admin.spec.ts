@@ -5,21 +5,21 @@ test.describe('Admin analytics access control', () => {
   test('unauthenticated user is redirected away from admin page', async ({
     page,
   }) => {
-    await page.goto('/admin/analytics');
+    await page.goto('/admin/search/repair');
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test('seeded admin user can load analytics view', async ({ page }) => {
+  test('seeded admin user can load the repair queue view', async ({ page }) => {
     await mockAdminAPIs(page);
 
     await page.goto('/');
     await signInViaDialog(page, { email: 'admin@example.com' });
 
-    await page.goto('/admin/analytics');
+    await page.goto('/admin/search/repair');
 
     await expect(
-      page.getByRole('heading', { name: /search analytics/i }),
+      page.getByRole('heading', { name: /repair queue/i }),
     ).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('42')).toBeVisible();
   });
+
 });

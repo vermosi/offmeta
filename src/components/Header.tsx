@@ -141,7 +141,7 @@ export function Header() {
                     {t('nav.profileSettings')}
                   </Link>
                   {isAdmin && (
-                    <Link to="/admin/analytics" onClick={() => setMobileMenuOpen(false)} className="w-full border-b border-border/40 px-1 py-4 text-base text-foreground transition-colors hover:text-accent focus-ring">
+                    <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="w-full border-b border-border/40 px-1 py-4 text-base text-foreground transition-colors hover:text-accent focus-ring">
                       {t('nav.adminDashboard')}
                     </Link>
                   )}
