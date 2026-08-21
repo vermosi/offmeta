@@ -160,7 +160,10 @@ export function buildAnswerQuery(
   broaderQuery: string,
 ): string {
   const names = buildNamesClause(cardNames);
-  const broader = broaderQuery.trim();
+  const broader = broaderQuery
+    .replace(/\bgame:paper\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
   if (!names) return broader;
   if (!broader) return `${names} game:paper`;
   return `(${names} or (${broader})) game:paper`;
