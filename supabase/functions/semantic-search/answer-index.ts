@@ -174,8 +174,25 @@ export function buildNamesClause(cardNames: string[]): string {
 }
 
 /**
- * Final query: the known answer cards OR the broader interpretation, so the
- * answers surface at the top of otherwise normal results.
+ * Counts distinct constraint fields in a query (`o:`, `t:`, `ci:`, `mv<=` …).
+ * A broader interpretation built from a single field — `o:"enters"` or
+ * `(t:instant or t:sorcery)` — matches thousands of cards, so it is treated
+ * as too loose to union with a curated answer list.
+ */
+function countConstraintFields(query: string): number {
+  const withoutQuotes = query.replace(/"[^"]*"/g, '""');
+  const tokens = withoutQuotes.match(/-?\w+(?=:|<=|>=|!=|=|<|>)/g) ?? [];
+  return new Set(tokens.map((t) => t.replace(/^-/, '').toLowerCase())).size;
+}
+
+
+/**
+ * Final query: the known answer cards OR the broader interpretation.
+ *
+ * The union only happens when the broader interpretation is specific enough
+ * (2+ constraints). A single loose clause such as `o:"enters the battlefield"`
+ * matches thousands of cards and would bury the curated answers, so in that
+ * case we return the curated names alone.
  */
 export function buildAnswerQuery(
   cardNames: string[],
@@ -195,6 +212,9 @@ export function buildAnswerQuery(
     .trim();
   const exclusion = exclude ? ` -!"${exclude}"` : '';
   if (!names) return broader ? `${broader}${exclusion}` : '';
-  if (!broader) return `${names}${exclusion} game:paper`;
+  if (!broader || countConstraintFields(broader) < 2) {
+    return `${names}${exclusion} game:paper`;
+  }
   return `(${names} or (${broader}))${exclusion} game:paper`;
 }
+
