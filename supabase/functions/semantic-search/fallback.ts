@@ -91,10 +91,63 @@ const BARE_WORD_STOPWORDS = new Set([
   'would',
   'you',
   'your',
+  // Prose observed in low-confidence logs that produced dead oracle terms
+  'affect',
+  'affects',
+  'archetype',
+  'archetypes',
+  'big',
+  'brings',
+  'build',
+  'color',
+  'colors',
+  'colour',
+  'colours',
+  'creator',
+  'deck',
+  'decks',
+  'effect',
+  'effects',
+  'help',
+  'huge',
+  'kinds',
+  'large',
+  'mechanic',
+  'mechanics',
+  'own',
+  'please',
+  'puts',
+  'similar',
+  'small',
+  'style',
+  'support',
+  'supports',
+  'theme',
+  'type',
+  'types',
+]);
+
+/**
+ * Common function words from the other supported locales. A fallback query is
+ * always executed against English oracle text, so leaking these into `o:"..."`
+ * guarantees zero results.
+ */
+const NON_ENGLISH_STOPWORDS = new Set([
+  // es / pt
+  'al', 'como', 'con', 'cartas', 'carta', 'criaturas', 'criatura', 'de', 'del',
+  'efeito', 'el', 'em', 'en', 'las', 'los', 'mejores', 'melhores', 'nas', 'nos',
+  'para', 'por', 'que', 'sobre', 'una', 'uno', 'com', 'dos', 'das',
+  // fr
+  'avec', 'cartes', 'des', 'dans', 'les', 'meilleures', 'pour', 'qui', 'sur',
+  // de
+  'die', 'der', 'das', 'karten', 'mit', 'und', 'besten', 'für',
+  // it
+  'carte', 'con', 'migliori', 'per', 'che',
 ]);
 
 /** Maximum number of leftover words promoted to oracle-text constraints. */
 const MAX_BARE_WORD_TERMS = 3;
+
 
 /**
  * Converts leftover natural-language words into explicit oracle-text terms so
