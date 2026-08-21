@@ -488,6 +488,28 @@ export function parseEquipmentPatterns(query: string, ir: SearchIR): string {
 export function parseOraclePatterns(query: string, ir: SearchIR): string {
   let remaining = query;
 
+  // Extra combat phases ("combat doubler", "additional combat phase")
+  const extraCombatPattern =
+    /\b(?:extra|additional|another|second)\s+combat(?:\s+phases?)?\b|\bcombat(?:\s+phase)?\s+doublers?\b|\bdouble\s+combat(?:\s+phases?)?\b/gi;
+  if (extraCombatPattern.test(remaining)) {
+    ir.oracle.push('o:"additional combat phase"');
+    extraCombatPattern.lastIndex = 0;
+    remaining = remaining.replace(extraCombatPattern, '').trim();
+  }
+
+  // Finishers / game-enders → win condition payoffs
+  const finisherPattern =
+    /\bgame[-\s]?enders?\b|\bfinishers?\b|\bwin\s*cons?\b|\bwin\s+conditions?\b/gi;
+  if (finisherPattern.test(remaining)) {
+    ir.tags.push(
+      KNOWN_OTAGS.has('win-condition') ? 'otag:win-condition' : 'otag:finisher',
+    );
+    finisherPattern.lastIndex = 0;
+    remaining = remaining.replace(finisherPattern, '').trim();
+  }
+
+
+
   if (/\b(?:draw cards?|card\s+draw)\b/i.test(remaining)) {
     if (KNOWN_OTAGS.has('draw')) {
       ir.tags.push('otag:draw');
