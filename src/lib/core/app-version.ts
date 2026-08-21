@@ -6,6 +6,9 @@
  * instead of only in aggregate.
  */
 
+/** Injected by Vite `define`; absent under plain ts-node/test runners. */
+declare const __APP_VERSION__: string | undefined;
+
 const FALLBACK = 'dev';
 
 function readInjectedVersion(): string {
