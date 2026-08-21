@@ -26,7 +26,7 @@ import { Footer } from '@/components/Footer';
 import { SkipLinks } from '@/components/SkipLinks';
 import { useAuth, useUserRole, useAdminAnalyticsData } from '@/hooks';
 import { useAdminOpsData } from '@/hooks/useAdminOpsData';
-import { ADMIN_AREAS, resolveArea, resolveSection } from '@/pages/admin/nav';
+import { ADMIN_AREAS, resolveArea, resolveLegacyPath, resolveSection } from '@/pages/admin/nav';
 import { OperationsInbox } from '@/pages/admin/sections/OperationsInbox';
 import { SearchLab } from '@/pages/admin/sections/SearchLab';
 import { ConceptManager } from '@/pages/admin/sections/ConceptManager';
