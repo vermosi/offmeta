@@ -4,7 +4,6 @@
  */
 
 import type { ValidationResult, RepairResult, BroadenResult } from './types.ts';
-import { fetchWithRetry } from '../utils.ts';
 import { scryfallFetch } from '../../_shared/scryfall-client.ts';
 
 const SCRYFALL_SEARCH_URL = 'https://api.scryfall.com/cards/search';

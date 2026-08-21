@@ -1,4 +1,3 @@
-import { fetchWithRetry } from './utils.ts';
 import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 export interface ScryfallValidationResult {
