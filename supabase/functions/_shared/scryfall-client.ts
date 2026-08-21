@@ -193,12 +193,13 @@ export async function scryfallFetch(
 
   // Half-open: the window elapsed but Scryfall has not answered successfully
   // yet, so let exactly one request probe the API instead of a thundering herd.
-  const isProbe = consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD;
-  if (isProbe) {
+  let ownsProbe = false;
+  if (consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD) {
     if (probeInFlight) {
       if (failFastOnCooldown) throw new ScryfallUnavailableError(CIRCUIT_OPEN_MS);
     } else {
       probeInFlight = true;
+      ownsProbe = true;
     }
   }
 
