@@ -122,19 +122,20 @@ export interface UnifiedSearchBarHandle {
   ) => void;
 }
 
-// Ordered to lead with discovery-flavored queries (see docs/product-audit.md).
-// Tested queries — `budget board wipes under $5`, `cards that protect my commander`,
-// `mana rocks that cost 2` — must remain present so existing suites keep passing.
+// Ordered so the first four — the only ones visible on mobile — are the
+// queries visitors actually run here, taken from analytics. Tested queries
+// (`budget board wipes under $5`, `cards that protect my commander`,
+// `mana rocks that cost 2`) must remain present so existing suites keep passing.
 const EXAMPLE_QUERY_FALLBACKS = [
-  'cards that punish treasure decks',
+  'budget board wipes under $5',
   'budget alternatives to Rhystic Study',
+  'cards that protect my commander',
+  'cheap graveyard hate for EDH',
+  'cards that punish treasure decks',
   'cards similar to Seedborn Muse',
   'hidden finishers under $5',
-  'budget board wipes under $5',
-  'cards that protect my commander',
   'mono-white card draw that is not a staple',
   'creatures that reward opponents attacking each other',
-  'cheap graveyard hate for EDH',
   'mana rocks that cost 2',
   'best black removal for commander',
   'sacrifice outlets',
@@ -220,24 +221,21 @@ export const UnifiedSearchBar = forwardRef<
 
   const flattenedVisibleExamples = visibleExamples;
 
+  // One impression per session for the whole surface, not one per chip per
+  // render: the per-chip version produced ~6x more impressions than sessions
+  // and buried every other signal.
   useEffect(() => {
     if (!showExamples) return;
+    if (!markOnce(`search_examples:${isMobile ? 'mobile' : 'desktop'}`)) return;
 
-    flattenedVisibleExamples.forEach(({ query: example, position }) => {
-      const impressionKey = `offmeta_example_impression:${example}:${isMobile ? 'mobile' : 'desktop'}`;
-      if (sessionStorage.getItem(impressionKey)) return;
-
-      sessionStorage.setItem(impressionKey, '1');
-      trackExampleQueryImpression({
-        query: example,
-        category: 'flat',
-        position,
-        visible_count: flattenedVisibleExamples.length,
-        is_mobile: isMobile,
-      });
+    trackExampleQueryImpression({
+      query: 'search_bar_examples',
+      category: 'flat',
+      visible_count: flattenedVisibleExamples.length,
+      is_mobile: isMobile,
     });
   }, [
-    flattenedVisibleExamples,
+    flattenedVisibleExamples.length,
     isMobile,
     showExamples,
     trackExampleQueryImpression,
