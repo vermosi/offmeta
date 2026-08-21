@@ -2204,6 +2204,10 @@ export type Database = {
         Returns: number
       }
       normalize_intent_signature: { Args: { q: string }; Returns: string }
+      prune_cron_job_run_details: {
+        Args: { _max_batches?: number; _retention_days?: number }
+        Returns: number
+      }
       prune_dedupe_and_locks: { Args: never; Returns: undefined }
       prune_old_error_events: { Args: never; Returns: undefined }
       prune_old_price_snapshots: { Args: never; Returns: undefined }
