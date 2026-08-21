@@ -122,9 +122,8 @@ serve(
         headers,
       });
     }
-    const { error } = await admin.rpc(
-      'record_recommendation_rollout_observation_v2',
-      {
+    const { error } = await admin
+      .rpc('record_recommendation_rollout_observation_v2', {
         p_request_id: observation.requestId,
         p_subject_key: observation.subjectKey,
         p_model_version: observation.modelVersion,
@@ -135,13 +134,22 @@ serve(
         p_constraint_violation: observation.constraintViolation ?? false,
         p_errored: observation.errored ?? false,
         p_correctness_passed: observation.correctnessPassed ?? null,
-      },
-    );
-    if (error)
+      })
+      .abortSignal(AbortSignal.timeout(OBSERVATION_TIMEOUT_MS));
+    if (error) {
+      // Telemetry is best-effort; a timed-out write is dropped, not an error.
+      if (isTimeoutError(error)) {
+        return new Response(JSON.stringify({ success: false, degraded: true }), {
+          status: 202,
+          headers,
+        });
+      }
       return new Response(JSON.stringify({ error: 'Observation rejected' }), {
         status: 400,
         headers,
       });
+    }
     return new Response(JSON.stringify({ success: true }), { headers });
+
   }),
 );
