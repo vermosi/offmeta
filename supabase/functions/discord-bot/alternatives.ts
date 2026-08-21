@@ -1,3 +1,4 @@
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 /**
  * "cards like X" handling for the Discord bot.
  *
@@ -128,18 +129,12 @@ export async function resolveAlternativesQuery(
 
   let card: ScryfallNamedCard;
   try {
-    const res = await fetch(
+    // Never let a stalled upstream hold the deferred Discord reply open.
+    const res = await scryfallFetch(
       `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(
         intent.cardName,
       )}`,
-      {
-        headers: {
-          'User-Agent': 'OffMetaDiscordBot/1.0',
-          Accept: 'application/json',
-        },
-        // Never let a stalled upstream hold the deferred Discord reply open.
-        signal: AbortSignal.timeout(NAMED_LOOKUP_TIMEOUT_MS),
-      },
+      { timeoutMs: NAMED_LOOKUP_TIMEOUT_MS, retries: 0 },
     );
     if (!res.ok) return null;
     card = (await res.json()) as ScryfallNamedCard;

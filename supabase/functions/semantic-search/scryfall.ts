@@ -1,4 +1,5 @@
 import { fetchWithRetry } from './utils.ts';
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 export interface ScryfallValidationResult {
   ok: boolean;
@@ -23,7 +24,7 @@ export async function validateAgainstScryfall(
   )}&extras=true`;
 
   try {
-    const response = await fetchWithRetry(scryfallUrl);
+    const response = await scryfallFetch(scryfallUrl, { retries: 1 });
 
     if (response.status === 200) {
       const data = await response.json();

@@ -11,6 +11,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, requireServiceOrPipelineKey } from '../_shared/auth.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 const log = createLogger('sync-card-names');
 const SCRYFALL_CATALOG_URL = 'https://api.scryfall.com/catalog/card-names';
@@ -38,8 +39,9 @@ serve(withLogging('sync-card-names', async (req: Request): Promise<Response> => 
   try {
     // Fetch all card names from Scryfall catalog
     log.info('fetching_catalog', { url: SCRYFALL_CATALOG_URL });
-    const response = await fetch(SCRYFALL_CATALOG_URL, {
-      headers: { 'User-Agent': 'OffMeta/1.0' },
+    const response = await scryfallFetch(SCRYFALL_CATALOG_URL, {
+      timeoutMs: 20000,
+      failFastOnCooldown: false,
     });
 
     if (!response.ok) {

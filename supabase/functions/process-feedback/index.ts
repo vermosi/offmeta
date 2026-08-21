@@ -20,6 +20,7 @@ import {
 } from '../_shared/auth.ts';
 import { validateEnv } from '../_shared/env.ts';
 import { createLogger, withLogging } from '../_shared/logger.ts';
+import { scryfallFetch } from '../_shared/scryfall-client.ts';
 
 const { LOVABLE_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } =
   validateEnv(['LOVABLE_API_KEY', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']);
@@ -547,8 +548,8 @@ IMPORTANT: Only output the JSON object, nothing else.`;
         let scryfallError = '';
 
         try {
-          const scryfallResp = await fetch(scryfallValidationUrl, {
-            headers: { 'User-Agent': 'OffMeta/1.0 (feedback-validator)' },
+          const scryfallResp = await scryfallFetch(scryfallValidationUrl, {
+            failFastOnCooldown: false,
           });
 
           if (scryfallResp.status === 200) {
@@ -681,8 +682,8 @@ Respond in this EXACT JSON format only (no other text):
               const correctionValidationUrl = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
                 correctedRuleData.scryfall_syntax,
               )}&extras=true`;
-              const correctionResp = await fetch(correctionValidationUrl, {
-                headers: { 'User-Agent': 'OffMeta/1.0 (feedback-validator)' },
+              const correctionResp = await scryfallFetch(correctionValidationUrl, {
+                failFastOnCooldown: false,
               });
 
               if (correctionResp.status === 200) {
