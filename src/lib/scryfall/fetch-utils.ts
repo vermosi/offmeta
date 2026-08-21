@@ -138,49 +138,76 @@ export async function fetchWithTimeout(
  * Paced fetch with automatic retry on 429/5xx errors.
  * A 429 sets a global cool-off (honouring Retry-After) so every other
  * in-flight Scryfall call waits instead of hammering the API.
+ *
+ * After {@link CIRCUIT_FAILURE_THRESHOLD} consecutive failures the circuit
+ * breaker opens and calls throw {@link ScryfallUnavailableError} immediately
+ * for {@link CIRCUIT_OPEN_MS}; one probe then re-tests the API.
  */
 export async function fetchWithRetry(
   url: string,
   init?: RequestInit,
   retries = MAX_RETRIES,
 ): Promise<Response> {
+  const circuitRemaining = scryfallCircuitRemainingMs();
+  if (circuitRemaining > 0) {
+    throw new ScryfallUnavailableError(circuitRemaining);
+  }
+
+  // Half-open: allow a single probe rather than a burst of retries.
+  let ownsProbe = false;
+  if (consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD) {
+    if (probeInFlight) throw new ScryfallUnavailableError(CIRCUIT_OPEN_MS);
+    probeInFlight = true;
+    ownsProbe = true;
+  }
+
   let attempt = 0;
   let lastError: Error | undefined;
 
-  while (attempt <= retries) {
-    await acquireSlot();
-    try {
-      const response = await fetchWithTimeout(url, FETCH_TIMEOUT_MS, init);
+  try {
+    while (attempt <= retries) {
+      await acquireSlot();
+      try {
+        const response = await fetchWithTimeout(url, FETCH_TIMEOUT_MS, init);
 
-      if (response.status === 429 || response.status === 503) {
-        const retryAfterMs = parseRetryAfterMs(response);
-        cooldownUntil = Math.max(cooldownUntil, Date.now() + retryAfterMs);
-        if (attempt < retries) {
+        if (response.status === 429 || response.status === 503) {
+          const retryAfterMs = parseRetryAfterMs(response);
+          cooldownUntil = Math.max(cooldownUntil, Date.now() + retryAfterMs);
+          if (attempt < retries) {
+            attempt += 1;
+            continue;
+          }
+          recordFailure();
+          return response;
+        }
+
+        if (response.status >= 500 && attempt < retries) {
+          await delay(300 * (attempt + 1));
           attempt += 1;
           continue;
         }
-        return response;
-      }
 
-      if (response.status >= 500 && attempt < retries) {
+        if (response.status >= 500) recordFailure();
+        else recordSuccess();
+        return response;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        if (attempt >= retries) {
+          recordFailure();
+          throw lastError;
+        }
         await delay(300 * (attempt + 1));
         attempt += 1;
-        continue;
       }
-
-      return response;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (attempt >= retries) {
-        throw lastError;
-      }
-      await delay(300 * (attempt + 1));
-      attempt += 1;
     }
-  }
 
-  throw lastError ?? new Error('Request failed');
+    recordFailure();
+    throw lastError ?? new Error('Request failed');
+  } finally {
+    if (ownsProbe) probeInFlight = false;
+  }
 }
+
 
 /**
  * Rate-limited fetch for user-driven Scryfall calls.
