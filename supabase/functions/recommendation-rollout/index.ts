@@ -18,8 +18,31 @@ type ObservationBody = {
   correctnessPassed?: boolean | null;
 };
 
+// Client-side guards sit slightly above the RPC statement_timeout values
+// (3s / 5s) so the database cancels first when it is the slow party.
+const ASSIGNMENT_TIMEOUT_MS = 4000;
+const OBSERVATION_TIMEOUT_MS = 6000;
+
+/** Statement timeout, query cancellation, or an aborted client request. */
+const isTimeoutError = (error: {
+  code?: string | null;
+  message?: string | null;
+  name?: string | null;
+}): boolean => {
+  if (error.code === '57014' || error.code === '57P01') return true;
+  const message = (error.message ?? '').toLowerCase();
+  return (
+    error.name === 'AbortError' ||
+    message.includes('statement timeout') ||
+    message.includes('canceling statement') ||
+    message.includes('aborted') ||
+    message.includes('timeout')
+  );
+};
+
 const validText = (value: unknown, max: number): value is string =>
   typeof value === 'string' && value.trim().length > 0 && value.length <= max;
+
 
 serve(
   withLogging('recommendation-rollout', async (req: Request) => {
