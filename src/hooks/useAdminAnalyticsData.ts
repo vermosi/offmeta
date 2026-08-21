@@ -31,6 +31,7 @@ import type {
   RulesFilter,
   TranslationRuleRow,
 } from '@/pages/admin-analytics/types';
+import { rateLimitedFetch } from '@/lib/scryfall/fetch-utils';
 
 export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: boolean) {
   // ── Analytics state ────────────────────────────────────────────────────
@@ -240,9 +241,7 @@ export function useAdminAnalyticsData(user: { id: string } | null, isAdmin: bool
 
       try {
         const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(trimmed)}&extras=true`;
-        const resp = await fetch(url, {
-          headers: { 'User-Agent': 'OffMeta-Admin/1.0 (rule-editor)' },
-        });
+        const resp = await rateLimitedFetch(url);
 
         if (resp.status === 200) {
           const data = await resp.json();
