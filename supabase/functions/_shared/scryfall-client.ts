@@ -158,6 +158,11 @@ export interface ScryfallFetchOptions extends RequestInit {
  * Throws `ScryfallRateLimitError` while a cool-off is active (fail-fast mode)
  * and on 429s that outlive the retry budget. 4xx responses other than 429 are
  * returned to the caller unchanged — they are query errors, not rate limits.
+ *
+ * After {@link CIRCUIT_FAILURE_THRESHOLD} consecutive failures the circuit
+ * breaker opens: calls throw `ScryfallUnavailableError` immediately for
+ * {@link CIRCUIT_OPEN_MS} without touching the network, then a single probe is
+ * allowed through to close it again.
  */
 export async function scryfallFetch(
   url: string,
@@ -170,12 +175,31 @@ export async function scryfallFetch(
     ...init
   } = options;
 
+  const circuitRemaining = scryfallCircuitRemainingMs();
+  if (circuitRemaining > 0) {
+    // Background jobs (failFastOnCooldown: false) wait the window out; every
+    // user-facing caller skips Scryfall entirely and uses its fallback path.
+    if (failFastOnCooldown) throw new ScryfallUnavailableError(circuitRemaining);
+    await sleep(circuitRemaining);
+  }
+
   const cooldown = scryfallCooldownRemainingMs();
   if (cooldown > 0 && failFastOnCooldown) {
     throw new ScryfallRateLimitError(cooldown);
   }
   if (queueDepth >= MAX_QUEUE_DEPTH) {
     throw new ScryfallRateLimitError(MIN_REQUEST_INTERVAL_MS * queueDepth);
+  }
+
+  // Half-open: the window elapsed but Scryfall has not answered successfully
+  // yet, so let exactly one request probe the API instead of a thundering herd.
+  const isProbe = consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD;
+  if (isProbe) {
+    if (probeInFlight) {
+      if (failFastOnCooldown) throw new ScryfallUnavailableError(CIRCUIT_OPEN_MS);
+    } else {
+      probeInFlight = true;
+    }
   }
 
   queueDepth += 1;
@@ -201,6 +225,7 @@ export async function scryfallFetch(
             await sleep(retryAfterMs);
             continue;
           }
+          recordFailure();
           throw new ScryfallRateLimitError(retryAfterMs);
         }
 
@@ -210,22 +235,30 @@ export async function scryfallFetch(
           continue;
         }
 
+        if (response.status >= 500) recordFailure();
+        else recordSuccess();
         return response;
       } catch (error) {
         if (error instanceof ScryfallRateLimitError) throw error;
         lastError = error instanceof Error ? error : new Error(String(error));
-        if (attempt >= retries) throw lastError;
+        if (attempt >= retries) {
+          recordFailure();
+          throw lastError;
+        }
         await sleep(300 * (attempt + 1));
       } finally {
         clearTimeout(timer);
       }
     }
 
+    recordFailure();
     throw lastError ?? new Error('Scryfall request failed');
   } finally {
     queueDepth = Math.max(0, queueDepth - 1);
+    if (isProbe) probeInFlight = false;
   }
 }
+
 
 /** Convenience wrapper for `/cards/search`. */
 export function scryfallSearch(
