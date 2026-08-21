@@ -174,15 +174,17 @@ export function buildNamesClause(cardNames: string[]): string {
 }
 
 /**
- * Counts top-level constraint tokens in a query, ignoring nesting.
- * Used to decide whether a broader interpretation is specific enough to
- * union with a curated answer list.
+ * Counts distinct constraint fields in a query (`o:`, `t:`, `ci:`, `mv<=` …).
+ * A broader interpretation built from a single field — `o:"enters"` or
+ * `(t:instant or t:sorcery)` — matches thousands of cards, so it is treated
+ * as too loose to union with a curated answer list.
  */
-function countConstraints(query: string): number {
+function countConstraintFields(query: string): number {
   const withoutQuotes = query.replace(/"[^"]*"/g, '""');
-  const tokens = withoutQuotes.match(/-?\w+(:|<=|>=|!=|=|<|>)/g);
-  return tokens ? tokens.length : 0;
+  const tokens = withoutQuotes.match(/-?\w+(?=:|<=|>=|!=|=|<|>)/g) ?? [];
+  return new Set(tokens.map((t) => t.replace(/^-/, '').toLowerCase())).size;
 }
+
 
 /**
  * Final query: the known answer cards OR the broader interpretation.
