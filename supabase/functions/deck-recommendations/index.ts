@@ -74,10 +74,11 @@ async function resolveCards(
     const batch = names.slice(i, i + 75);
     const identifiers = batch.map((name) => ({ name }));
     try {
-      const resp = await fetch('https://api.scryfall.com/cards/collection', {
+      const resp = await scryfallFetch('https://api.scryfall.com/cards/collection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifiers }),
+        failFastOnCooldown: false,
       });
       if (resp.ok) {
         const data = await resp.json();

@@ -128,14 +128,12 @@ serve(withLogging('price-snapshot', async (req: Request): Promise<Response> => {
       label: string,
     ): Promise<'ok' | 'rejected' | 'failed'> => {
       try {
-        const resp = await fetch('https://api.scryfall.com/cards/collection', {
+        const resp = await scryfallFetch('https://api.scryfall.com/cards/collection', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'User-Agent': 'OffMeta/1.0',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ identifiers }),
+          timeoutMs: 20000,
+          failFastOnCooldown: false,
         });
         if (!resp.ok) {
           const errText = await resp.text();

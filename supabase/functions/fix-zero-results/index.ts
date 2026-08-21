@@ -243,9 +243,7 @@ async function validateScryfall(
 ): Promise<{ valid: boolean; totalCards: number }> {
   try {
     const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}&page=1`;
-    const resp = await fetch(url, {
-      headers: { 'User-Agent': 'OffMeta/1.0 (zero-result-fixer)' },
-    });
+    const resp = await scryfallFetch(url, { failFastOnCooldown: false });
 
     if (resp.status === 200) {
       const data = await resp.json();

@@ -97,14 +97,11 @@ export async function probeTagSupported(
   const prefix = kind === 'oracle' ? 'otag' : 'atag';
   const request = (async () => {
     try {
-      const response = await fetch(
+      const response = await scryfallFetch(
         `https://api.scryfall.com/cards/search?q=${encodeURIComponent(
           `${prefix}:${tag} game:paper`,
         )}&unique=cards&page=1`,
-        {
-          headers: { Accept: 'application/json' },
-          signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
-        },
+        { timeoutMs: PROBE_TIMEOUT_MS, retries: 0 },
       );
 
       // 404 = "no cards matched" — the tag indexes nothing.

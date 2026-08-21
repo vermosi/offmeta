@@ -71,14 +71,15 @@ async function verifyCardNames(names: string[]): Promise<string[]> {
   if (identifiers.length === 0) return [];
 
   try {
-    const response = await fetchWithTimeout(
+    const response = await scryfallFetch(
       'https://api.scryfall.com/cards/collection',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifiers }),
+        timeoutMs: SCRYFALL_VERIFY_TIMEOUT_MS,
+        retries: 0,
       },
-      SCRYFALL_VERIFY_TIMEOUT_MS,
     );
     if (!response.ok) return [];
     const payload = await response.json();

@@ -491,10 +491,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
       queryWords.length <= 5
     ) {
       try {
-        const fuzzyResp = await fetchWithTimeout(
+        const fuzzyResp = await scryfallFetch(
           `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(query.trim())}`,
-          {},
-          2000,
+          { timeoutMs: 2000, retries: 0 },
         );
         if (fuzzyResp.ok) {
           const cardData = await fuzzyResp.json();
@@ -1148,10 +1147,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           )
         ) {
           try {
-            const cardLookup = await fetchWithTimeout(
+            const cardLookup = await scryfallFetch(
               `https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(candidateName)}`,
-              {},
-              3000,
+              { timeoutMs: 3000, retries: 0 },
             );
             if (cardLookup.ok) {
               const cardData = await cardLookup.json();
@@ -1355,10 +1353,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         });
         for (const candidate of repairCandidates) {
           try {
-            const candidateResp = await fetchWithTimeout(
+            const candidateResp = await scryfallFetch(
               `https://api.scryfall.com/cards/search?q=${encodeURIComponent(candidate.query)}&page=1`,
-              {},
-              2000,
+              { timeoutMs: 2000, retries: 0 },
             );
             if (candidateResp.status !== 200) continue;
             const candidateData = await candidateResp.json();
@@ -1385,10 +1382,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           deterministicQuery !== finalQuery
         ) {
           try {
-            const detResp = await fetchWithTimeout(
+            const detResp = await scryfallFetch(
               `https://api.scryfall.com/cards/search?q=${encodeURIComponent(deterministicQuery)}&page=1`,
-              {},
-              2000,
+              { timeoutMs: 2000, retries: 0 },
             );
             if (detResp.status === 200) {
               const detData = await detResp.json();
@@ -1413,10 +1409,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
           const { relaxedQuery, removed } = relaxSpeculativeClauses(finalQuery);
           if (removed.length > 0) {
             try {
-              const relaxResp = await fetchWithTimeout(
+              const relaxResp = await scryfallFetch(
                 `https://api.scryfall.com/cards/search?q=${encodeURIComponent(relaxedQuery)}&page=1`,
-                {},
-                2000,
+                { timeoutMs: 2000, retries: 0 },
               );
               if (relaxResp.status === 200) {
                 const relaxData = await relaxResp.json();
@@ -1441,10 +1436,9 @@ const searchHandler = withLogging('semantic-search', async (req: Request) => {
         if (resultCount === 0) {
           const nameQuery = `!"${query.trim()}"`;
           try {
-            const nameResp = await fetchWithTimeout(
+            const nameResp = await scryfallFetch(
               `https://api.scryfall.com/cards/search?q=${encodeURIComponent(nameQuery)}&page=1`,
-              {},
-              2000,
+              { timeoutMs: 2000, retries: 0 },
             );
             if (nameResp.status === 200) {
               const nameData = await nameResp.json();

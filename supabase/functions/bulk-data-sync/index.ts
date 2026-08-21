@@ -153,8 +153,9 @@ serve(withLogging('bulk-data-sync', async (req: Request): Promise<Response> => {
     while (nextPageUrl && pagesProcessed < MAX_PAGES) {
       await sleep(SCRYFALL_DELAY_MS);
 
-      const resp = await fetch(nextPageUrl, {
-        headers: { 'User-Agent': 'OffMeta/1.0' },
+      const resp = await scryfallFetch(nextPageUrl, {
+        timeoutMs: 30000,
+        failFastOnCooldown: false,
       });
 
       if (!resp.ok) {
