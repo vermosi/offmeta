@@ -18,24 +18,69 @@ const QUEUE_ITEM_TIMEOUT_MS = FETCH_TIMEOUT_MS;
 /** Fallback cool-off when a 429 arrives without a Retry-After header. */
 const DEFAULT_COOLDOWN_MS = 2000;
 const MAX_COOLDOWN_MS = 60_000;
+/** Consecutive failed calls (timeout, network, 5xx) before the breaker trips. */
+const CIRCUIT_FAILURE_THRESHOLD = 4;
+/** How long the breaker stays open before a single probe is allowed through. */
+const CIRCUIT_OPEN_MS = 30_000;
 
 let queuedRequests = 0;
 let nextRequestAllowedAt = 0;
 let cooldownUntil = 0;
+let consecutiveFailures = 0;
+let circuitOpenUntil = 0;
+let probeInFlight = false;
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Thrown while the circuit breaker is open — Scryfall is not called at all. */
+export class ScryfallUnavailableError extends Error {
+  readonly retryAfterMs: number;
+  constructor(retryAfterMs: number) {
+    super(
+      `Scryfall is unavailable; retrying in ${Math.ceil(retryAfterMs / 1000)}s`,
+    );
+    this.name = 'ScryfallUnavailableError';
+    this.retryAfterMs = retryAfterMs;
+  }
+}
 
 /** Milliseconds remaining in the current Scryfall cool-off (0 when clear). */
 export function scryfallCooldownRemainingMs(): number {
   return Math.max(0, cooldownUntil - Date.now());
 }
 
-/** Test helper: clears pacing and cool-off state. */
+/** Milliseconds left in the open circuit-breaker window (0 when closed). */
+export function scryfallCircuitRemainingMs(): number {
+  return Math.max(0, circuitOpenUntil - Date.now());
+}
+
+/** True while Scryfall calls short-circuit instead of hitting the network. */
+export function isScryfallCircuitOpen(): boolean {
+  return scryfallCircuitRemainingMs() > 0;
+}
+
+function recordFailure(): void {
+  consecutiveFailures += 1;
+  if (consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD) {
+    circuitOpenUntil = Date.now() + CIRCUIT_OPEN_MS;
+  }
+}
+
+function recordSuccess(): void {
+  consecutiveFailures = 0;
+  circuitOpenUntil = 0;
+}
+
+/** Test helper: clears pacing, cool-off and circuit-breaker state. */
 export function resetScryfallFetchState(): void {
   queuedRequests = 0;
   nextRequestAllowedAt = 0;
   cooldownUntil = 0;
+  consecutiveFailures = 0;
+  circuitOpenUntil = 0;
+  probeInFlight = false;
 }
+
 
 function parseRetryAfterMs(response: Response): number {
   const header = response.headers.get('Retry-After');
