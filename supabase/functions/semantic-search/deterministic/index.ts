@@ -42,6 +42,10 @@ import {
 } from './parse-patterns.ts';
 import { renderIR } from './render.ts';
 
+const SIMILARITY_INTENT_RE =
+  /\b(like|similar|alternatives?|replacements?|substitutes?|swaps?)\b/i;
+
+
 // Re-export public types
 export type { ParsedIntent, NumericConstraint, SearchIR } from './types.ts';
 
@@ -392,7 +396,11 @@ export function buildDeterministicIntent(query: string, options?: { isKnownCardN
     ir.artTags.length > 0 ||
     ir.numeric.length > 0;
   // "cards like X" is a similarity request, not an artwork request.
-  if (!hasContent && ir.remaining.trim() && !/\blike\b/i.test(query)) {
+  if (
+    !hasContent &&
+    ir.remaining.trim() &&
+    !SIMILARITY_INTENT_RE.test(query)
+  ) {
     const leftoverArtMatch = matchArtTagQuery(ir.remaining);
     if (leftoverArtMatch) {
       ir.artTags.push(`atag:${leftoverArtMatch.tag}`);
@@ -406,7 +414,7 @@ export function buildDeterministicIntent(query: string, options?: { isKnownCardN
   // Art-tag fallback: nothing else in the pipeline understood the query, but it
   // names a Scryfall art tag ("shirtless cards" → atag:shirtless). Runs last so
   // functional/type parsing always wins.
-  if (!deterministicQuery.trim()) {
+  if (!deterministicQuery.trim() && !SIMILARITY_INTENT_RE.test(query)) {
     const artMatch = matchArtTagQuery(query);
     if (artMatch) {
       return { intent: emptyIntent(), deterministicQuery: artMatch.query };

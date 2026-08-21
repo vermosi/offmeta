@@ -13,6 +13,7 @@ import { fetchWithTimeout } from './utils.ts';
 import {
   type AnswerIndexRow,
   buildAnswerQuery,
+  extractSimilarityReference,
   looksLikeAnswerableQuestion,
   normalizeQuestion,
   pickBestAnswer,
@@ -93,7 +94,19 @@ async function lookupAnswerWithAi(
   query: string,
   apiKey: string,
   logWarn: Logger,
+  similarityReference?: string | null,
 ): Promise<string[]> {
+  const systemPrompt = similarityReference
+    ? 'You are a Magic: The Gathering card expert. The user wants cards that play like a reference card. ' +
+      `List up to ${MAX_ANSWER_CARDS} real paper Magic cards that are functionally similar to "${similarityReference}" ` +
+      '(same effect, role and colors where possible), most similar first. ' +
+      `Never include "${similarityReference}" itself. Respect any stated budget, colors or format. ` +
+      'Use exact English card names as printed. Respond with JSON only: {"cards":["Name","Name"]}. If unsure, return {"cards":[]}.'
+    : 'You are a Magic: The Gathering rules and card expert. Given a question about what a card does, ' +
+      `list up to ${MAX_ANSWER_CARDS} real paper Magic cards that best answer it, most relevant first. ` +
+      'Use exact English card names as printed. Respect any stated colors, color identity, format or budget. ' +
+      'Respond with JSON only: {"cards":["Name","Name"]}. If you are unsure, return {"cards":[]}.';
+
   try {
     const response = await fetchWithTimeout(
       'https://ai.gateway.lovable.dev/v1/chat/completions',
@@ -107,14 +120,7 @@ async function lookupAnswerWithAi(
           model: 'google/gemini-2.5-flash',
           temperature: 0,
           messages: [
-            {
-              role: 'system',
-              content:
-                'You are a Magic: The Gathering rules and card expert. Given a question about what a card does, ' +
-                `list up to ${MAX_ANSWER_CARDS} real paper Magic cards that best answer it, most relevant first. ` +
-                'Use exact English card names as printed. Respect any stated colors, color identity, format or budget. ' +
-                'Respond with JSON only: {"cards":["Name","Name"]}. If you are unsure, return {"cards":[]}.',
-            },
+            { role: 'system', content: systemPrompt },
             { role: 'user', content: query },
           ],
           response_format: { type: 'json_object' },
@@ -212,7 +218,13 @@ export async function resolveAnswer(args: {
     return null;
   }
 
-  const suggested = await lookupAnswerWithAi(query, apiKey, args.logWarn);
+  const similarityReference = extractSimilarityReference(query);
+  const suggested = await lookupAnswerWithAi(
+    query,
+    apiKey,
+    args.logWarn,
+    similarityReference,
+  );
   if (suggested.length === 0) return null;
 
   const verified = await verifyCardNames(suggested);
@@ -224,12 +236,18 @@ export async function resolveAnswer(args: {
     return null;
   }
 
-  const scryfallQuery = buildAnswerQuery(verified, broaderQuery);
+  const scryfallQuery = buildAnswerQuery(
+    verified,
+    broaderQuery,
+    similarityReference,
+  );
   args.logInfo('answer_lookup_hit', {
     query: query.substring(0, 60),
     verified: verified.length,
+    similarityReference: similarityReference ?? null,
   });
   void rememberAnswer(query, verified, scryfallQuery);
+
 
   return {
     scryfallQuery,

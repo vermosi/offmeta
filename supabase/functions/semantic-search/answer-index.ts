@@ -142,6 +142,28 @@ export function pickBestAnswer(
   return best;
 }
 
+/**
+ * Detect "cards like X" / "budget alternatives to X" intents and return the
+ * reference card name. Those queries must never answer with X itself.
+ */
+export function extractSimilarityReference(input: string): string | null {
+  const text = input.trim();
+  const patterns = [
+    /^(?:cards?|spells?|creatures?|something|anything)\s+(?:like|similar to)\s+(.+)$/i,
+    /^(?:budget|cheap|cheaper|affordable|inexpensive)?\s*(?:alternatives?|replacements?|substitutes?|swaps?)\s+(?:to|for)\s+(.+)$/i,
+  ];
+  for (const pattern of patterns) {
+    const match = pattern.exec(text);
+    if (!match) continue;
+    const name = match[1]
+      .replace(/\b(?:under|below|less than)\s+\$?\d+(?:\.\d+)?\b.*$/i, '')
+      .replace(/[?."']/g, '')
+      .trim();
+    if (name.length >= 3 && name.split(/\s+/).length <= 6) return name;
+  }
+  return null;
+}
+
 /** Scryfall-safe exact-name clause for a list of card names. */
 export function buildNamesClause(cardNames: string[]): string {
   const clauses = cardNames
@@ -158,13 +180,21 @@ export function buildNamesClause(cardNames: string[]): string {
 export function buildAnswerQuery(
   cardNames: string[],
   broaderQuery: string,
+  excludeCardName?: string | null,
 ): string {
-  const names = buildNamesClause(cardNames);
+  const exclude = excludeCardName?.replace(/"/g, '').trim();
+  const kept = exclude
+    ? cardNames.filter(
+        (name) => name.trim().toLowerCase() !== exclude.toLowerCase(),
+      )
+    : cardNames;
+  const names = buildNamesClause(kept);
   const broader = broaderQuery
     .replace(/\bgame:paper\b/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
-  if (!names) return broader;
-  if (!broader) return `${names} game:paper`;
-  return `(${names} or (${broader})) game:paper`;
+  const exclusion = exclude ? ` -!"${exclude}"` : '';
+  if (!names) return broader ? `${broader}${exclusion}` : '';
+  if (!broader) return `${names}${exclusion} game:paper`;
+  return `(${names} or (${broader}))${exclusion} game:paper`;
 }
