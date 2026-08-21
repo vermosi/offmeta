@@ -361,9 +361,10 @@ export function parseKeywordGrants(query: string, ir: SearchIR): string {
 
       // A grant clause is far more specific than the generic anthem/lord tags
       // that "anthem"-style wording may have already added.
-      ir.tags = ir.tags.filter(
-        (tag) => tag !== 'otag:anthem' && tag !== 'otag:lord',
-      );
+      const isAnthemToken = (token: string) =>
+        token === 'otag:anthem' || token === 'otag:lord';
+      ir.tags = ir.tags.filter((tag) => !isAnthemToken(tag));
+      ir.specials = ir.specials.filter((token) => !isAnthemToken(token));
 
       remaining = remaining.replace(pattern, ' ').replace(/\s+/g, ' ').trim();
       break;
