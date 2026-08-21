@@ -86,6 +86,7 @@ vi.mock('@/hooks/useAnalytics', () => ({
     trackCardClick: vi.fn(),
     trackEvent: vi.fn(),
     trackSearchFailure: vi.fn(),
+    trackSearchSuccess: vi.fn(),
     trackPagination: vi.fn(),
     shouldLogCacheEvent: vi.fn(),
     trackLandingPageView: mockTrackLandingPageView,
@@ -120,7 +121,21 @@ vi.mock('@/lib/i18n', async () => {
   >;
   return {
     useTranslation: () => ({
-      t: (key: string, fallback?: string) => enDict[key] ?? fallback ?? key,
+      t: (
+        key: string,
+        fallbackOrParams?: string | Record<string, string | number>,
+        maybeParams?: Record<string, string | number>,
+      ) => {
+        const fallback =
+          typeof fallbackOrParams === 'string' ? fallbackOrParams : undefined;
+        const params =
+          typeof fallbackOrParams === 'object' ? fallbackOrParams : maybeParams;
+        const raw = enDict[key] ?? fallback ?? key;
+        if (!params) return raw;
+        return raw.replace(/\{(\w+)\}/g, (_m: string, k: string) =>
+          params[k] !== undefined ? String(params[k]) : `{${k}}`,
+        );
+      },
       locale: 'en',
       setLocale: vi.fn(),
     }),
