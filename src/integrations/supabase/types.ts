@@ -1102,6 +1102,36 @@ export type Database = {
         }
         Relationships: []
       }
+      retention_policies: {
+        Row: {
+          compact_after_days: number | null
+          created_at: string
+          description: string | null
+          enabled: boolean
+          policy_key: string
+          retention_days: number
+          updated_at: string
+        }
+        Insert: {
+          compact_after_days?: number | null
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          policy_key: string
+          retention_days: number
+          updated_at?: string
+        }
+        Update: {
+          compact_after_days?: number | null
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          policy_key?: string
+          retention_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rules_glossary: {
         Row: {
           category: string
@@ -2210,7 +2240,14 @@ export type Database = {
       }
       prune_dedupe_and_locks: { Args: never; Returns: undefined }
       prune_old_error_events: { Args: never; Returns: undefined }
-      prune_old_price_snapshots: { Args: never; Returns: undefined }
+      prune_old_price_snapshots: {
+        Args: {
+          p_batch_size?: number
+          p_max_batches?: number
+          p_retention_days?: number
+        }
+        Returns: Json
+      }
       prune_old_rate_limits: { Args: never; Returns: undefined }
       prune_old_seo_health_checks: { Args: never; Returns: undefined }
       read_email_batch: {
