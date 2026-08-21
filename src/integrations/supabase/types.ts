@@ -925,6 +925,45 @@ export type Database = {
         }
         Relationships: []
       }
+      rules_glossary: {
+        Row: {
+          category: string
+          created_at: string
+          definition: string
+          rule_refs: string[]
+          scryfall_hint: string | null
+          slug: string
+          source: string
+          term: string
+          term_lower: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          definition: string
+          rule_refs?: string[]
+          scryfall_hint?: string | null
+          slug: string
+          source?: string
+          term: string
+          term_lower: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          definition?: string
+          rule_refs?: string[]
+          scryfall_hint?: string | null
+          slug?: string
+          source?: string
+          term?: string
+          term_lower?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       saved_card_collections: {
         Row: {
           collection_id: string
