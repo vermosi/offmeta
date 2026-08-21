@@ -90,7 +90,11 @@ export default function AdminConsole() {
       case 'overview/product-health':
         return (
           <div className="space-y-6">
-            <ConsoleHeading index="01" title="Product health" note="Usage and behavioural outcomes." />
+            <ConsoleHeading
+              index="01"
+              title="Product health"
+              note="Usage, arrival → search → action, and returning searchers."
+            />
             {hook.data ? (
               <AnalyticsChartsSection data={hook.data} days={days} />
             ) : (
@@ -99,6 +103,8 @@ export default function AdminConsole() {
               </ConsolePanel>
             )}
             <EngagementMetricsPanel days={days} />
+            <ConversionFunnelPanel days={days} />
+            <HitRatePanel days={days} />
           </div>
         );
       case 'overview/alerts':
@@ -129,37 +135,23 @@ export default function AdminConsole() {
               note="Proposed fixes stay reviewable — returning cards is not approval."
             />
             <SelfHealPanel />
-          </div>
-        );
-      case 'search/zero-results':
-        return (
-          <div className="space-y-6">
-            <ConsoleHeading index="02" title="Zero results" note="Queries that returned nothing." />
-            <ConsolePanel title="Highest no-result queries">
-              <div className="divide-y divide-border">
-                {[...hook.repairQueue]
-                  .filter((q) => q.no_results > 0)
-                  .sort((a, b) => b.no_results - a.no_results)
-                  .slice(0, 30)
-                  .map((q) => (
-                    <Link
-                      key={q.normalized_query}
-                      to={`/admin/search/lab?q=${encodeURIComponent(q.normalized_query)}`}
-                      className="flex items-center justify-between gap-3 py-1.5 hover:bg-muted/20"
-                    >
-                      <span className="min-w-0 truncate text-xs text-foreground">
-                        {q.display_query}
-                      </span>
-                      <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-                        {q.no_results}
-                      </span>
-                    </Link>
-                  ))}
-                {hook.repairQueue.every((q) => q.no_results === 0) && (
-                  <EmptyRow>No zero-result queries in this window.</EmptyRow>
-                )}
-              </div>
-            </ConsolePanel>
+            <FeedbackQueuePanel
+              pendingFeedbackCount={hook.pendingFeedbackCount}
+              archivedFeedbackCount={hook.archivedFeedbackCount}
+              processAllPending={hook.processAllPending}
+              processingAllPending={hook.processingAllPending}
+              feedbackFilter={hook.feedbackFilter}
+              onFeedbackFilterChange={hook.setFeedbackFilter}
+              onRefresh={hook.fetchFeedback}
+              feedbackLoading={hook.feedbackLoading}
+              filteredFeedback={hook.filteredFeedback}
+              expandedFeedback={hook.expandedFeedback}
+              setExpandedFeedback={hook.setExpandedFeedback}
+              retriggeringId={hook.retriggeringId}
+              ruleTogglingId={hook.ruleTogglingId}
+              onRetriggerFeedback={hook.retriggerFeedback}
+              onToggleRuleActive={hook.toggleRuleActive}
+            />
           </div>
         );
       case 'search/confidence':
@@ -229,19 +221,7 @@ export default function AdminConsole() {
             mode="clusters"
           />
         );
-      case 'knowledge/classification':
-        return (
-          <div className="space-y-6">
-            <ConsoleHeading
-              index="03"
-              title="Card classification"
-              note="Deterministic ontology coverage across the card corpus."
-            />
-            <ConceptManager mode="concepts" />
-          </div>
-        );
-
-      case 'content/opportunities':
+      case 'knowledge/opportunities':
         return (
           <OpportunityQueue
             opportunities={ops.opportunities}
@@ -249,14 +229,14 @@ export default function AdminConsole() {
             mode="content"
           />
         );
-      case 'content/landing-pages':
-        return <LandingPagesSection />;
-      case 'content/guides':
-        return <GuidesSection />;
-      case 'content/related-searches':
+      case 'knowledge/inventory':
         return (
           <div className="space-y-6">
-            <ConsoleHeading index="04" title="Related searches" note="Curated search inventory." />
+            <ConsoleHeading
+              index="03"
+              title="Content inventory"
+              note="Declared entrances into search: landing pages, guides, curated searches."
+            />
             <ConsolePanel>
               <div className="flex flex-wrap gap-3 font-mono text-[11px]">
                 <Link to="/admin/curated-searches" className="text-primary hover:underline">
@@ -267,54 +247,29 @@ export default function AdminConsole() {
                 </Link>
               </div>
             </ConsolePanel>
+            <LandingPagesSection />
+            <GuidesSection />
           </div>
         );
-
-      case 'growth/acquisition':
-        return (
-          <div className="space-y-6">
-            <ConsoleHeading
-              index="05"
-              title="Acquisition"
-              note="Channels judged on usage quality, not raw sessions."
-            />
-            <ConversionFunnelPanel days={days} />
-          </div>
-        );
-      case 'growth/funnels':
-        return (
-          <div className="space-y-6">
-            <ConsoleHeading index="05" title="Funnels" note="Arrival → search → interaction → action." />
-            <ConversionFunnelPanel days={days} />
-            <HitRatePanel days={days} />
-          </div>
-        );
-      case 'growth/retention':
-        return (
-          <div className="space-y-6">
-            <ConsoleHeading index="05" title="Retention" note="Returning searchers are the north star." />
-            <QualityBenchmark metrics={ops.metrics} analytics={hook.data} days={days} />
-          </div>
-        );
-      case 'growth/visibility':
-        return <SemrushPanel />;
 
       case 'system/performance':
         return (
           <div className="space-y-6">
-            <ConsoleHeading index="06" title="Performance" note="Regressions first, healthy metrics collapsed." />
+            <ConsoleHeading index="04" title="Performance" note="Regressions first, healthy metrics collapsed." />
             <RumPanel days={days} />
           </div>
         );
       case 'system/api-health':
         return (
           <div className="space-y-6">
-            <ConsoleHeading index="06" title="API health" note="Edge functions, pipelines and SEO checks." />
+            <ConsoleHeading index="04" title="API health" note="Edge functions, pipelines and SEO checks." />
             <EdgeFunctionStatusPanel />
             <EdgeFunctionTriggerPanel />
             <SeoHealthPanel />
           </div>
         );
+      case 'system/visibility':
+        return <SemrushPanel />;
       case 'system/releases':
         return <ReleasesSection />;
       case 'system/experiments':
@@ -322,16 +277,11 @@ export default function AdminConsole() {
       case 'system/logs':
         return (
           <div className="space-y-6">
-            <ConsoleHeading index="06" title="Logs" note="Auth failures and raw telemetry." />
+            <ConsoleHeading index="04" title="Logs" note="Auth failures and raw telemetry." />
             <AuthFailuresPanel days={days} />
-            <Link
-              to="/admin/analytics"
-              className="inline-block font-mono text-[11px] text-primary hover:underline"
-            >
-              Open legacy analytics workspace →
-            </Link>
           </div>
         );
+
       default:
         return (
           <ConsolePanel>
