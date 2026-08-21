@@ -1,18 +1,16 @@
 /**
  * Admin control-room information architecture.
  *
- * Six areas, each holding action-oriented sections. Routing is
+ * Four areas, each holding action-oriented sections. Routing is
  * `/admin/:area/:section` with sensible defaults, so every view is linkable
  * from the Operations Inbox.
+ *
+ * Sections exist only where they answer a distinct question. Duplicated
+ * surfaces (classification/concepts, retention/benchmark, acquisition/funnels)
+ * were removed rather than aliased.
  */
 
-export type AdminAreaId =
-  | 'overview'
-  | 'search'
-  | 'knowledge'
-  | 'content'
-  | 'growth'
-  | 'system';
+export type AdminAreaId = 'overview' | 'search' | 'knowledge' | 'system';
 
 export interface AdminSection {
   id: string;
@@ -33,7 +31,7 @@ export const ADMIN_AREAS: readonly AdminArea[] = [
     label: 'Overview',
     sections: [
       { id: 'inbox', label: 'Operations Inbox', purpose: 'What should I improve today' },
-      { id: 'product-health', label: 'Product Health', purpose: 'Successful search rate and usage' },
+      { id: 'product-health', label: 'Product Health', purpose: 'Usage, funnels and returning searchers' },
       { id: 'alerts', label: 'Alerts', purpose: 'Errors, pipelines and freshness' },
     ],
   },
@@ -42,8 +40,7 @@ export const ADMIN_AREAS: readonly AdminArea[] = [
     label: 'Search',
     sections: [
       { id: 'lab', label: 'Search Lab', purpose: 'Diagnose a single query end to end' },
-      { id: 'repair', label: 'Repair Queue', purpose: 'Human-in-the-loop rule review' },
-      { id: 'zero-results', label: 'Zero Results', purpose: 'Queries returning nothing' },
+      { id: 'repair', label: 'Repair Queue', purpose: 'Feedback and human-in-the-loop rule review' },
       { id: 'confidence', label: 'Confidence Monitor', purpose: 'Live confidence per deploy and failing patterns' },
       { id: 'benchmark', label: 'Quality Benchmark', purpose: 'Successful search rate over time' },
       { id: 'rules', label: 'Translation Rules', purpose: 'Deterministic rule inventory' },
@@ -53,31 +50,12 @@ export const ADMIN_AREAS: readonly AdminArea[] = [
     id: 'knowledge',
     label: 'Knowledge',
     sections: [
-      { id: 'concepts', label: 'Concepts', purpose: 'Ontology editor' },
+      { id: 'concepts', label: 'Concepts', purpose: 'Ontology editor and card coverage' },
       { id: 'relationships', label: 'Relationships', purpose: 'Concept graph edges' },
       { id: 'approaches', label: 'Approaches', purpose: 'How players solve the problem' },
       { id: 'clusters', label: 'Query Clusters', purpose: 'Emerging intents from real searches' },
-      { id: 'classification', label: 'Card Classification', purpose: 'Coverage of the card corpus' },
-    ],
-  },
-  {
-    id: 'content',
-    label: 'Content',
-    sections: [
       { id: 'opportunities', label: 'SEO Opportunities', purpose: 'Demand without a page' },
-      { id: 'landing-pages', label: 'Landing Pages', purpose: 'Declared entrances into search' },
-      { id: 'guides', label: 'Guides', purpose: 'Editorial coverage' },
-      { id: 'related-searches', label: 'Related Searches', purpose: 'Curated search inventory' },
-    ],
-  },
-  {
-    id: 'growth',
-    label: 'Growth',
-    sections: [
-      { id: 'acquisition', label: 'Acquisition', purpose: 'Which channels bring real usage' },
-      { id: 'funnels', label: 'Funnels', purpose: 'Journey from arrival to action' },
-      { id: 'retention', label: 'Retention', purpose: 'Returning searchers' },
-      { id: 'visibility', label: 'Visibility', purpose: 'Organic visibility and backlinks' },
+      { id: 'inventory', label: 'Content Inventory', purpose: 'Landing pages, guides and curated searches' },
     ],
   },
   {
@@ -86,12 +64,40 @@ export const ADMIN_AREAS: readonly AdminArea[] = [
     sections: [
       { id: 'performance', label: 'Performance', purpose: 'Exception-based web vitals' },
       { id: 'api-health', label: 'API Health', purpose: 'Edge functions and pipelines' },
+      { id: 'visibility', label: 'Visibility', purpose: 'Organic visibility and backlinks' },
       { id: 'releases', label: 'Releases', purpose: 'Did this release make OffMeta better' },
       { id: 'experiments', label: 'Experiments', purpose: 'Structured product tests' },
       { id: 'logs', label: 'Logs', purpose: 'Auth failures and raw telemetry' },
     ],
   },
 ] as const;
+
+/** Old `/admin/:area/:section` paths kept working after the consolidation. */
+const LEGACY_PATHS: Record<string, string> = {
+  'search/zero-results': 'search/lab',
+  'knowledge/classification': 'knowledge/concepts',
+  'content/opportunities': 'knowledge/opportunities',
+  'content/landing-pages': 'knowledge/inventory',
+  'content/guides': 'knowledge/inventory',
+  'content/related-searches': 'knowledge/inventory',
+  'growth/acquisition': 'overview/product-health',
+  'growth/funnels': 'overview/product-health',
+  'growth/retention': 'search/benchmark',
+  'growth/visibility': 'system/visibility',
+};
+
+/** Returns the current path for a legacy area/section pair, if one exists. */
+export function resolveLegacyPath(
+  areaId: string | undefined,
+  sectionId: string | undefined,
+): string | null {
+  if (!areaId) return null;
+  const direct = LEGACY_PATHS[`${areaId}/${sectionId ?? ''}`];
+  if (direct) return direct;
+  if (areaId === 'content') return 'knowledge/opportunities';
+  if (areaId === 'growth') return 'overview/product-health';
+  return null;
+}
 
 export function resolveArea(areaId: string | undefined): AdminArea {
   return ADMIN_AREAS.find((a) => a.id === areaId) ?? ADMIN_AREAS[0];
@@ -100,3 +106,4 @@ export function resolveArea(areaId: string | undefined): AdminArea {
 export function resolveSection(area: AdminArea, sectionId: string | undefined): AdminSection {
   return area.sections.find((s) => s.id === sectionId) ?? area.sections[0];
 }
+
