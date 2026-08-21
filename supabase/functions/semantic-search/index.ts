@@ -46,6 +46,7 @@ import {
   createSearchSuccessResponse,
 } from './responses.ts';
 import { tryConceptStage } from './concept-stage.ts';
+import { resolveAnswer } from './answer-stage.ts';
 import { runPipeline, type PipelineContext } from './pipeline/index.ts';
 import {
   validateAIResponse,
@@ -137,7 +138,8 @@ type StageName =
   | 'preTranslate'
   | 'ai'
   | 'fallback'
-  | 'card_name_lookup';
+  | 'card_name_lookup'
+  | 'answer';
 
 const ACCENTED_LATIN_HIGH_CONFIDENCE_THRESHOLD = 0.9;
 
