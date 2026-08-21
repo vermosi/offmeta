@@ -90,10 +90,23 @@ describe('buildAnswerQuery', () => {
     expect(query.match(/game:paper/g)).toHaveLength(1);
   });
 
+  it('keeps only the curated names when the broader query is too loose', () => {
+    expect(
+      buildAnswerQuery(
+        ['Strionic Resonator', 'Panharmonicon'],
+        'o:"enters the battlefield"',
+      ),
+    ).toBe('(!"Strionic Resonator" or !"Panharmonicon") game:paper');
+    expect(buildAnswerQuery(['Panharmonicon'], '(t:instant or t:sorcery)')).toBe(
+      '(!"Panharmonicon") game:paper',
+    );
+  });
+
   it('falls back to the broader query when no names resolve', () => {
     expect(buildAnswerQuery([], 'ci:rw o:indestructible')).toBe('ci:rw o:indestructible');
     expect(buildNamesClause(['  '])).toBe('');
   });
+
 });
 
 describe('similarity intent', () => {
