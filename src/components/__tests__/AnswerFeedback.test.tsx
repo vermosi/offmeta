@@ -8,9 +8,14 @@ const mockTrackEvent = vi.fn();
 const mockToastSuccess = vi.fn();
 const mockToastError = vi.fn();
 
-vi.mock('@/lib/feedback', () => ({
-  submitFeedback: (...args: unknown[]) => mockSubmitFeedback(...args),
-}));
+vi.mock('@/lib/feedback', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/feedback')>();
+  return {
+    ...actual,
+    submitFeedback: (payload: FeedbackPayload) => mockSubmitFeedback(payload),
+  };
+});
+
 
 vi.mock('@/hooks/useAnalytics', () => ({
   useAnalytics: () => ({ trackEvent: mockTrackEvent }),
