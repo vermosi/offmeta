@@ -222,6 +222,11 @@ export async function rateLimitedFetch(
     throw new Error('Too many pending requests. Please try again.');
   }
 
+  const circuitRemaining = scryfallCircuitRemainingMs();
+  if (circuitRemaining > 0) {
+    throw new ScryfallUnavailableError(circuitRemaining);
+  }
+
   const cooldown = scryfallCooldownRemainingMs();
   if (cooldown > QUEUE_ITEM_TIMEOUT_MS) {
     throw new Error('Scryfall is rate limiting requests. Please try again shortly.');
