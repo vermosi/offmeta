@@ -45,6 +45,8 @@ When you submit a correction via Report Issue, it is stored as a `pending` feedb
 
 The nightly `generate-patterns` job also promotes repeated queries that meet the configured frequency and confidence thresholds into a permanent rule. Admins can review, approve, or reject generated rules from the analytics dashboard's Feedback Queue panel.
 
+Failed feedback is retried up to three times. Items that still fail after the cap are archived so they remain auditable without blocking the actionable queue.
+
 ## Approve Or Reject Rules
 
 Admins can visit the Admin Analytics page and use the Feedback Queue panel. Each feedback row shows its pipeline status and the AI-generated rule. Clicking the approve or reject toggle immediately updates the rule's active state: approved rules are used by the translation pipeline, while rejected rules are disabled but kept for audit purposes.

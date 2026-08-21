@@ -24,7 +24,7 @@ coverage
 test-results/
 
 # Editor directories and files
-.lovable/*
+.lovable/
 .vscode/*
 !.vscode/extensions.json
 .idea

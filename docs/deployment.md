@@ -26,14 +26,14 @@ The frontend reads public Supabase values at runtime, while privileged operation
 3. Deploy the edge functions in `supabase/functions/`.
 4. Set the required secrets in the Supabase dashboard or CLI:
    - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
+   - `SUPABASE_ANON_KEY` (server-side anon access where required)
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `LOVABLE_API_KEY`
 5. Verify the semantic-search function responds to a known query.
 
 ## Frontend Setup
 
-1. Set the frontend environment variables used by the app.
+1. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in the frontend host.
 2. Build the app with `npm run build`.
 3. Publish the `dist/` output to your hosting provider.
 4. Confirm the deployed site can reach the Supabase project and edge functions.

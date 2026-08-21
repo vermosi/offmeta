@@ -4,7 +4,7 @@ This page describes the search-guides system and how to navigate the generated c
 
 ## What The System Provides
 
-- 10 progressive search guides
+- 11 progressive search guides
 - SEO metadata and structured data
 - localized guide content
 - internal linking between related guides

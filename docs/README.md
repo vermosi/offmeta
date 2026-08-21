@@ -11,6 +11,7 @@ Start here if you want the shortest path through the docs.
 | [Development](./development.md) | Local setup, commands, and contributor workflow |
 | [Testing](./testing.md) | Canonical test surface and CI expectations |
 | [Roadmap](./roadmap.md) | What we are working on now and next |
+| [How OffMeta Search Works](./how-offmeta-search-works.md) | Natural-language search, LLM boundaries, and translation flow |
 
 ## Build
 
@@ -28,7 +29,6 @@ Start here if you want the shortest path through the docs.
 | [Security](./security.md) | Security implementation index |
 | [Troubleshooting](./troubleshooting.md) | Common user-facing questions and recovery paths |
 | [Triage](./TRIAGE.md) | Issue intake and prioritization workflow |
-| [Archive](./archive/product-audits.md) | Older product/search audit notes kept for reference |
 
 ## Policy
 
