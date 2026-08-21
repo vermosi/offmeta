@@ -14,6 +14,7 @@ import {
   forwardRef,
 } from 'react';
 import { Search, Loader2, X, Clock, Sparkles, Database } from 'lucide-react';
+import { markOnce } from '@/lib/analytics/oncePerSession';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useSearchContext } from '@/hooks/useSearchContext';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
@@ -122,19 +123,20 @@ export interface UnifiedSearchBarHandle {
   ) => void;
 }
 
-// Ordered to lead with discovery-flavored queries (see docs/product-audit.md).
-// Tested queries — `budget board wipes under $5`, `cards that protect my commander`,
-// `mana rocks that cost 2` — must remain present so existing suites keep passing.
+// Ordered so the first four — the only ones visible on mobile — are the
+// queries visitors actually run here, taken from analytics. Tested queries
+// (`budget board wipes under $5`, `cards that protect my commander`,
+// `mana rocks that cost 2`) must remain present so existing suites keep passing.
 const EXAMPLE_QUERY_FALLBACKS = [
-  'cards that punish treasure decks',
+  'budget board wipes under $5',
   'budget alternatives to Rhystic Study',
+  'cards that protect my commander',
+  'cheap graveyard hate for EDH',
+  'cards that punish treasure decks',
   'cards similar to Seedborn Muse',
   'hidden finishers under $5',
-  'budget board wipes under $5',
-  'cards that protect my commander',
   'mono-white card draw that is not a staple',
   'creatures that reward opponents attacking each other',
-  'cheap graveyard hate for EDH',
   'mana rocks that cost 2',
   'best black removal for commander',
   'sacrifice outlets',
@@ -220,24 +222,21 @@ export const UnifiedSearchBar = forwardRef<
 
   const flattenedVisibleExamples = visibleExamples;
 
+  // One impression per session for the whole surface, not one per chip per
+  // render: the per-chip version produced ~6x more impressions than sessions
+  // and buried every other signal.
   useEffect(() => {
     if (!showExamples) return;
+    if (!markOnce(`search_examples:${isMobile ? 'mobile' : 'desktop'}`)) return;
 
-    flattenedVisibleExamples.forEach(({ query: example, position }) => {
-      const impressionKey = `offmeta_example_impression:${example}:${isMobile ? 'mobile' : 'desktop'}`;
-      if (sessionStorage.getItem(impressionKey)) return;
-
-      sessionStorage.setItem(impressionKey, '1');
-      trackExampleQueryImpression({
-        query: example,
-        category: 'flat',
-        position,
-        visible_count: flattenedVisibleExamples.length,
-        is_mobile: isMobile,
-      });
+    trackExampleQueryImpression({
+      query: 'search_bar_examples',
+      category: 'flat',
+      visible_count: flattenedVisibleExamples.length,
+      is_mobile: isMobile,
     });
   }, [
-    flattenedVisibleExamples,
+    flattenedVisibleExamples.length,
     isMobile,
     showExamples,
     trackExampleQueryImpression,
@@ -405,11 +404,11 @@ export const UnifiedSearchBar = forwardRef<
       {/* Example queries - shown when no query typed */}
       {showExamples && (
         <div
-          className="flex flex-wrap items-baseline gap-x-5 gap-y-2"
+          className="flex flex-wrap items-center gap-2"
           role="group"
           aria-label={t('search.trySearchingFor')}
         >
-          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70">
+          <span className="w-full font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70 sm:w-auto">
             {t('search.trySearchingFor')} →
           </span>
           {visibleExamples.map(({ query: example, position }) => (
@@ -427,7 +426,7 @@ export const UnifiedSearchBar = forwardRef<
                 setQuery(example);
                 handleSearch(example);
               }}
-              className="focus-ring font-mono text-[11px] lowercase tracking-[0.06em] text-muted-foreground underline decoration-border underline-offset-[6px] transition-colors hover:text-foreground hover:decoration-foreground"
+              className="focus-ring inline-flex min-h-9 items-center rounded-full border border-border/60 bg-background/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-accent/60 hover:text-foreground"
               aria-label={t('search.searchFor').replace('{query}', example)}
             >
               {example}
@@ -437,7 +436,7 @@ export const UnifiedSearchBar = forwardRef<
             <button
               type="button"
               onClick={() => setShowAllExamples(true)}
-              className="font-mono text-[11px] uppercase tracking-[0.12em] text-accent transition-colors hover:text-accent/80"
+              className="focus-ring inline-flex min-h-9 items-center px-2 font-mono text-[11px] uppercase tracking-[0.12em] text-accent transition-colors hover:text-accent/80"
             >
               {t('search.moreExamples', 'More')} ▾
             </button>

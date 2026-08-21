@@ -1564,6 +1564,7 @@
   "nav.deckCheck": "Chequeo de Mazo",
   "nav.deckRecs": "Recomendaciones",
   "nav.discord": "Discord",
+  "nav.docs": "Documentos",
   "nav.guides": "Guías",
   "nav.history": "Historial",
   "nav.home": "Inicio",
@@ -1952,6 +1953,7 @@
   "syntax.scryfallSyntax": "Sintaxis Scryfall",
   "syntax.subtitle": "OffMeta traduce lenguaje natural a sintaxis de Scryfall automáticamente. Aquí tienes una referencia de lo que puedes decir y a qué se traduce.",
   "syntax.tip": "¡No necesitas memorizar nada de esto! Solo escribe lo que buscas en tu idioma y OffMeta se encargará de la traducción.",
+  "syntax.tipLabel": "Consejo",
   "syntax.title": "Hoja de Referencia de Sintaxis",
   "syntax.youType": "Tú escribes",
   "theme.switchToDark": "Cambiar a tema oscuro",
@@ -2029,7 +2031,5 @@
   "whyItMatches.roleValue.removal": "remoción",
   "whyItMatches.roleValue.tutor": "tutor",
   "whyItMatches.structural": "Estructural",
-  "whyItMatches.title": "Por qué coincide",
-  "syntax.tipLabel": "Consejo",
-  "nav.docs": "Documentos"
+  "whyItMatches.title": "Por qué coincide"
 }

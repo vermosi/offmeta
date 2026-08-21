@@ -169,11 +169,13 @@ describe('Index – example queries', () => {
         name: /search for budget board wipes under \$5/i,
       }),
     ).toBeInTheDocument();
+    // One aggregate impression per session for the whole surface, not one per
+    // chip (which produced ~6x more impressions than sessions).
     await waitFor(() => {
-      expect(mockTrackExampleQueryImpression).toHaveBeenCalled();
+      expect(mockTrackExampleQueryImpression).toHaveBeenCalledTimes(1);
       expect(mockTrackExampleQueryImpression).toHaveBeenCalledWith(
         expect.objectContaining({
-          query: 'budget board wipes under $5',
+          query: 'search_bar_examples',
           category: 'flat',
         }),
       );

@@ -43,6 +43,7 @@ export {
 
 export { startSessionHeartbeat } from './sessionHeartbeat';
 export { classifyTraffic } from './traffic';
+export { markOnce, resetOncePerSession } from './oncePerSession';
 export {
   initAudienceContext,
   collectEnvironmentContext,

@@ -1556,6 +1556,7 @@
   "nav.deckCheck": "デッキ診断",
   "nav.deckRecs": "デッキ推薦",
   "nav.discord": "Discord",
+  "nav.docs": "ドキュメント",
   "nav.guides": "ガイド",
   "nav.history": "履歴",
   "nav.home": "ホーム",
@@ -1944,6 +1945,7 @@
   "syntax.scryfallSyntax": "Scryfall構文",
   "syntax.subtitle": "OffMetaは自然言語を自動的にScryfall構文に翻訳します。何を言えるかとその対応表です。",
   "syntax.tip": "これを覚える必要はありません！探しているものを入力するだけで、OffMetaが翻訳を処理します。",
+  "syntax.tipLabel": "ヒント",
   "syntax.title": "構文チートシート",
   "syntax.youType": "あなたが入力",
   "theme.switchToDark": "ダークテーマに切り替え",
@@ -2021,7 +2023,5 @@
   "whyItMatches.roleValue.removal": "除去",
   "whyItMatches.roleValue.tutor": "サーチ",
   "whyItMatches.structural": "構造的",
-  "whyItMatches.title": "一致する理由",
-  "syntax.tipLabel": "ヒント",
-  "nav.docs": "ドキュメント"
+  "whyItMatches.title": "一致する理由"
 }

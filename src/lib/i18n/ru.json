@@ -1585,6 +1585,7 @@
   "nav.deckCheck": "Проверка колоды",
   "nav.deckRecs": "Рекомендации",
   "nav.discord": "Discord",
+  "nav.docs": "Документы",
   "nav.guides": "Руководства",
   "nav.history": "История",
   "nav.home": "Главная",
@@ -1993,6 +1994,7 @@
   "syntax.scryfallSyntax": "Синтаксис Scryfall",
   "syntax.subtitle": "OffMeta автоматически переводит естественный язык в синтаксис Scryfall. Вот справочник того, что можно сказать и во что это превращается.",
   "syntax.tip": "Не нужно ничего запоминать! Просто введите, что ищете, и OffMeta выполнит перевод.",
+  "syntax.tipLabel": "Совет",
   "syntax.title": "Шпаргалка по Синтаксису",
   "syntax.youType": "Вы вводите",
   "theme.switchToDark": "Переключить на тёмную тему",
@@ -2070,7 +2072,5 @@
   "whyItMatches.roleValue.removal": "удаление",
   "whyItMatches.roleValue.tutor": "поиск карт",
   "whyItMatches.structural": "Структурное",
-  "whyItMatches.title": "Почему подходит",
-  "syntax.tipLabel": "Совет",
-  "nav.docs": "Документы"
+  "whyItMatches.title": "Почему подходит"
 }

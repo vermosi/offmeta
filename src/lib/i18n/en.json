@@ -1556,6 +1556,7 @@
   "nav.deckCheck": "Deck Check",
   "nav.deckRecs": "Deck Recs",
   "nav.discord": "Discord",
+  "nav.docs": "Docs",
   "nav.guides": "Guides",
   "nav.history": "History",
   "nav.home": "Home",
@@ -1944,6 +1945,7 @@
   "syntax.scryfallSyntax": "Scryfall syntax",
   "syntax.subtitle": "OffMeta translates natural language to Scryfall syntax automatically. Here's a reference of what you can say and what it maps to.",
   "syntax.tip": "You don't need to memorize any of this! Just type what you're looking for in your language and OffMeta will handle the translation.",
+  "syntax.tipLabel": "Tip",
   "syntax.title": "Search Syntax Cheat Sheet",
   "syntax.youType": "You type",
   "theme.switchToDark": "Switch to dark theme",
@@ -2021,7 +2023,5 @@
   "whyItMatches.roleValue.removal": "removal",
   "whyItMatches.roleValue.tutor": "tutor",
   "whyItMatches.structural": "Structural",
-  "whyItMatches.title": "Why it matches",
-  "syntax.tipLabel": "Tip",
-  "nav.docs": "Docs"
+  "whyItMatches.title": "Why it matches"
 }

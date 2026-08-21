@@ -1556,6 +1556,7 @@
   "nav.deckCheck": "Deck-Check",
   "nav.deckRecs": "Deck-Empfehlungen",
   "nav.discord": "Discord",
+  "nav.docs": "Doku",
   "nav.guides": "Anleitungen",
   "nav.history": "Verlauf",
   "nav.home": "Startseite",
@@ -1944,6 +1945,7 @@
   "syntax.scryfallSyntax": "Scryfall-Syntax",
   "syntax.subtitle": "OffMeta übersetzt natürliche Sprache automatisch in Scryfall-Syntax. Hier ist eine Referenz, was du sagen kannst und was daraus wird.",
   "syntax.tip": "Du musst dir nichts davon merken! Tippe einfach, wonach du suchst, und OffMeta übernimmt die Übersetzung.",
+  "syntax.tipLabel": "Tipp",
   "syntax.title": "Syntax-Spickzettel",
   "syntax.youType": "Du tippst",
   "theme.switchToDark": "Zum dunklen Thema wechseln",
@@ -2021,7 +2023,5 @@
   "whyItMatches.roleValue.removal": "Entfernung",
   "whyItMatches.roleValue.tutor": "Tutor",
   "whyItMatches.structural": "Strukturell",
-  "whyItMatches.title": "Warum es passt",
-  "syntax.tipLabel": "Tipp",
-  "nav.docs": "Doku"
+  "whyItMatches.title": "Warum es passt"
 }

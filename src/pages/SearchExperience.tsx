@@ -59,11 +59,6 @@ const InstantDemoPreview = lazy(() =>
   })),
 );
 
-const StickySearchNudge = lazy(() =>
-  import('@/components/StickySearchNudge').then((m) => ({
-    default: m.StickySearchNudge,
-  })),
-);
 const ScrollToTop = lazy(() =>
   import('@/components/ScrollToTop').then((m) => ({ default: m.ScrollToTop })),
 );
@@ -656,12 +651,15 @@ const Index = () => {
               cardCount={cards.length}
             />
 
-            {/* Real cards, immediately — the index should look like Magic
-                before it looks like marketing. */}
+            {/* Real cards, immediately — desktop only, so the mobile first
+                screen stays headline → search → queries with no image in the
+                critical path. */}
             {!hasSearched && (
-              <Suspense fallback={null}>
-                <InstantDemoPreview onTrySearch={handleTryExample} />
-              </Suspense>
+              <div className="hidden sm:block">
+                <Suspense fallback={null}>
+                  <InstantDemoPreview onTrySearch={handleTryExample} />
+                </Suspense>
+              </div>
             )}
 
             {isSearching && originalQuery && (
@@ -878,7 +876,10 @@ const Index = () => {
           )}
 
           {!hasSearched && (
-            <div id="home-examples" className="container-main pb-2">
+            <div
+              id="home-examples"
+              className="container-main hidden pb-2 sm:block"
+            >
               <Suspense fallback={null}>
                 <ExampleQueriesCarousel onTrySearch={handleTryExample} />
               </Suspense>
@@ -902,12 +903,6 @@ const Index = () => {
           <Footer />
         </Suspense>
 
-        <Suspense fallback={null}>
-          <StickySearchNudge
-            hasSearched={hasSearched}
-            onTrySearch={handleTryExample}
-          />
-        </Suspense>
         {hasSearched && (
           <Suspense fallback={null}>
             <ScrollToTop threshold={800} />
