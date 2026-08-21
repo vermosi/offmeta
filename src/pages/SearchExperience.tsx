@@ -34,6 +34,7 @@ const Footer = lazy(() =>
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { HomepageQuickPaths } from '@/components/HomepageQuickPaths';
+import { HomeQuickQueries } from '@/components/HomeQuickQueries';
 import { Link } from 'react-router-dom';
 
 import { ArrowRight, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
@@ -59,11 +60,6 @@ const InstantDemoPreview = lazy(() =>
   })),
 );
 
-const StickySearchNudge = lazy(() =>
-  import('@/components/StickySearchNudge').then((m) => ({
-    default: m.StickySearchNudge,
-  })),
-);
 const ScrollToTop = lazy(() =>
   import('@/components/ScrollToTop').then((m) => ({ default: m.ScrollToTop })),
 );
@@ -656,12 +652,21 @@ const Index = () => {
               cardCount={cards.length}
             />
 
-            {/* Real cards, immediately — the index should look like Magic
-                before it looks like marketing. */}
+            {/* The only prompt surface above the fold: one-tap real queries,
+                directly under the search bar. */}
             {!hasSearched && (
-              <Suspense fallback={null}>
-                <InstantDemoPreview onTrySearch={handleTryExample} />
-              </Suspense>
+              <HomeQuickQueries onTrySearch={handleTryExample} />
+            )}
+
+            {/* Real cards, immediately — desktop only, so the mobile first
+                screen stays headline → search → queries with no image in the
+                critical path. */}
+            {!hasSearched && (
+              <div className="hidden sm:block">
+                <Suspense fallback={null}>
+                  <InstantDemoPreview onTrySearch={handleTryExample} />
+                </Suspense>
+              </div>
             )}
 
             {isSearching && originalQuery && (
@@ -878,7 +883,10 @@ const Index = () => {
           )}
 
           {!hasSearched && (
-            <div id="home-examples" className="container-main pb-2">
+            <div
+              id="home-examples"
+              className="container-main hidden pb-2 sm:block"
+            >
               <Suspense fallback={null}>
                 <ExampleQueriesCarousel onTrySearch={handleTryExample} />
               </Suspense>
@@ -902,12 +910,6 @@ const Index = () => {
           <Footer />
         </Suspense>
 
-        <Suspense fallback={null}>
-          <StickySearchNudge
-            hasSearched={hasSearched}
-            onTrySearch={handleTryExample}
-          />
-        </Suspense>
         {hasSearched && (
           <Suspense fallback={null}>
             <ScrollToTop threshold={800} />
