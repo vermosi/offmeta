@@ -95,6 +95,8 @@ const SearchResultsArea = lazy(() =>
 import { SkipLinks } from '@/components/SkipLinks';
 import { SearchProgressIndicator } from '@/components/SearchProgressIndicator';
 import { SearchDeskHeader } from '@/components/SearchDeskHeader';
+import { AnswerFeedback } from '@/components/AnswerFeedback';
+
 
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -718,6 +720,24 @@ const Index = () => {
                 }
               />
             )}
+
+            {hasSearched && !isSearching && (
+              <div className="pt-3">
+                <AnswerFeedback
+                  key={`${originalQuery}|${lastSearchResult?.scryfallQuery ?? ''}`}
+                  originalQuery={originalQuery || searchQuery}
+                  scryfallQuery={(
+                    lastSearchResult?.scryfallQuery || searchQuery
+                  ).trim()}
+                  confidence={lastSearchResult?.explanation?.confidence ?? null}
+                  resultCount={totalCards}
+                  requestId={currentRequestId || undefined}
+                  filters={activeFilters}
+                />
+              </div>
+            )}
+
+
 
             {cards.length > 0 && !isSearching && (
               <div className="sticky top-[56px] z-30 -mx-4 border-b border-border/40 bg-background/85 px-4 py-1.5 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
