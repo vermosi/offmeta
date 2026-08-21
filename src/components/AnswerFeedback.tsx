@@ -201,8 +201,11 @@ export function AnswerFeedback({
             open={dialogOpen}
             onOpenChange={(open) => {
               setDialogOpen(open);
-              if (!open) setSubmitted(true);
+              if (!open) {
+                setVote(null);
+              }
             }}
+            onSubmitted={() => setSubmitted(true)}
             originalQuery={originalQuery}
             compiledQuery={scryfallQuery}
             filters={filters}
@@ -210,6 +213,7 @@ export function AnswerFeedback({
           />
         </Suspense>
       )}
+
     </div>
   );
 }
