@@ -77,13 +77,13 @@ ALTER TABLE public.recommendation_rollout_hourly_metrics_v2 ENABLE ROW LEVEL SEC
 
 CREATE POLICY "Admins read recommendation rollout state v2"
   ON public.recommendation_rollout_state_v2 FOR SELECT TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+  USING (public.has_role('admin'::public.app_role));
 CREATE POLICY "Admins read recommendation rollout audit v2"
   ON public.recommendation_rollout_audit_v2 FOR SELECT TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+  USING (public.has_role('admin'::public.app_role));
 CREATE POLICY "Admins read recommendation rollout metrics v2"
   ON public.recommendation_rollout_hourly_metrics_v2 FOR SELECT TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+  USING (public.has_role('admin'::public.app_role));
 
 CREATE POLICY "Service role manages recommendation rollout state v2"
   ON public.recommendation_rollout_state_v2 FOR ALL TO service_role
