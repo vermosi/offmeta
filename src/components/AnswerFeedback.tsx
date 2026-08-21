@@ -8,7 +8,7 @@
  * @module components/AnswerFeedback
  */
 
-import { useState, lazy, Suspense } from 'react';
+import { useRef, useState, lazy, Suspense } from 'react';
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
