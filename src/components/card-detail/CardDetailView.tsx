@@ -235,11 +235,13 @@ export function CardDetailView({ card }: CardDetailViewProps) {
     getCardImage(card, 'large', currentFace);
   // Merge only the fields the localized printing actually provides so an
   // English value is never replaced by `undefined`.
-  const localizedCard = localizedFields
+  const activeLocalizedFields =
+    scryfallLang === 'en' ? null : localizedFields;
+  const localizedCard = activeLocalizedFields
     ? {
         ...card,
         ...Object.fromEntries(
-          Object.entries(localizedFields).filter(([, v]) => Boolean(v)),
+          Object.entries(activeLocalizedFields).filter(([, v]) => Boolean(v)),
         ),
       }
     : card;
