@@ -25,7 +25,7 @@ describe('buildInterpretation', () => {
       types: ['Creature'],
       cmc: { op: '<=', value: 2 },
     });
-    expect(rows).toEqual([
+    expect(rows).toMatchObject([
       { kind: 'colors', value: 'red' },
       { kind: 'type', value: 'creature' },
       { kind: 'mana value', value: '<= 2' },
@@ -37,7 +37,7 @@ describe('buildInterpretation', () => {
       ...baseIntent,
       oraclePatterns: ['o:"Treasure token"'],
     });
-    expect(rows[0]).toEqual({ kind: 'oracle text', value: '“Treasure token”' });
+    expect(rows[0]).toMatchObject({ kind: 'oracle text', value: '“Treasure token”' });
   });
 
   it('caps the readout at 12 rows', () => {

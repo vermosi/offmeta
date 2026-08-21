@@ -10,7 +10,7 @@
  * build identifier stamped on each search. Polls every 30s while mounted.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -92,40 +92,37 @@ function shareTone(share: number | null): 'neutral' | 'good' | 'warn' | 'bad' {
 }
 
 export function ConfidenceMonitor({ days }: { days: number }) {
-  const [data, setData] = useState<ConfidenceMonitorData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const isMounted = useRef(true);
+  const {
+    data,
+    error: queryError,
+    isPending: isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ['admin', 'confidence-monitor', days],
+    queryFn: async (): Promise<ConfidenceMonitorData> => {
+      const { data: raw, error: rpcError } = await supabase.rpc(
+        'get_confidence_monitor' as never,
+        { days_back: days, deploy_limit: 8, low_threshold: 0.75 } as never,
+      );
+      if (rpcError) {
+        logger.warn('[admin-ops] confidence monitor unavailable');
+        throw new Error('Confidence telemetry is unavailable right now.');
+      }
+      return raw as unknown as ConfidenceMonitorData;
+    },
+    refetchInterval: POLL_INTERVAL_MS,
+    refetchOnWindowFocus: false,
+  });
 
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
+  const error = queryError
+    ? 'Confidence telemetry is unavailable right now.'
+    : null;
+  const load = () => {
+    void refetch();
+  };
 
-  const load = useCallback(async () => {
-    const { data: raw, error: rpcError } = await supabase.rpc(
-      'get_confidence_monitor' as never,
-      { days_back: days, deploy_limit: 8, low_threshold: 0.75 } as never,
-    );
-    if (!isMounted.current) return;
-    if (rpcError) {
-      logger.warn('[admin-ops] confidence monitor unavailable');
-      setError('Confidence telemetry is unavailable right now.');
-    } else {
-      setError(null);
-      setData(raw as unknown as ConfidenceMonitorData);
-    }
-    setIsLoading(false);
-  }, [days]);
 
-  useEffect(() => {
-    setIsLoading(true);
-    void load();
-    const timer = setInterval(() => void load(), POLL_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [load]);
+
 
   const healthy = data?.healthy_share ?? null;
   const deploys = data?.by_deploy ?? [];
@@ -143,7 +140,7 @@ export function ConfidenceMonitor({ days }: { days: number }) {
             <StatusTag tone={shareTone(healthy)}>
               {healthy == null ? 'no data' : healthy >= TARGET_HEALTHY_SHARE ? 'on target' : 'below target'}
             </StatusTag>
-            <Button variant="outline" size="sm" onClick={() => void load()}>
+            <Button variant="outline" size="sm" onClick={load}>
               <RefreshCw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
               Refresh
             </Button>

@@ -10,6 +10,16 @@ vi.mock('../../supabase/functions/_shared/scryfall-client.ts', () => ({
   scryfallFetch: (...args: unknown[]) => mockFetch(...args),
 }));
 
+// Belt-and-braces: never allow a real network call from this suite, even if
+// module mocking is bypassed by the environment.
+vi.stubGlobal(
+  'fetch',
+  vi.fn(async () => {
+    throw new Error('Unexpected network call in semantic-search scryfall test');
+  }),
+);
+
+
 describe('Semantic Search Scryfall Utils', () => {
   describe('relaxSpeculativeClauses', () => {
     it('removes speculative clauses', () => {
