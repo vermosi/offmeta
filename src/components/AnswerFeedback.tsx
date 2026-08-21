@@ -54,6 +54,9 @@ export function AnswerFeedback({
   const [submitted, setSubmitted] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  /** Set when the details dialog submits, so closing it is not counted as a cancel. */
+  const dialogSubmittedRef = useRef(false);
+
 
   if (!originalQuery.trim()) return null;
 
