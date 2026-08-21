@@ -268,10 +268,55 @@ async function harvestCandidates(): Promise<Candidate[]> {
     return [];
   }
 
+  const lowConfidence = await harvestLowConfidenceCandidates(since);
+
+  const merged = new Map<string, Candidate>();
+  for (const c of [...((data as Candidate[]) ?? []), ...lowConfidence]) {
+    const key = c.query.trim().toLowerCase();
+    if (!merged.has(key)) merged.set(key, c);
+  }
+
   const quarantined = await loadQuarantine();
-  return ((data as Candidate[]) ?? []).filter(
+  return [...merged.values()].filter(
     (c) => isRepairableQuery(c.query) && !quarantined.has(quarantineKey(c.query)),
   );
+}
+
+/**
+ * Recurring searches that resolve with low confidence but still return cards.
+ *
+ * These never surface as failures, yet they are exactly the queries where the
+ * pipeline guessed. Repairing them into deterministic rules is what pushes the
+ * healthy-confidence share above target.
+ */
+async function harvestLowConfidenceCandidates(since: Date): Promise<Candidate[]> {
+  const { data, error } = await supabase.rpc(
+    'get_low_confidence_candidates' as never,
+    {
+      since_date: since.toISOString(),
+      min_frequency: 2,
+      max_results: MAX_CANDIDATES,
+      max_confidence: 0.75,
+    },
+  );
+
+  if (error) {
+    logger.warn('low_confidence_harvest_failed', { error: error.message });
+    return [];
+  }
+
+  return (
+    (data as Array<{
+      query: string;
+      frequency: number;
+      last_translation: string | null;
+    }> | null) ?? []
+  ).map((row) => ({
+    query: row.query,
+    frequency: row.frequency,
+    last_translation: row.last_translation ?? '',
+    sources: 'low_confidence',
+  }));
 }
 
 async function ruleExists(pattern: string): Promise<boolean> {

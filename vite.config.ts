@@ -3,13 +3,30 @@ import react from '@vitejs/plugin-react';
 import { mcpPlugin } from '@lovable.dev/mcp-js/stacks/supabase/vite';
 import path from 'path';
 
+/**
+ * Stable-per-build identifier used to attribute search quality telemetry to a
+ * deploy. Uses the platform/CI commit when available, otherwise a build stamp.
+ */
+const APP_VERSION = (
+  process.env.COMMIT_SHA ||
+  process.env.VERCEL_GIT_COMMIT_SHA ||
+  process.env.LOVABLE_BUILD_ID ||
+  `build-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '')}`
+)
+  .replace(/[^A-Za-z0-9._-]/g, '')
+  .slice(0, 40);
+
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
+  define: {
+    __APP_VERSION__: JSON.stringify(APP_VERSION),
+  },
   server: {
     host: '::',
     port: 8080,
   },
   plugins: [react(), ...(process.env.VITEST ? [] : [mcpPlugin()])],
+
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

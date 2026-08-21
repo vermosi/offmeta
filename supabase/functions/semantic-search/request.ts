@@ -9,6 +9,7 @@ type SearchRequestBody = {
   useCache?: unknown;
   cacheSalt?: unknown;
   locale?: unknown;
+  appVersion?: unknown;
 };
 
 type SearchRequestData = {
@@ -18,6 +19,8 @@ type SearchRequestData = {
   useCache: boolean | undefined;
   cacheSalt: string | undefined;
   locale: string | undefined;
+  /** Build identifier of the calling client, used for per-deploy telemetry. */
+  appVersion: string | null;
 };
 
 type JsonHeaders = Record<string, string>;
@@ -62,6 +65,11 @@ export function validateSearchRequest(
   const useCache = requestBody.useCache;
   const cacheSalt = requestBody.cacheSalt;
   const locale = requestBody.locale;
+  const appVersion =
+    typeof requestBody.appVersion === 'string'
+      ? requestBody.appVersion.replace(/[^A-Za-z0-9._-]/g, '').slice(0, 64) ||
+        null
+      : null;
 
   if (!query || typeof query !== 'string' || query.trim().length === 0) {
     return {
@@ -166,6 +174,7 @@ export function validateSearchRequest(
       useCache,
       cacheSalt,
       locale,
+      appVersion,
     },
   };
 }

@@ -12,6 +12,7 @@ import type { ScryfallCard } from '@/types/card';
 
 import { CLIENT_CONFIG } from '@/lib/config';
 import { logger } from '@/lib/core/logger';
+import { APP_VERSION } from '@/lib/core/app-version';
 import { PRETRANSLATED } from '@/lib/search/fallback';
 import { useTranslation } from '@/lib/i18n';
 
@@ -313,6 +314,7 @@ export async function translateQueryWithDedup(
             filters: filters || undefined,
             cacheSalt: cacheSalt || undefined,
             locale,
+            appVersion: APP_VERSION,
           },
           headers: {
             'x-session-id': sessionId,

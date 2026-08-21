@@ -44,6 +44,7 @@ export const ADMIN_AREAS: readonly AdminArea[] = [
       { id: 'lab', label: 'Search Lab', purpose: 'Diagnose a single query end to end' },
       { id: 'repair', label: 'Repair Queue', purpose: 'Human-in-the-loop rule review' },
       { id: 'zero-results', label: 'Zero Results', purpose: 'Queries returning nothing' },
+      { id: 'confidence', label: 'Confidence Monitor', purpose: 'Live confidence per deploy and failing patterns' },
       { id: 'benchmark', label: 'Quality Benchmark', purpose: 'Successful search rate over time' },
       { id: 'rules', label: 'Translation Rules', purpose: 'Deterministic rule inventory' },
     ],
