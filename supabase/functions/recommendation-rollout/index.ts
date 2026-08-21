@@ -80,22 +80,31 @@ serve(
     const admin = createClient(url, key);
 
     if (body.action === 'assignment') {
-      const { data, error } = await admin.rpc(
-        'get_recommendation_rollout_assignment_v2',
-        {
+      const { data, error } = await admin
+        .rpc('get_recommendation_rollout_assignment_v2', {
           p_subject_key: body.subjectKey,
-        },
-      );
-      if (error)
+        })
+        .abortSignal(AbortSignal.timeout(ASSIGNMENT_TIMEOUT_MS));
+      if (error) {
+        // A slow/aborted query must not surface as an outage: degrade to the
+        // baseline assignment so callers keep serving results.
+        if (isTimeoutError(error)) {
+          return new Response(
+            JSON.stringify({ success: true, assignment: null, degraded: true }),
+            { headers },
+          );
+        }
         return new Response(
           JSON.stringify({ error: 'Assignment unavailable' }),
           { status: 503, headers },
         );
+      }
       return new Response(
         JSON.stringify({ success: true, assignment: data?.[0] ?? null }),
         { headers },
       );
     }
+
 
     const observation = body as unknown as ObservationBody & {
       action?: string;
