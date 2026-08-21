@@ -34,7 +34,6 @@ const Footer = lazy(() =>
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { HomepageQuickPaths } from '@/components/HomepageQuickPaths';
-import { HomeQuickQueries } from '@/components/HomeQuickQueries';
 import { Link } from 'react-router-dom';
 
 import { ArrowRight, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
@@ -651,12 +650,6 @@ const Index = () => {
               scryfallQuery={lastSearchResult?.scryfallQuery}
               cardCount={cards.length}
             />
-
-            {/* The only prompt surface above the fold: one-tap real queries,
-                directly under the search bar. */}
-            {!hasSearched && (
-              <HomeQuickQueries onTrySearch={handleTryExample} />
-            )}
 
             {/* Real cards, immediately — desktop only, so the mobile first
                 screen stays headline → search → queries with no image in the

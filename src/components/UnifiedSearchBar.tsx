@@ -14,6 +14,7 @@ import {
   forwardRef,
 } from 'react';
 import { Search, Loader2, X, Clock, Sparkles, Database } from 'lucide-react';
+import { markOnce } from '@/lib/analytics/oncePerSession';
 import { useIsMobile } from '@/hooks/useMobile';
 import { useSearchContext } from '@/hooks/useSearchContext';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
