@@ -38,6 +38,48 @@ export type Database = {
         }
         Relationships: []
       }
+      answer_index: {
+        Row: {
+          card_names: string[]
+          confidence: number
+          created_at: string
+          hit_count: number
+          id: string
+          keywords: string[]
+          last_used_at: string | null
+          question: string
+          scryfall_query: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          card_names?: string[]
+          confidence?: number
+          created_at?: string
+          hit_count?: number
+          id?: string
+          keywords?: string[]
+          last_used_at?: string | null
+          question: string
+          scryfall_query: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          card_names?: string[]
+          confidence?: number
+          created_at?: string
+          hit_count?: number
+          id?: string
+          keywords?: string[]
+          last_used_at?: string | null
+          question?: string
+          scryfall_query?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       card_cooccurrence: {
         Row: {
           card_a_oracle_id: string
