@@ -92,43 +92,35 @@ function shareTone(share: number | null): 'neutral' | 'good' | 'warn' | 'bad' {
 }
 
 export function ConfidenceMonitor({ days }: { days: number }) {
-  const [data, setData] = useState<ConfidenceMonitorData | null>(null);
-  const [loadedDays, setLoadedDays] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const isMounted = useRef(true);
+  const {
+    data,
+    error: queryError,
+    isPending: isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ['admin', 'confidence-monitor', days],
+    queryFn: async (): Promise<ConfidenceMonitorData> => {
+      const { data: raw, error: rpcError } = await supabase.rpc(
+        'get_confidence_monitor' as never,
+        { days_back: days, deploy_limit: 8, low_threshold: 0.75 } as never,
+      );
+      if (rpcError) {
+        logger.warn('[admin-ops] confidence monitor unavailable');
+        throw new Error('Confidence telemetry is unavailable right now.');
+      }
+      return raw as unknown as ConfidenceMonitorData;
+    },
+    refetchInterval: POLL_INTERVAL_MS,
+    refetchOnWindowFocus: false,
+  });
 
-  // Loading is derived: no payload yet, or the payload belongs to a
-  // different range than the one currently selected.
-  const isLoading = loadedDays !== days;
+  const error = queryError
+    ? 'Confidence telemetry is unavailable right now.'
+    : null;
+  const load = () => {
+    void refetch();
+  };
 
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  const load = useCallback(async () => {
-    const { data: raw, error: rpcError } = await supabase.rpc(
-      'get_confidence_monitor' as never,
-      { days_back: days, deploy_limit: 8, low_threshold: 0.75 } as never,
-    );
-    if (!isMounted.current) return;
-    if (rpcError) {
-      logger.warn('[admin-ops] confidence monitor unavailable');
-      setError('Confidence telemetry is unavailable right now.');
-    } else {
-      setError(null);
-      setData(raw as unknown as ConfidenceMonitorData);
-    }
-    setLoadedDays(days);
-  }, [days]);
-
-  useEffect(() => {
-    void load();
-    const timer = setInterval(() => void load(), POLL_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [load]);
 
 
 
