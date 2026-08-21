@@ -95,10 +95,7 @@ export default function AppRoutes() {
               element={withFullApp(<AdminConsole />)}
             />
             <Route
-              path="/admin/analytics"
-              element={withFullApp(<AdminAnalytics />)}
-            />
-            <Route
+
               path="/admin/curated-searches"
               element={withFullApp(<AdminCuratedSearches />)}
             />
