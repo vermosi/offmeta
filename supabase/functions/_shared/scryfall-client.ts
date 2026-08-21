@@ -256,7 +256,7 @@ export async function scryfallFetch(
     throw lastError ?? new Error('Scryfall request failed');
   } finally {
     queueDepth = Math.max(0, queueDepth - 1);
-    if (isProbe) probeInFlight = false;
+    if (ownsProbe) probeInFlight = false;
   }
 }
 
