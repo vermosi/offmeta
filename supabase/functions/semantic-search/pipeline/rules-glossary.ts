@@ -16,6 +16,8 @@
  * @module semantic-search/pipeline/rules-glossary
  */
 
+declare const Deno: { env: { get(key: string): string | undefined } };
+
 export interface GlossaryTerm {
   term: string;
   termLower: string;
