@@ -18,8 +18,31 @@ type ObservationBody = {
   correctnessPassed?: boolean | null;
 };
 
+// Client-side guards sit slightly above the RPC statement_timeout values
+// (3s / 5s) so the database cancels first when it is the slow party.
+const ASSIGNMENT_TIMEOUT_MS = 4000;
+const OBSERVATION_TIMEOUT_MS = 6000;
+
+/** Statement timeout, query cancellation, or an aborted client request. */
+const isTimeoutError = (error: {
+  code?: string | null;
+  message?: string | null;
+  name?: string | null;
+}): boolean => {
+  if (error.code === '57014' || error.code === '57P01') return true;
+  const message = (error.message ?? '').toLowerCase();
+  return (
+    error.name === 'AbortError' ||
+    message.includes('statement timeout') ||
+    message.includes('canceling statement') ||
+    message.includes('aborted') ||
+    message.includes('timeout')
+  );
+};
+
 const validText = (value: unknown, max: number): value is string =>
   typeof value === 'string' && value.trim().length > 0 && value.length <= max;
+
 
 serve(
   withLogging('recommendation-rollout', async (req: Request) => {
@@ -80,22 +103,31 @@ serve(
     const admin = createClient(url, key);
 
     if (body.action === 'assignment') {
-      const { data, error } = await admin.rpc(
-        'get_recommendation_rollout_assignment_v2',
-        {
+      const { data, error } = await admin
+        .rpc('get_recommendation_rollout_assignment_v2', {
           p_subject_key: body.subjectKey,
-        },
-      );
-      if (error)
+        })
+        .abortSignal(AbortSignal.timeout(ASSIGNMENT_TIMEOUT_MS));
+      if (error) {
+        // A slow/aborted query must not surface as an outage: degrade to the
+        // baseline assignment so callers keep serving results.
+        if (isTimeoutError(error)) {
+          return new Response(
+            JSON.stringify({ success: true, assignment: null, degraded: true }),
+            { headers },
+          );
+        }
         return new Response(
           JSON.stringify({ error: 'Assignment unavailable' }),
           { status: 503, headers },
         );
+      }
       return new Response(
         JSON.stringify({ success: true, assignment: data?.[0] ?? null }),
         { headers },
       );
     }
+
 
     const observation = body as unknown as ObservationBody & {
       action?: string;
@@ -113,9 +145,8 @@ serve(
         headers,
       });
     }
-    const { error } = await admin.rpc(
-      'record_recommendation_rollout_observation_v2',
-      {
+    const { error } = await admin
+      .rpc('record_recommendation_rollout_observation_v2', {
         p_request_id: observation.requestId,
         p_subject_key: observation.subjectKey,
         p_model_version: observation.modelVersion,
@@ -126,13 +157,22 @@ serve(
         p_constraint_violation: observation.constraintViolation ?? false,
         p_errored: observation.errored ?? false,
         p_correctness_passed: observation.correctnessPassed ?? null,
-      },
-    );
-    if (error)
+      })
+      .abortSignal(AbortSignal.timeout(OBSERVATION_TIMEOUT_MS));
+    if (error) {
+      // Telemetry is best-effort; a timed-out write is dropped, not an error.
+      if (isTimeoutError(error)) {
+        return new Response(JSON.stringify({ success: false, degraded: true }), {
+          status: 202,
+          headers,
+        });
+      }
       return new Response(JSON.stringify({ error: 'Observation rejected' }), {
         status: 400,
         headers,
       });
+    }
     return new Response(JSON.stringify({ success: true }), { headers });
+
   }),
 );
