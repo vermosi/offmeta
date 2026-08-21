@@ -33,7 +33,20 @@ export function normalizeQuery(query: string): string {
     .replace(/\bazourus\b/gi, 'azorius')
     .replace(/\bboard\s*whipe\b/gi, 'board wipe')
     .replace(/\bboardwhipe\b/gi, 'board wipe')
-    .replace(/\bwhipe\b/gi, 'wipe');
+    .replace(/\bwhipe\b/gi, 'wipe')
+    // Frequent misspellings observed in low-confidence search logs
+    .replace(/\bplains?walkers?\b/gi, 'planeswalker')
+    .replace(/\bplaneswalkers\b/gi, 'planeswalker')
+    .replace(/\bsplells?\b/gi, 'spell')
+    .replace(/\bspel+s\b/gi, 'spell')
+    .replace(/\bcretures?\b|\bcreautres?\b|\bcreatuers?\b/gi, 'creature')
+    .replace(/\bartefacts?\b/gi, 'artifact')
+    .replace(/\bgraveyeard\b|\bgraveard\b|\bgravyard\b/gi, 'graveyard')
+    .replace(/\benchantmants?\b|\benchantements?\b/gi, 'enchantment')
+    .replace(/\bopponene?te?s?\b/gi, 'opponent')
+    .replace(/\bsimiliar\b|\bsimilliar\b/gi, 'similar')
+    .replace(/\bcomander\b|\bcommandeer\b/gi, 'commander');
+
 
   // Apply slang mappings
   for (const [slang, formal] of Object.entries(SLANG_MAP)) {
