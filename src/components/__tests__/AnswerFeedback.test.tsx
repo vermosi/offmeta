@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import type { FeedbackPayload } from '@/lib/feedback';
+import type * as FeedbackModule from '@/lib/feedback';
 
 
 const mockSubmitFeedback = vi.fn();
@@ -9,7 +9,7 @@ const mockToastSuccess = vi.fn();
 const mockToastError = vi.fn();
 
 vi.mock('@/lib/feedback', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/feedback')>();
+  const actual = await importOriginal<typeof FeedbackModule>();
   return {
     ...actual,
     submitFeedback: (payload: FeedbackPayload) => mockSubmitFeedback(payload),
