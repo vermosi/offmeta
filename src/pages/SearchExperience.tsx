@@ -95,6 +95,8 @@ const SearchResultsArea = lazy(() =>
 import { SkipLinks } from '@/components/SkipLinks';
 import { SearchProgressIndicator } from '@/components/SearchProgressIndicator';
 import { SearchDeskHeader } from '@/components/SearchDeskHeader';
+import { AnswerFeedback } from '@/components/AnswerFeedback';
+
 
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
