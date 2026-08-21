@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import type { FeedbackPayload } from '@/lib/feedback';
+
 
 const mockSubmitFeedback = vi.fn();
 const mockTrackEvent = vi.fn();
