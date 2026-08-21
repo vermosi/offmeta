@@ -925,6 +925,183 @@ export type Database = {
         }
         Relationships: []
       }
+      recommendation_rollout_audit_v2: {
+        Row: {
+          action: string
+          details: Json
+          evaluation_hour: string | null
+          from_stage: string
+          id: number
+          occurred_at: string
+          reason: string
+          to_stage: string
+        }
+        Insert: {
+          action: string
+          details?: Json
+          evaluation_hour?: string | null
+          from_stage: string
+          id?: never
+          occurred_at?: string
+          reason: string
+          to_stage: string
+        }
+        Update: {
+          action?: string
+          details?: Json
+          evaluation_hour?: string | null
+          from_stage?: string
+          id?: never
+          occurred_at?: string
+          reason?: string
+          to_stage?: string
+        }
+        Relationships: []
+      }
+      recommendation_rollout_hourly_metrics_v2: {
+        Row: {
+          aggregated_at: string
+          constraint_violations: number
+          correctness_evaluated: number
+          correctness_failures: number
+          errors: number
+          hour: string
+          immediate_refinements: number
+          model_version: string
+          negative_feedback: number
+          p95_latency_ms: number | null
+          requests: number
+          stage: string
+          useful_clicks: number
+        }
+        Insert: {
+          aggregated_at?: string
+          constraint_violations: number
+          correctness_evaluated: number
+          correctness_failures: number
+          errors: number
+          hour: string
+          immediate_refinements: number
+          model_version: string
+          negative_feedback: number
+          p95_latency_ms?: number | null
+          requests: number
+          stage: string
+          useful_clicks: number
+        }
+        Update: {
+          aggregated_at?: string
+          constraint_violations?: number
+          correctness_evaluated?: number
+          correctness_failures?: number
+          errors?: number
+          hour?: string
+          immediate_refinements?: number
+          model_version?: string
+          negative_feedback?: number
+          p95_latency_ms?: number | null
+          requests?: number
+          stage?: string
+          useful_clicks?: number
+        }
+        Relationships: []
+      }
+      recommendation_rollout_observations_v2: {
+        Row: {
+          constraint_observed_at: string | null
+          constraint_violation: boolean
+          correctness_passed: boolean | null
+          errored: boolean
+          immediate_refinement: boolean
+          latency_ms: number
+          model_version: string
+          negative_feedback: boolean
+          observed_at: string
+          request_id: string
+          stage: string
+          subject_hash: string
+          useful_click: boolean
+        }
+        Insert: {
+          constraint_observed_at?: string | null
+          constraint_violation: boolean
+          correctness_passed?: boolean | null
+          errored: boolean
+          immediate_refinement: boolean
+          latency_ms: number
+          model_version: string
+          negative_feedback: boolean
+          observed_at?: string
+          request_id: string
+          stage: string
+          subject_hash: string
+          useful_click: boolean
+        }
+        Update: {
+          constraint_observed_at?: string | null
+          constraint_violation?: boolean
+          correctness_passed?: boolean | null
+          errored?: boolean
+          immediate_refinement?: boolean
+          latency_ms?: number
+          model_version?: string
+          negative_feedback?: boolean
+          observed_at?: string
+          request_id?: string
+          stage?: string
+          subject_hash?: string
+          useful_click?: boolean
+        }
+        Relationships: []
+      }
+      recommendation_rollout_state_v2: {
+        Row: {
+          assignment_salt: string
+          baseline_errors: number | null
+          baseline_immediate_refinements: number | null
+          baseline_negative_feedback: number | null
+          baseline_p95_latency_ms: number | null
+          baseline_requests: number | null
+          baseline_useful_clicks: number | null
+          consecutive_guardrail_failures: number
+          last_evaluated_hour: string | null
+          singleton: boolean
+          stage: string
+          stage_started_at: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_salt?: string
+          baseline_errors?: number | null
+          baseline_immediate_refinements?: number | null
+          baseline_negative_feedback?: number | null
+          baseline_p95_latency_ms?: number | null
+          baseline_requests?: number | null
+          baseline_useful_clicks?: number | null
+          consecutive_guardrail_failures?: number
+          last_evaluated_hour?: string | null
+          singleton?: boolean
+          stage?: string
+          stage_started_at?: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_salt?: string
+          baseline_errors?: number | null
+          baseline_immediate_refinements?: number | null
+          baseline_negative_feedback?: number | null
+          baseline_p95_latency_ms?: number | null
+          baseline_requests?: number | null
+          baseline_useful_clicks?: number | null
+          consecutive_guardrail_failures?: number
+          last_evaluated_hour?: string | null
+          singleton?: boolean
+          stage?: string
+          stage_started_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rules_glossary: {
         Row: {
           category: string
@@ -1909,6 +2086,16 @@ export type Database = {
           last_run: string
         }[]
       }
+      get_recommendation_rollout_assignment_v2: {
+        Args: { p_subject_key: string }
+        Returns: {
+          bucket: number
+          rollout_percent: number
+          run_shadow: boolean
+          serve_version: string
+          stage: string
+        }[]
+      }
       get_search_analytics: {
         Args: { max_low_confidence?: number; since_date: string }
         Returns: Json
@@ -2031,6 +2218,21 @@ export type Database = {
       }
       record_dedupe_decision: {
         Args: { p_decision: Json; p_key: string }
+        Returns: undefined
+      }
+      record_recommendation_rollout_observation_v2: {
+        Args: {
+          p_constraint_violation?: boolean
+          p_correctness_passed?: boolean
+          p_errored?: boolean
+          p_immediate_refinement?: boolean
+          p_latency_ms: number
+          p_model_version: string
+          p_negative_feedback?: boolean
+          p_request_id: string
+          p_subject_key: string
+          p_useful_click?: boolean
+        }
         Returns: undefined
       }
       record_translation_result_count: {
